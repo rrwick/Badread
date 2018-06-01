@@ -1,5 +1,16 @@
+"""
+Copyright 2018 Ryan Wick (rrwick@gmail.com)
+https://github.com/rrwick/Badread/
 
-import argparse
+This file is part of Badread. Badread is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. Badread is distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details. You should have received a copy of the GNU General Public License along with Badread.
+If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import numpy as np
 import random
 import scipy.special
@@ -7,68 +18,7 @@ import sys
 import uuid
 
 
-def get_arguments():
-    parser = argparse.ArgumentParser(description='Generate long reads with all sorts of problems')
-
-    required_args = parser.add_argument_group('Required arguments',
-                                              description='Quantity can be expressed in absolute '
-                                                          'or relative values')
-    required_args.add_argument('--reference', type=str, required=True,
-                               help='Reference FASTA file')
-    required_args.add_argument('--quantity', type=str, required=True,
-                               help='Either an absolute value (e.g. 250M) or a relative depth '
-                                    '(e.g. 25x)')
-
-    length_args = parser.add_argument_group('Read lengths',
-                                            description='Read fragments are generated with a '
-                                                        'gamma distribution:'
-                                                        'desmos.com/calculator/rddlqip1if')
-    length_args.add_argument('--mean_read_length', type=int, default=10000,
-                             help='Mean read length (in bp)')
-    length_args.add_argument('--read_length_stdev', type=int, default=9000,
-                             help='Read length standard deviation (in bp)')
-    length_args.add_argument('--min_read_length', type=int, default=25,
-                             help='Regardless of the distribution, no reads shorter than this '
-                                  'will be outputted')
-
-    id_args = parser.add_argument_group('Read identities',
-                                        description='Read identities are generated with a beta '
-                                                    'distribution:'
-                                                    'https://www.desmos.com/calculator/t03zr2thap')
-    id_args.add_argument('--mean_read_identity', type=float, default=0.85,
-                         help='Mean read length (in bp)')
-    id_args.add_argument('--read_identity_dist_shape', type=int, default=4,
-                         help='Shape parameter - large values produce a tighter distribution '
-                              'around the mean')
-    id_args.add_argument('--max_read_identity', type=float, default=0.95,
-                         help='The entire beta distribution is scaled to max out at this value')
-    id_args.add_argument('--error_model', type=str,
-                         help='If provided, will use this to simulate realistic errors (otherwise '
-                              'errors are random)')
-
-    problem_args = parser.add_argument_group('Read problems',
-                                             description='Ways reads can go wrong')
-    problem_args.add_argument('--junk_read_rate', type=float, default=0.02,
-                              help='This fraction of reads will be low-complexity junk')
-    problem_args.add_argument('--random_read_rate', type=float, default=0.01,
-                              help='This fraction of reads will be random sequence')
-    problem_args.add_argument('--chimera_rate', type=float, default=0.01,
-                              help='Rate at which separate fragments join together')
-    problem_args.add_argument('--start_adapters', type=int, default=25,
-                              help='Average amount of adapters on starts of reads')
-    problem_args.add_argument('--end_adapters', type=int, default=25,
-                              help='Average amount of adapters on ends of reads')
-    problem_args.add_argument('--glitches', type=str, default='50,8000',
-                              help='Read glitch parameters')
-    problem_args.add_argument('--skips', type=str, default='10,8000',
-                              help='Read skip parameters')
-
-    args = parser.parse_args()
-    return args
-
-
-def main():
-    args = get_arguments()
+def simulate(args):
     reference = load_reference(args.reference)
     target_size = get_target_size(reference, args.quantity)
     gamma_k, gamma_t = gamma_parameters(args.mean_read_length, args.read_length_stdev)
@@ -268,7 +218,3 @@ def get_mean_id(reads):
         total_length += read_length
         total_id += (read_length * read_id)
     return total_id / total_length
-
-
-if __name__ == '__main__':
-    main()

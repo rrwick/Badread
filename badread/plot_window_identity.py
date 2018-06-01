@@ -1,4 +1,15 @@
-#!/usr/bin/env python3
+"""
+Copyright 2018 Ryan Wick (rrwick@gmail.com)
+https://github.com/rrwick/Badread/
+
+This file is part of Badread. Badread is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. Badread is distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details. You should have received a copy of the GNU General Public License along with Badread.
+If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import collections
 import gzip
@@ -8,17 +19,10 @@ import re
 import sys
 
 
-WINDOW_SIZE = 100
-
-
-def main():
-    read_filename = sys.argv[1]
-    ref_filename = sys.argv[2]
-    alignments_filename = sys.argv[3]
-
-    reads = load_fastq(read_filename)
-    refs = load_fasta(ref_filename)
-    alignments = load_alignments(alignments_filename)
+def plot_window_identity(args):
+    reads = load_fastq(args.reads)
+    refs = load_fasta(args.reference)
+    alignments = load_alignments(args.alignment)
 
     for a in alignments:
         print(a)
@@ -26,9 +30,9 @@ def main():
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
-        aligned_read_seq, aligned_ref_seq, errors_per_read_pos = align_sequences(read_seq, ref_seq, a)
-        positions, identities = get_window_identity(errors_per_read_pos, WINDOW_SIZE, a.read_start)
-        plot_window_identity(positions, identities, WINDOW_SIZE, a, len(reads[a.read_name][0]))
+        _, _, errors_per_read_pos = align_sequences(read_seq, ref_seq, a)
+        positions, identities = get_window_identity(errors_per_read_pos, args.window, a.read_start)
+        plot_one_alignment(positions, identities, args.window, a, len(reads[a.read_name][0]))
 
 
 def get_compression_type(filename):
@@ -235,26 +239,24 @@ def get_window_identity(errors_per_read_pos, window_size, read_start):
     return positions, identities
 
 
-class My_Axes(matplotlib.axes.Axes):
-    name = "My_Axes"
+class MyAxes(matplotlib.axes.Axes):
+    name = "MyAxes"
+
     def drag_pan(self, button, key, x, y):
-        matplotlib.axes.Axes.drag_pan(self, button, 'x', x, y) # pretend key=='x'
-
-matplotlib.projections.register_projection(My_Axes)
+        matplotlib.axes.Axes.drag_pan(self, button, 'x', x, y)  # pretend key=='x'
 
 
-def plot_window_identity(positions, identities, window_size, alignment, read_length):
+matplotlib.projections.register_projection(MyAxes)
+
+
+def plot_one_alignment(positions, identities, window_size, alignment, read_length):
     fig = plt.figure(figsize=(12, 4))
-
-    fig.add_subplot(111, projection="My_Axes")
+    fig.add_subplot(111, projection='MyAxes')
     plt.plot(positions, identities, '-')
     plt.ylabel('% identity ({} bp windows)'.format(window_size))
-    plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length, alignment.percent_identity))
+    plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length,
+                                                    alignment.percent_identity))
     plt.gca().set_xlim([0,10000])
     plt.gca().set_ylim([50,100])
     fig.canvas.manager.toolbar.pan()
     plt.show()
-
-
-if __name__ == '__main__':
-    main()

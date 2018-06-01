@@ -1,4 +1,15 @@
-#!/usr/bin/env python3
+"""
+Copyright 2018 Ryan Wick (rrwick@gmail.com)
+https://github.com/rrwick/Badread/
+
+This file is part of Badread. Badread is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. Badread is distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details. You should have received a copy of the GNU General Public License along with Badread.
+If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import collections
 import gzip
@@ -6,20 +17,13 @@ import itertools
 import re
 import sys
 
-KMER_SIZE = 6
-MAX_ALIGNMENTS = 100000
-MAX_ALT_KMERS = 100
 
-def main():
-    read_filename = sys.argv[1]
-    ref_filename = sys.argv[2]
-    alignments_filename = sys.argv[3]
+def make_error_model(args):
+    refs = load_fasta(args.reference)
+    reads = load_fastq(args.reads)
+    alignments = load_alignments(args.alignments, args.max_alignments)
 
-    refs = load_fasta(ref_filename)
-    reads = load_fastq(read_filename)
-    alignments = load_alignments(alignments_filename, MAX_ALIGNMENTS)
-
-    kmer_list = [''.join(x) for x in itertools.product('ACGT', repeat=KMER_SIZE)]
+    kmer_list = [''.join(x) for x in itertools.product('ACGT', repeat=args.k_size)]
     kmer_alternatives = {x: collections.defaultdict(int) for x in kmer_list}
 
     i = 0
@@ -40,10 +44,10 @@ def main():
             if end > len(aligned_read_seq):
                 break
             read_kmer = aligned_read_seq[start:end].replace('-', '')
-            if len(read_kmer) < KMER_SIZE:
+            if len(read_kmer) < args.k_size:
                 end += 1
                 continue
-            assert len(read_kmer) == KMER_SIZE
+            assert len(read_kmer) == args.k_size
             ref_kmer = aligned_ref_seq[start:end].replace('-', '')
             kmer_alternatives[read_kmer][ref_kmer] += 1
 
@@ -64,7 +68,7 @@ def main():
         print('{},{:.6f}'.format(kmer, alternatives[kmer] / total), end=';')
         alt_fracs = [(alt_k, count/total) for alt_k, count in alternatives.items() if alt_k != kmer]
         alt_fracs = sorted(alt_fracs, reverse=True, key=lambda x: x[1])
-        for k, frac in alt_fracs[:MAX_ALT_KMERS]:
+        for k, frac in alt_fracs[:args.max_alt]:
             print('{},{:.6f}'.format(k, frac), end=';')
         print()
 
@@ -275,7 +279,3 @@ def align_sequences(read_seq, ref_seq, alignment):
             alignment.deletions += cigar_size
             ref_pos += cigar_size
     return ''.join(read), ''.join(ref), errors_per_read_pos
-
-
-if __name__ == '__main__':
-    main()
