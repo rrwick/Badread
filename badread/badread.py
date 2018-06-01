@@ -1,6 +1,6 @@
 """
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
-https://github.com/rrwick/Badread/
+https://github.com/rrwick/Badread
 
 This file is part of Badread. Badread is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -74,7 +74,7 @@ def simulate_subparser(subparsers):
 
     length_args = group.add_argument_group('Read lengths',
                                            description='Read fragments are generated with a '
-                                                       'gamma distribution:'
+                                                       'gamma distribution: '
                                                        'desmos.com/calculator/rddlqip1if')
     length_args.add_argument('--mean_read_length', type=int, default=10000,
                              help='Mean read length (in bp)')
@@ -86,8 +86,8 @@ def simulate_subparser(subparsers):
 
     id_args = group.add_argument_group('Read identities',
                                        description='Read identities are generated with a beta '
-                                                   'distribution:'
-                                                   'https://www.desmos.com/calculator/t03zr2thap')
+                                                   'distribution: '
+                                                   'desmos.com/calculator/t03zr2thap')
     id_args.add_argument('--mean_read_identity', type=float, default=0.85,
                          help='Mean read length (in bp)')
     id_args.add_argument('--read_identity_dist_shape', type=int, default=4,
@@ -99,6 +99,20 @@ def simulate_subparser(subparsers):
                          help='If provided, will use this to simulate realistic errors (otherwise '
                               'errors are random)')
 
+    problem_args = group.add_argument_group('Adapters',
+                                            description='Controls adapter sequences on the start '
+                                                        'and end of reads')
+    problem_args.add_argument('--start_adapter', type=str, default='AATGTACTTCGTTCAGTTACGTATTGCT',
+                              help='Adapter sequence for starts of reads')
+    problem_args.add_argument('--end_adapter', type=str, default='GCAATACGTAACTGAACGAAGT',
+                              help='Adapter sequence for ends of reads')
+    problem_args.add_argument('--start_adapter_params', type=str, default='0.9,0.6',
+                              help='Rate and amount (comma-separated) for adapters on starts of '
+                                   'reads')
+    problem_args.add_argument('--end_adapter_params', type=str, default='0.5,0.2',
+                              help='Rate and amount (comma-separated) for adapters on ends of '
+                                   'reads')
+
     problem_args = group.add_argument_group('Read problems',
                                             description='Ways reads can go wrong')
     problem_args.add_argument('--junk_read_rate', type=float, default=0.02,
@@ -107,14 +121,18 @@ def simulate_subparser(subparsers):
                               help='This fraction of reads will be random sequence')
     problem_args.add_argument('--chimera_rate', type=float, default=0.01,
                               help='Rate at which separate fragments join together')
-    problem_args.add_argument('--start_adapters', type=int, default=25,
-                              help='Average amount of adapters on starts of reads')
-    problem_args.add_argument('--end_adapters', type=int, default=25,
-                              help='Average amount of adapters on ends of reads')
     problem_args.add_argument('--glitches', type=str, default='50,8000',
                               help='Read glitch parameters')
     problem_args.add_argument('--skips', type=str, default='10,8000',
                               help='Read skip parameters')
+    problem_args.add_argument('--lose_small_plasmids', action='store_true',
+                              help='If set, then small circular plasmids are lost when the read '
+                                   'length is too high')
+
+
+    other_args = group.add_argument_group('Other')
+    other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                            help='Show this help message and exit')
 
 
 def model_subparser(subparsers):
@@ -137,6 +155,10 @@ def model_subparser(subparsers):
     required_args.add_argument('--max_alt', type=int, default=100,
                                help='Only save up to this many alternatives to each k-mer')
 
+    other_args = group.add_argument_group('Other')
+    other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                            help='Show this help message and exit')
+
 
 def plot_subparser(subparsers):
     group = subparsers.add_parser('plot', description='Plot read window identities',
@@ -153,6 +175,10 @@ def plot_subparser(subparsers):
     required_args = group.add_argument_group('Optional arguments')
     required_args.add_argument('--window', type=int, default=100,
                                help='Window size in bp')
+
+    other_args = group.add_argument_group('Other')
+    other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                            help='Show this help message and exit')
 
 
 if __name__ == '__main__':

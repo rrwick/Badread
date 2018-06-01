@@ -1,6 +1,6 @@
 """
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
-https://github.com/rrwick/Badread/
+https://github.com/rrwick/Badread
 
 This file is part of Badread. Badread is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,9 +19,9 @@ from .misc import load_fasta, load_fastq, reverse_complement
 
 
 def make_error_model(args):
-    refs = load_fasta(args.reference)
+    refs, _, _ = load_fasta(args.reference)
     reads = load_fastq(args.reads)
-    alignments = load_alignments(args.alignments, args.max_alignments)
+    alignments = load_alignments(args.alignment, args.max_alignments)
 
     kmer_list = [''.join(x) for x in itertools.product('ACGT', repeat=args.k_size)]
     kmer_alternatives = {x: collections.defaultdict(int) for x in kmer_list}

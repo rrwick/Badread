@@ -1,6 +1,6 @@
 """
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
-https://github.com/rrwick/Badread/
+https://github.com/rrwick/Badread
 
 The version is stored here in a separate file so it can exist in only one place.
 http://stackoverflow.com/questions/458550
@@ -14,7 +14,10 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import collections
 import gzip
+import random
+import re
 import sys
 
 
@@ -91,7 +94,9 @@ def load_fastq(filename):
 
 
 def load_fasta(filename):
-    fasta_seqs = {}
+    fasta_seqs = collections.OrderedDict()
+    depths, circular = {}, {}
+    p = re.compile('depth=([\d\.]+)')
     with get_open_func(filename)(filename, 'rt') as fasta_file:
         name = ''
         sequence = []
@@ -104,8 +109,31 @@ def load_fasta(filename):
                     fasta_seqs[name.split()[0]] = ''.join(sequence)
                     sequence = []
                 name = line[1:]
+                short_name = name.split()[0]
+                if 'depth=' in name.lower():
+                    depths[short_name] = float(p.search(name.lower()).group(1))
+                else:
+                    depths[short_name] = 1.0
+                circular[short_name] = 'circular=true' in name.lower()
             else:
                 sequence.append(line)
         if name:
             fasta_seqs[name.split()[0]] = ''.join(sequence)
-    return fasta_seqs
+    return fasta_seqs, list(depths.items()), circular
+
+
+RANDOM_SEQ_DICT = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
+
+
+def get_random_base():
+    """
+    Returns a random base with 25% probability of each.
+    """
+    return RANDOM_SEQ_DICT[random.randint(0, 3)]
+
+
+def get_random_sequence(length):
+    """
+    Returns a random sequence of the given length.
+    """
+    return ''.join([get_random_base() for _ in range(length)])

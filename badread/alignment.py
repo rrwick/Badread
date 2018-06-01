@@ -1,6 +1,6 @@
 """
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
-https://github.com/rrwick/Badread/
+https://github.com/rrwick/Badread
 
 The version is stored here in a separate file so it can exist in only one place.
 http://stackoverflow.com/questions/458550

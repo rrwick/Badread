@@ -1,6 +1,6 @@
 """
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
-https://github.com/rrwick/Badread/
+https://github.com/rrwick/Badread
 
 This file is part of Badread. Badread is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,7 +19,7 @@ from .misc import load_fasta, load_fastq, reverse_complement
 
 def plot_window_identity(args):
     reads = load_fastq(args.reads)
-    refs = load_fasta(args.reference)
+    refs, _, _ = load_fasta(args.reference)
     alignments = load_alignments(args.alignment)
 
     for a in alignments:
@@ -50,7 +50,7 @@ def get_window_identity(errors_per_read_pos, window_size, read_start):
 
 
 class MyAxes(matplotlib.axes.Axes):
-    name = "MyAxes"
+    name = 'MyAxes'
 
     def drag_pan(self, button, key, x, y):
         matplotlib.axes.Axes.drag_pan(self, button, 'x', x, y)  # pretend key=='x'
@@ -60,9 +60,9 @@ matplotlib.projections.register_projection(MyAxes)
 
 
 def plot_one_alignment(positions, identities, window_size, alignment, read_length):
-    fig = plt.figure(figsize=(12, 4))
-    fig.add_subplot(111, projection='MyAxes')
-    plt.plot(positions, identities, '-')
+    fig, (ax1) = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
+    ax1.plot(positions, identities, '-', color='#8F0505')
+    # ax1.fill_between(positions, 0, identities, color='#5EA7C9')
     plt.ylabel('% identity ({} bp windows)'.format(window_size))
     plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length,
                                                     alignment.percent_identity))
