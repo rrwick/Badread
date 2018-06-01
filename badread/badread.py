@@ -132,7 +132,7 @@ def model_subparser(subparsers):
     required_args = group.add_argument_group('Optional arguments')
     required_args.add_argument('--k_size', type=int, default=6,
                                help='Error model k-mer size')
-    required_args.add_argument('--max_alignments', type=int, default=100000,
+    required_args.add_argument('--max_alignments', type=int,
                                help='Only use this many alignments when generating error model')
     required_args.add_argument('--max_alt', type=int, default=100,
                                help='Only save up to this many alternatives to each k-mer')
