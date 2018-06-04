@@ -132,8 +132,20 @@ def get_random_base():
     return RANDOM_SEQ_DICT[random.randint(0, 3)]
 
 
+def get_random_different_base(b):
+    random_base = get_random_base()
+    while b == random_base:
+        random_base = get_random_base()
+    return random_base
+
+
 def get_random_sequence(length):
     """
     Returns a random sequence of the given length.
     """
     return ''.join([get_random_base() for _ in range(length)])
+
+
+def random_chance(chance):
+    assert 0.0 <= chance <= 1.0
+    return random.random() < chance

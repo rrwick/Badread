@@ -16,7 +16,8 @@ import random
 import scipy.special
 import sys
 import uuid
-from .misc import load_fasta, get_random_sequence, reverse_complement
+from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance
+from .error_model import ErrorModel
 
 
 def simulate(args):
@@ -30,6 +31,8 @@ def simulate(args):
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter_params)
     end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter_params)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
+
+    error_model = ErrorModel(args.error_model)
 
     total_size = 0
     while total_size < target_size:
@@ -55,7 +58,7 @@ def simulate(args):
         fragment = ''.join(fragment)
 
         seq, quals = sequence_fragment(fragment, beta_a, beta_b, args.max_read_identity,
-                                       args.glitches, args.skips)
+                                       args.glitches, args.skips, error_model)
         read_name = uuid.uuid4()
 
         print('@{} {}'.format(read_name, ','.join(info)))
@@ -68,11 +71,6 @@ def simulate(args):
     # print('', file=sys.stderr)
     # print('N50: {}'.format(get_n50(reads)), file=sys.stderr)
     # print('Mean identity: {:.4f}'.format(get_mean_id(reads)), file=sys.stderr)
-
-
-def random_chance(chance):
-    assert 0.0 <= chance <= 1.0
-    return random.random() < chance
 
 
 def get_ref_contig_weights(ref_seqs, ref_depths):
@@ -133,7 +131,7 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
     else:
         contig = random.choices(ref_contigs, weights=ref_contig_weights)[0]
     info = [contig]
-    if random.choice([0, 1]) == 0:
+    if random_chance(0.5):
         seq = ref_seqs[contig]
         info.append('+strand')
     else:
@@ -182,7 +180,15 @@ def get_junk_fragment(fragment_length):
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, beta_a, beta_b, beta_max, glitches, skips):
+def sequence_fragment(fragment, beta_a, beta_b, beta_max, glitches, skips, error_model):
+
+    # TODO: add glitches
+    # TODO: add skips
+
+    if error_model.type == 'perfect':
+        q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
+        return fragment, q_string
+
     read_identity = beta_max * np.random.beta(beta_a, beta_b)
     # TODO
     # TODO
