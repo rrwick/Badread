@@ -98,6 +98,7 @@ class ErrorModel(object):
             with open(model_type_or_filename, 'rt') as model_file:
                 for line in model_file:
                     kmer = line.split(',', 1)[0]
+                    print('\r  ' + kmer, file=output, end='')
 
                     # All k-mers in the model must be the same size.
                     if self.kmer_size is None:
@@ -110,6 +111,8 @@ class ErrorModel(object):
 
                     self.alternatives[kmer] = [align_kmers(kmer, x[0]) for x in alternatives]
                     self.probabilities[kmer] = [float(x[1]) for x in alternatives]
+            print('\r  done' + ' ' * (self.kmer_size - 4),  # spaces to cover up last k-mer
+                  file=output)
 
     def add_errors_to_kmer(self, kmer):
         """

@@ -13,6 +13,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
 import sys
+from .quickhist import quickhist_beta
 
 
 class Identities(object):
@@ -52,6 +53,7 @@ class Identities(object):
             print('  mean: {}%'.format(self.mean * 100), file=output)
             print('  max:  {}%'.format(self.max_identity * 100), file=output)
             print('  shape: {}'.format(self.shape), file=output)
+            quickhist_beta(self.beta_a, self.beta_b, self.max_identity, 8)
 
     def get_identity(self):
         if self.distribution == 'constant':
