@@ -14,23 +14,71 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+import statistics
 import unittest
 import badread.fragment_lengths
 
 
 class TestConstantFragmentLength(unittest.TestCase):
 
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+
+    def tearDown(self):
+        self.null.close()
+
     def test_constant_length_1(self):
-        pass
+        lengths = badread.fragment_lengths.FragmentLengths('constant', 5000, 1000, output=self.null)
+        for _ in range(100):
+            self.assertEqual(lengths.get_fragment_length(), 5000)
 
     def test_constant_length_2(self):
-        pass
+        lengths = badread.fragment_lengths.FragmentLengths('constant', 5000, 5000, output=self.null)
+        for _ in range(100):
+            self.assertEqual(lengths.get_fragment_length(), 5000)
+
+    def test_constant_length_3(self):
+        lengths = badread.fragment_lengths.FragmentLengths('constant', 8000, 1000, output=self.null)
+        for _ in range(100):
+            self.assertEqual(lengths.get_fragment_length(), 8000)
+
+    def test_constant_length_4(self):
+        # A stdev of 0 will switch the distribution from gamma to constant.
+        lengths = badread.fragment_lengths.FragmentLengths('gamma', 5000, 0, output=self.null)
+        for _ in range(100):
+            self.assertEqual(lengths.get_fragment_length(), 5000)
+
+    def test_constant_length_5(self):
+        # A stdev of 0 will switch the distribution from gamma to constant.
+        lengths = badread.fragment_lengths.FragmentLengths('gamma', 7000, 0, output=self.null)
+        for _ in range(100):
+            self.assertEqual(lengths.get_fragment_length(), 7000)
 
 
 class TestGammaFragmentLength(unittest.TestCase):
 
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.trials = 100000
+
+    def tearDown(self):
+        self.null.close()
+
     def test_gamma_length_1(self):
-        pass
+        lengths = badread.fragment_lengths.FragmentLengths('gamma', 5000, 1000, output=self.null)
+        all_lengths = [lengths.get_fragment_length() for _ in range(self.trials)]
+        self.assertAlmostEqual(statistics.mean(all_lengths), 5000, delta=100)
+        self.assertAlmostEqual(statistics.stdev(all_lengths), 1000, delta=100)
 
     def test_gamma_length_2(self):
-        pass
+        lengths = badread.fragment_lengths.FragmentLengths('gamma', 5000, 3000, output=self.null)
+        all_lengths = [lengths.get_fragment_length() for _ in range(self.trials)]
+        self.assertAlmostEqual(statistics.mean(all_lengths), 5000, delta=100)
+        self.assertAlmostEqual(statistics.stdev(all_lengths), 3000, delta=100)
+
+    def test_gamma_length_3(self):
+        lengths = badread.fragment_lengths.FragmentLengths('gamma', 20000, 30000, output=self.null)
+        all_lengths = [lengths.get_fragment_length() for _ in range(self.trials)]
+        self.assertAlmostEqual(statistics.mean(all_lengths), 20000, delta=1000)
+        self.assertAlmostEqual(statistics.stdev(all_lengths), 30000, delta=1000)

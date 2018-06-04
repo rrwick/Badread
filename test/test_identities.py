@@ -51,32 +51,32 @@ class TestBetaIdentity(unittest.TestCase):
     def test_beta_identity_1(self):
         identities = badread.identities.Identities('beta', 90, 4, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_2(self):
         identities = badread.identities.Identities('beta', 90, 4, 95, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_3(self):
         identities = badread.identities.Identities('beta', 90, 4, 90, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_4(self):
         identities = badread.identities.Identities('beta', 90, 3, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_5(self):
         identities = badread.identities.Identities('beta', 90, 2, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_6(self):
         identities = badread.identities.Identities('beta', 90, 8, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
-        self.assertAlmostEqual(mean, 0.9, places=2)
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
 
 class TestPerfectErrorModel(unittest.TestCase):

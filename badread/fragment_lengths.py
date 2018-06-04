@@ -24,7 +24,11 @@ class FragmentLengths(object):
         self.stdev = stdev
         assert distribution == 'constant' or distribution == 'gamma'
         print('', file=output)
-        if distribution == 'constant':
+        if self.distribution == 'gamma' and self.stdev == 0:
+            print('Switching from "gamma" to "constant" read length distribution because '
+                  'stdev equals 0', file=output)
+            self.distribution = 'constant'
+        if self.distribution == 'constant':
             self.gamma_k, self.gamma_t = None, None
             print('Using a constant fragment length of {} bp'.format(mean), file=output)
         else:  # gamma distribution
