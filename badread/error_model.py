@@ -22,7 +22,7 @@ from .misc import load_fasta, load_fastq, reverse_complement, random_chance, get
     get_random_different_base
 
 
-def make_error_model(args):
+def make_error_model(args, output=sys.stderr):
     refs, _, _ = load_fasta(args.reference)
     reads = load_fastq(args.reads)
     alignments = load_alignments(args.alignment, args.max_alignments)
@@ -31,7 +31,7 @@ def make_error_model(args):
     kmer_alternatives = {x: collections.defaultdict(int) for x in kmer_list}
 
     i = 0
-    print('Processing alignments', end='', file=sys.stderr, flush=True)
+    print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
         # print(a)
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
@@ -58,8 +58,8 @@ def make_error_model(args):
             end += 1
         i += 1
         if i % 1000 == 0:
-            print('.', end='', file=sys.stderr, flush=True)
-    print('', file=sys.stderr, flush=True)
+            print('.', end='', file=output, flush=True)
+    print('', file=output, flush=True)
 
     for kmer in kmer_list:
         alternatives = kmer_alternatives[kmer]
@@ -76,19 +76,24 @@ def make_error_model(args):
 
 class ErrorModel(object):
 
-    def __init__(self, model_type_or_filename):
+    def __init__(self, model_type_or_filename, output=sys.stderr):
         self.kmer_size = None
         self.alternatives = {}
         self.probabilities = {}
         self.mutations_by_base = {}
 
+        print('', file=output)
         if model_type_or_filename == 'random':
+            print('Using a random error model', file=output)
             self.type = 'random'
             self.kmer_size = 1
         elif model_type_or_filename == 'perfect':
+            print('Using a perfect error model (reads will have no base-level errors)',
+                  file=output)
             self.type = 'perfect'
             self.kmer_size = 1
         else:
+            print('Loading error model from {}'.format(model_type_or_filename), file=output)
             self.type = 'model'
             with open(model_type_or_filename, 'rt') as model_file:
                 for line in model_file:

@@ -151,8 +151,10 @@ class TestLoadErrorModel(unittest.TestCase):
     Loads a simple 4-mer error model from a file and makes sure it looks okay.
     """
     def setUp(self):
+        null = open(os.devnull, 'w')
         model_filename = os.path.join(os.path.dirname(__file__), '4-mer_model')
-        self.model = badread.error_model.ErrorModel(model_filename)
+        self.model = badread.error_model.ErrorModel(model_filename, output=null)
+        null.close()
 
     def test_k_size(self):
         self.assertEqual(self.model.kmer_size, 4)
@@ -187,8 +189,10 @@ class Test4MerErrorModel(unittest.TestCase):
     Uses a simple 4-mer error model to make errors.
     """
     def setUp(self):
+        null = open(os.devnull, 'w')
         model_filename = os.path.join(os.path.dirname(__file__), '4-mer_model')
-        self.model = badread.error_model.ErrorModel(model_filename)
+        self.model = badread.error_model.ErrorModel(model_filename, output=null)
+        null.close()
 
     def test_ACAC(self):
         # The model never gets this k-mer wrong.
@@ -290,7 +294,9 @@ class TestRandomErrorModel(unittest.TestCase):
     Tests a random error model (i.e. an error model not based on k-mers and loaded from a file).
     """
     def setUp(self):
-        self.model = badread.error_model.ErrorModel('random')
+        null = open(os.devnull, 'w')
+        self.model = badread.error_model.ErrorModel('random', output=null)
+        null.close()
 
     def test_k_size(self):
         self.assertEqual(self.model.kmer_size, 1)
@@ -343,7 +349,9 @@ class TestPerfectErrorModel(unittest.TestCase):
     Tests a perfect error model (no errors ever added to k-mers).
     """
     def setUp(self):
-        self.model = badread.error_model.ErrorModel('perfect')
+        null = open(os.devnull, 'w')
+        self.model = badread.error_model.ErrorModel('perfect', output=null)
+        null.close()
 
     def test_k_size(self):
         self.assertEqual(self.model.kmer_size, 1)

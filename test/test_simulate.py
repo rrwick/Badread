@@ -14,8 +14,11 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 import unittest
 import badread.simulate
+import badread.identities
+import badread.error_model
 
 
 class TestPerfectSequenceFragment(unittest.TestCase):
@@ -23,11 +26,16 @@ class TestPerfectSequenceFragment(unittest.TestCase):
     Tests the sequence_fragment function with a perfect error model.
     """
     def setUp(self):
-        self.model = badread.error_model.ErrorModel('perfect')
+        self.null = open(os.devnull, 'w')
+        self.model = badread.error_model.ErrorModel('perfect', output=self.null)
+
+    def tearDown(self):
+        self.null.close()
 
     def test_sequence_fragment_1(self):
+        identities = badread.identities.Identities('beta', 100, 4, 100, output=self.null)
         frag = 'GACCCAGTTTTTTTACTGATTCAGCGTAGGTGCTCTGATCTTCACGCATCTTTGACCGCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, 0.0, 0.0, 0.0, 0.0, 0.0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, identities, 0.0, 0.0, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:
@@ -35,8 +43,9 @@ class TestPerfectSequenceFragment(unittest.TestCase):
 
     def test_sequence_fragment_2(self):
         # Beta distribution parameters are ignored for perfect error models.
+        identities = badread.identities.Identities('beta', 85, 4, 95, output=self.null)
         frag = 'TATAAAGACCCCACTTTTGAAGCCAGAGGTAATGGCCGTGATGGCGTTAAATTCCCTTCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, 0.5, 0.5, 0.5, 0.0, 0.0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, identities, 0.0, 0.0, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:

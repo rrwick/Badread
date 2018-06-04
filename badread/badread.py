@@ -12,6 +12,7 @@ If not, see <http://www.gnu.org/licenses/>.
 """
 
 import argparse
+import pathlib
 import sys
 from .help_formatter import MyParser, MyHelpFormatter
 from .version import __version__
@@ -49,6 +50,7 @@ def main():
     args = parser.parse_args()
 
     if args.subparser_name == 'simulate':
+        check_simulate_args(args)
         from .simulate import simulate
         simulate(args)
 
@@ -72,32 +74,36 @@ def simulate_subparser(subparsers):
                                help='Either an absolute value (e.g. 250M) or a relative depth '
                                     '(e.g. 25x)')
 
-    length_args = group.add_argument_group('Read lengths',
-                                           description='Read fragments are generated with a '
-                                                       'gamma distribution: '
+    length_args = group.add_argument_group('Fragment lengths',
+                                           description='If "--lengths constant" is used, all '
+                                                       'fragments will be the same length (set by '
+                                                       '--mean_frag_length). If "--frag_lengths '
+                                                       'gamma" is used, lengths will generated '
+                                                       'from a gamma distribution: '
                                                        'desmos.com/calculator/rddlqip1if')
-    length_args.add_argument('--mean_read_length', type=int, default=10000,
-                             help='Mean read length (in bp)')
-    length_args.add_argument('--read_length_stdev', type=int, default=9000,
-                             help='Read length standard deviation (in bp)')
-    length_args.add_argument('--min_read_length', type=int, default=25,
-                             help='Regardless of the distribution, no reads shorter than this '
-                                  'will be outputted')
+    length_args.add_argument('--lengths', type=str, choices=['constant', 'gamma'],
+                             default='gamma', help='Fragment length distribution')
+    length_args.add_argument('--mean_frag_length', type=int, default=10000,
+                             help='Mean fragment length (in bp)')
+    length_args.add_argument('--frag_length_stdev', type=int, default=9000,
+                             help='Gamma distribution standard deviation (in bp)')
 
     id_args = group.add_argument_group('Read identities',
                                        description='Read identities are generated with a beta '
                                                    'distribution: '
                                                    'desmos.com/calculator/t03zr2thap')
-    id_args.add_argument('--mean_read_identity', type=float, default=0.85,
-                         help='Mean read length (in bp)')
-    id_args.add_argument('--read_identity_dist_shape', type=int, default=4,
+    id_args.add_argument('--error_model', type=str, default='random',
+                         help='Can be "random" (for random errors), "perfect" (for no errors) or '
+                              'a filename for a read error model (for realistic errors)')
+    id_args.add_argument('--identities', choices=['constant', 'beta'],
+                         default='beta', help='Sequencing identity distribution')
+    id_args.add_argument('--mean_identity', type=float, default=85,
+                         help='Mean read identity (as a percentage)')
+    id_args.add_argument('--max_identity', type=float, default=95,
+                         help='Maximum read identity (as a percentage)')
+    id_args.add_argument('--identity_shape', type=int, default=4,
                          help='Shape parameter - large values produce a tighter distribution '
                               'around the mean')
-    id_args.add_argument('--max_read_identity', type=float, default=0.95,
-                         help='The entire beta distribution is scaled to max out at this value')
-    id_args.add_argument('--error_model', type=str,
-                         help='If provided, will use this to simulate realistic errors (otherwise '
-                              'errors are random)')
 
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
@@ -129,7 +135,6 @@ def simulate_subparser(subparsers):
                               help='If set, then small circular plasmids are lost when the read '
                                    'length is too high')
 
-
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
@@ -148,11 +153,11 @@ def model_subparser(subparsers):
                                help='PAF alignment of reads aligned to reference')
 
     required_args = group.add_argument_group('Optional arguments')
-    required_args.add_argument('--k_size', type=int, default=6,
+    required_args.add_argument('--k_size', type=int, default=7,
                                help='Error model k-mer size')
     required_args.add_argument('--max_alignments', type=int,
                                help='Only use this many alignments when generating error model')
-    required_args.add_argument('--max_alt', type=int, default=100,
+    required_args.add_argument('--max_alt', type=int, default=25,
                                help='Only save up to this many alternatives to each k-mer')
 
     other_args = group.add_argument_group('Other')
@@ -179,6 +184,19 @@ def plot_subparser(subparsers):
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
+
+
+def check_simulate_args(args):
+    args.error_model = args.error_model.lower()
+    if args.error_model != 'perfect' and args.error_model != 'random':
+        if not pathlib.Path(args.error_model).is_file():
+            sys.exit('Error: {} is not a file\n'
+                     '  --error_model must be "random", "perfect" or a '
+                     'filename'.format(args.error_model))
+
+    if args.mean_identity > args.max_identity:
+        sys.exit('Error: mean identity ({}) cannot be larger than max '
+                 'identity ({})'.format(args.mean_identity, args.max_identity))
 
 
 if __name__ == '__main__':
