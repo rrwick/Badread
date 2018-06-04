@@ -11,6 +11,7 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import edlib
 import numpy as np
 import random
 import sys
@@ -204,19 +205,57 @@ def sequence_fragment(fragment, identities, glitches, skips, error_model):
         return fragment, q_string
 
     read_identity = identities.get_identity()
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    # TODO
-    return fragment, 'A' * len(fragment)
+
+    # Buffer the fragment a bit so errors can be added to the first and last bases.
+    k_size = error_model.kmer_size
+    start_buffer = get_random_sequence(k_size)
+    end_buffer = get_random_sequence(k_size)
+    fragment = start_buffer + fragment + end_buffer
+
+    # A list to hold the bases for the errors-added fragment.
+    new_fragment_bases = [x for x in fragment]
+
+    number_of_changes = 0
+    target_changes = int(round((1.0 - read_identity) * len(fragment)))
+    max_kmer_index = len(new_fragment_bases) - 1 - k_size
+    while True:
+        i = random.randint(0, max_kmer_index)
+        kmer = fragment[i:i+k_size]
+        new_kmer = error_model.add_errors_to_kmer(kmer)
+
+        # If the error model didn't make any changes (quite common with a non-random error model),
+        # we just try again at a different position.
+        if kmer == ''.join(new_kmer):
+            continue
+
+        for j in range(k_size):
+            fragment_base = fragment[i+j]
+            new_base = new_kmer[j]  # can actually be more than one base, in cases of insertion
+
+            # If this base is changed in the k-mer and hasn't already been changed, then we apply
+            # the change.
+            if new_base != fragment_base and fragment_base == new_fragment_bases[i+j]:
+                new_fragment_bases[i+j] = new_base
+                if len(new_base) == 0:
+                    number_of_changes += len(fragment_base)
+                else:
+                    number_of_changes += edlib.align(fragment_base, new_base)['editDistance']
+
+        if number_of_changes >= target_changes:
+            break
+
+    # Remove the buffer bases.
+    new_fragment_bases = new_fragment_bases[k_size:-k_size]
+    seq = ''.join(new_fragment_bases)
+
+    qual = 'A' * len(seq)
+    # TODO: Phred quality scores
+    # TODO: Phred quality scores
+    # TODO: Phred quality scores
+    # TODO: Phred quality scores
+    # TODO: Phred quality scores
+
+    return seq, qual
 
 
 def get_start_adapter(rate, amount, adapter):

@@ -123,22 +123,25 @@ class ErrorModel(object):
             return add_one_random_change(kmer)
         elif self.type == 'perfect':
             return [x for x in kmer]
-        else:  # file-based error model
-            alts = self.alternatives[kmer]
-            probs = self.probabilities[kmer]
 
-            # The model probabilities for alternate k-mers should total to 1 or a bit less than 1.
-            # If less, then the remaining probability is given to random change.
-            random_change_prob = 1.0 - sum(probs)
-            if random_change_prob > 0.0:
-                alts.append(None)
-                probs.append(random_change_prob)
+        if kmer not in self.alternatives:
+            return add_one_random_change(kmer)
 
-            alt = random.choices(alts, weights=probs)[0]
-            if alt is None:
-                return add_one_random_change(kmer)
-            else:
-                return alt
+        alts = self.alternatives[kmer]
+        probs = self.probabilities[kmer]
+
+        # The model probabilities for alternate k-mers should total to 1 or a bit less than 1.
+        # If less, then the remaining probability is given to random change.
+        random_change_prob = 1.0 - sum(probs)
+        if random_change_prob > 0.0:
+            alts.append(None)
+            probs.append(random_change_prob)
+
+        alt = random.choices(alts, weights=probs)[0]
+        if alt is None:
+            return add_one_random_change(kmer)
+        else:
+            return alt
 
 
 def add_one_random_change(kmer):
