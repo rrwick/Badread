@@ -210,3 +210,18 @@ def align_kmers(kmer, alt):
         result[0] = first_base
         result[1] = inserted_base + result[1]
     return result
+
+
+def identity_from_edlib_cigar(cigar):
+    matches, alignment_length = 0, 0
+    cigar_parts = re.findall(r'\d+[IDX=]', cigar)
+    for c in cigar_parts:
+        cigar_type = c[-1]
+        cigar_size = int(c[:-1])
+        alignment_length += cigar_size
+        if cigar_type == '=':
+            matches += cigar_size
+    try:
+        return matches / alignment_length
+    except ZeroDivisionError:
+        return 0.0
