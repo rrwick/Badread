@@ -33,7 +33,6 @@ def make_error_model(args, output=sys.stderr):
     i = 0
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
-        # print(a)
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
         if a.strand == '-':

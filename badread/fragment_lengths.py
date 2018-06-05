@@ -42,7 +42,7 @@ class FragmentLengths(object):
             n50 = int(round(find_n_value(gamma_a, gamma_b, 50)))
             print('  theoretical N50: {} bp'.format(n50),
                   file=output)
-            quickhist_gamma(gamma_a, gamma_b, n50, 8)
+            quickhist_gamma(gamma_a, gamma_b, n50, 8, output=output)
 
     def get_fragment_length(self):
         if self.distribution == 'constant':
@@ -74,8 +74,6 @@ def find_n_value(a, b, n):
     while True:
         integral = base_distribution_integral(a, b, guess)
         if top_range - bottom_range < 0.01:
-            return guess
-        if guess == target:
             return guess
         elif integral < target:
             bottom_range = guess

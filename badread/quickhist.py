@@ -41,35 +41,33 @@ import sys
 
 
 def draw_hist(y, shape, bins, height, x_tick_interval, y_label='', y_label_space=0,
-              print_labels=True):
+              print_labels=True, output=sys.stderr):
     max_count = max(y)
     normed_hist_list = [float(x) * height / max_count for x in y]
 
     # Build plot from top level
     i = 0
     for depth in range(height-1, -1, -1):
-        # print(' │', end='', file=sys.stderr)  # y axis
-        # print(' ', end='', file=sys.stderr)
         if 0 <= i-y_label_space < len(y_label):
-            print(y_label[i-2], end='', file=sys.stderr)
+            print(y_label[i-2], end='', file=output)
         else:
-            print(' ', end='', file=sys.stderr)
-        print(' │', end='', file=sys.stderr)
+            print(' ', end='', file=output)
+        print(' │', end='', file=output)
 
         for item in normed_hist_list:
             floored_item = math.floor(item)
             if floored_item >= depth:
                 if floored_item == depth and 0.75 > item % 1 > 0.25:
-                    print('\u2596', end='', file=sys.stderr)  # half bar
+                    print('\u2596', end='', file=output)  # half bar
                 elif floored_item == depth and item % 1 > 0.75:
-                    print('\u258c', end='', file=sys.stderr)  # full bar
+                    print('\u258c', end='', file=output)  # full bar
                 elif floored_item > depth:
-                    print('\u258c', end='', file=sys.stderr)  # full bar
+                    print('\u258c', end='', file=output)  # full bar
                 else:
-                    print(' ', end='', file=sys.stderr)
+                    print(' ', end='', file=output)
             else:
-                print(' ', end='', file=sys.stderr)
-        print('', file=sys.stderr)
+                print(' ', end='', file=output)
+        print('', file=output)
         i += 1
 
     # Draw X axis with labels
@@ -88,12 +86,12 @@ def draw_hist(y, shape, bins, height, x_tick_interval, y_label='', y_label_space
         else:
             line += '─'
             labels += ' ' * (len(line) - len(labels))
-    print(line, file=sys.stderr)
+    print(line, file=output)
     if print_labels:
-        print(labels, file=sys.stderr)
+        print(labels, file=output)
 
 
-def quickhist_gamma(a, b, n50, height):
+def quickhist_gamma(a, b, n50, height, output=sys.stderr):
     hist_max = int(math.ceil(n50 * 3 / 2000) * 2000)
     tick_interval = 10
     if get_max_width() > 120:
@@ -107,11 +105,12 @@ def quickhist_gamma(a, b, n50, height):
         frags_y.append((b ** a) * (x ** (a-1)) * (np.exp(-x * b) / (scipy.special.gamma(a))))
         bases_y.append((b ** (a+1)) * (x ** a) * (np.exp(-x * b) / (scipy.special.gamma(a+1))))
     shape = (0, hist_max)
-    draw_hist(frags_y, shape, len(bins), height, tick_interval, 'frags', 2, print_labels=False)
-    draw_hist(bases_y, shape, len(bins), height, tick_interval, 'bases', 2)
+    draw_hist(frags_y, shape, len(bins), height, tick_interval, 'frags', 2, print_labels=False,
+              output=output)
+    draw_hist(bases_y, shape, len(bins), height, tick_interval, 'bases', 2, output=output)
 
 
-def quickhist_beta(a, b, max_identity, height):
+def quickhist_beta(a, b, max_identity, height, output=sys.stderr):
     hist_min, hist_max = 50, 100
     tick_interval = 10
     if get_max_width() > 120:
@@ -128,7 +127,7 @@ def quickhist_beta(a, b, max_identity, height):
             y.append(0.0)
     bins *= max_identity
     shape = (hist_min, hist_max)
-    draw_hist(y, shape, len(bins), height, tick_interval)
+    draw_hist(y, shape, len(bins), height, tick_interval, output=output)
 
 
 def get_terminal_size_stderr(fallback=(80, 24)):

@@ -60,7 +60,9 @@ def simulate(args):
         fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter))
         fragment = ''.join(fragment)
 
-        seq, quals = sequence_fragment(fragment, identities, args.glitches, args.skips, error_model)
+        read_identity = identities.get_identity()
+        seq, quals = sequence_fragment(fragment, read_identity, args.glitches, args.skips,
+                                       error_model)
         read_name = uuid.uuid4()
 
         print('@{} {}'.format(read_name, ','.join(info)))
@@ -195,7 +197,7 @@ def get_junk_fragment(fragment_length):
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, identities, glitches, skips, error_model):
+def sequence_fragment(fragment, read_identity, glitches, skips, error_model):
 
     # TODO: add glitches
     # TODO: add skips
@@ -203,8 +205,6 @@ def sequence_fragment(fragment, identities, glitches, skips, error_model):
     if error_model.type == 'perfect':
         q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
         return fragment, q_string
-
-    read_identity = identities.get_identity()
 
     # Buffer the fragment a bit so errors can be added to the first and last bases.
     k_size = error_model.kmer_size
@@ -219,6 +219,8 @@ def sequence_fragment(fragment, identities, glitches, skips, error_model):
     target_changes = int(round((1.0 - read_identity) * len(fragment)))
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
     while True:
+        if number_of_changes >= target_changes:
+            break
         i = random.randint(0, max_kmer_index)
         kmer = fragment[i:i+k_size]
         new_kmer = error_model.add_errors_to_kmer(kmer)
@@ -240,9 +242,6 @@ def sequence_fragment(fragment, identities, glitches, skips, error_model):
                     number_of_changes += len(fragment_base)
                 else:
                     number_of_changes += edlib.align(fragment_base, new_base)['editDistance']
-
-        if number_of_changes >= target_changes:
-            break
 
     # Remove the buffer bases.
     new_fragment_bases = new_fragment_bases[k_size:-k_size]

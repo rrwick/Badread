@@ -53,7 +53,7 @@ class Identities(object):
             print('  mean: {}%'.format(self.mean * 100), file=output)
             print('  max:  {}%'.format(self.max_identity * 100), file=output)
             print('  shape: {}'.format(self.shape), file=output)
-            quickhist_beta(self.beta_a, self.beta_b, self.max_identity, 8)
+            quickhist_beta(self.beta_a, self.beta_b, self.max_identity, 8, output=output)
 
     def get_identity(self):
         if self.distribution == 'constant':

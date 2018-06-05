@@ -160,12 +160,14 @@ class TestLoadErrorModel(unittest.TestCase):
         self.assertEqual(self.model.kmer_size, 4)
 
     def test_kmers(self):
-        self.assertEqual(len(self.model.alternatives), 256)
-        self.assertEqual(len(self.model.probabilities), 256)
+        """ The test 4-mer error model has all possible 4-mers except for ACGA. """
+        self.assertEqual(len(self.model.alternatives), 255)
+        self.assertEqual(len(self.model.probabilities), 255)
         all_4_mers = [''.join(x) for x in itertools.product('ACGT', repeat=4)]
         for kmer in all_4_mers:
-            self.assertTrue(kmer in self.model.alternatives)
-            self.assertTrue(kmer in self.model.probabilities)
+            if kmer != 'ACGA':
+                self.assertTrue(kmer in self.model.alternatives)
+                self.assertTrue(kmer in self.model.probabilities)
 
     def test_specifics_1(self):
         alts = self.model.alternatives['AAAA']
@@ -287,6 +289,20 @@ class Test4MerErrorModel(unittest.TestCase):
 
         # There are 45 new k-mers in total: 44 random one-change k-mers and the correct k-mer.
         self.assertEqual(len(new_kmers), 45)
+
+    def test_ACGA(self):
+        # This k-mer is not in the model, and so it should always be given a random error.
+        correct_count = 0
+        new_kmers = set()
+        for i in range(10000):
+            new_kmer = self.model.add_errors_to_kmer('ACGA')
+            if new_kmer == ['A', 'C', 'G', 'A']:
+                correct_count += 1
+            new_kmers.add('_'.join(new_kmer))
+        self.assertEqual(correct_count, 0)
+
+        # There are 44 random one-change k-mers (the correct k-mer never occurs).
+        self.assertEqual(len(new_kmers), 44)
 
 
 class TestRandomErrorModel(unittest.TestCase):

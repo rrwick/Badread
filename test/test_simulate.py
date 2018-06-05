@@ -14,11 +14,14 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import edlib
 import os
+import random
 import unittest
 import badread.simulate
 import badread.identities
 import badread.error_model
+import badread.misc
 
 
 class TestPerfectSequenceFragment(unittest.TestCase):
@@ -33,9 +36,8 @@ class TestPerfectSequenceFragment(unittest.TestCase):
         self.null.close()
 
     def test_sequence_fragment_1(self):
-        identities = badread.identities.Identities('beta', 100, 4, 100, output=self.null)
         frag = 'GACCCAGTTTTTTTACTGATTCAGCGTAGGTGCTCTGATCTTCACGCATCTTTGACCGCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, identities, 0.0, 0.0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, 1.0, None, None, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:
@@ -43,10 +45,58 @@ class TestPerfectSequenceFragment(unittest.TestCase):
 
     def test_sequence_fragment_2(self):
         # Beta distribution parameters are ignored for perfect error models.
-        identities = badread.identities.Identities('beta', 85, 4, 95, output=self.null)
         frag = 'TATAAAGACCCCACTTTTGAAGCCAGAGGTAATGGCCGTGATGGCGTTAAATTCCCTTCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, identities, 0.0, 0.0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, 0.9, None, None, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:
             self.assertTrue(q in 'ABCDEFGHI')
+
+
+class TestRandomErrorSequenceFragment(unittest.TestCase):
+    """
+    Tests the sequence_fragment function with a perfect error model.
+    """
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.model = badread.error_model.ErrorModel('random', output=self.null)
+        self.trials = 100
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_70_identity(self):
+        identity_sum = 0.0
+        for _ in range(self.trials):
+            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
+            seq, qual = badread.simulate.sequence_fragment(frag, 0.7, None, None, self.model)
+            identity_sum += 1.0 - (edlib.align(frag, seq, task='path')['editDistance'] / len(frag))
+        mean_identity = identity_sum / self.trials
+        self.assertAlmostEqual(mean_identity, 0.7, delta=0.001)
+
+    def test_80_identity(self):
+        identity_sum = 0.0
+        for _ in range(self.trials):
+            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
+            seq, qual = badread.simulate.sequence_fragment(frag, 0.8, None, None, self.model)
+            identity_sum += 1.0 - (edlib.align(frag, seq, task='path')['editDistance'] / len(frag))
+        mean_identity = identity_sum / self.trials
+        self.assertAlmostEqual(mean_identity, 0.8, delta=0.001)
+
+    def test_90_identity(self):
+        identity_sum = 0.0
+        for _ in range(self.trials):
+            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
+            seq, qual = badread.simulate.sequence_fragment(frag, 0.9, None, None, self.model)
+            identity_sum += 1.0 - (edlib.align(frag, seq, task='path')['editDistance'] / len(frag))
+        mean_identity = identity_sum / self.trials
+        self.assertAlmostEqual(mean_identity, 0.9, delta=0.001)
+
+    def test_100_identity(self):
+        identity_sum = 0.0
+        for _ in range(self.trials):
+            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
+            seq, qual = badread.simulate.sequence_fragment(frag, 1.0, None, None, self.model)
+            identity_sum += 1.0 - (edlib.align(frag, seq, task='path')['editDistance'] / len(frag))
+        mean_identity = identity_sum / self.trials
+        self.assertEqual(mean_identity, 1.0)
