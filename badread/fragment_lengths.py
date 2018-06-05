@@ -42,7 +42,7 @@ class FragmentLengths(object):
             n50 = int(round(find_n_value(gamma_a, gamma_b, 50)))
             print('  theoretical N50: {} bp'.format(n50),
                   file=output)
-            quickhist_gamma(self.gamma_k, self.gamma_t, n50, 8)
+            quickhist_gamma(gamma_a, gamma_b, n50, 8)
 
     def get_fragment_length(self):
         if self.distribution == 'constant':
