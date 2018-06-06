@@ -17,7 +17,7 @@ import random
 import sys
 import uuid
 from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance
-from .error_model import ErrorModel
+from .error_model import ErrorModel, identity_from_edlib_cigar
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
 
@@ -197,7 +197,7 @@ def get_junk_fragment(fragment_length):
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, read_identity, glitches, skips, error_model):
+def sequence_fragment(fragment, target_identity, glitches, skips, error_model):
 
     # TODO: add glitches
     # TODO: add skips
@@ -208,19 +208,29 @@ def sequence_fragment(fragment, read_identity, glitches, skips, error_model):
 
     # Buffer the fragment a bit so errors can be added to the first and last bases.
     k_size = error_model.kmer_size
-    start_buffer = get_random_sequence(k_size)
-    end_buffer = get_random_sequence(k_size)
-    fragment = start_buffer + fragment + end_buffer
+    fragment = get_random_sequence(k_size) + fragment + get_random_sequence(k_size)
+    frag_len = len(fragment)
 
-    # A list to hold the bases for the errors-added fragment.
+    # A list to hold the bases for the errors-added fragment. Note that these values can be ''
+    # (meaning the base was deleted) or more than one base (meaning there was an insertion).
     new_fragment_bases = [x for x in fragment]
 
-    number_of_changes = 0
-    target_changes = int(round((1.0 - read_identity) * len(fragment)))
+    errors = 0.0
+    change_count = 0
+
+    # # The target identity is the threshold below which we stop adding errors. It is therefore a
+    # # little bit higher than the identity we're aiming for.
+    # target_identity = 1.0 - ((1.0 - target_identity) * ((frag_len - 1) / frag_len))
+
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
     while True:
-        if number_of_changes >= target_changes:
+
+        # To gauge the identity, we first use the number of changes we've added to the fragment,
+        # which will probably under-estimate the identity, but it's fast.
+        estimated_identity = 1.0 - (errors / frag_len)
+        if estimated_identity <= target_identity:
             break
+
         i = random.randint(0, max_kmer_index)
         kmer = fragment[i:i+k_size]
         new_kmer = error_model.add_errors_to_kmer(kmer)
@@ -238,10 +248,19 @@ def sequence_fragment(fragment, read_identity, glitches, skips, error_model):
             # the change.
             if new_base != fragment_base and fragment_base == new_fragment_bases[i+j]:
                 new_fragment_bases[i+j] = new_base
-                if len(new_base) == 0:
-                    number_of_changes += len(fragment_base)
-                else:
-                    number_of_changes += edlib.align(fragment_base, new_base)['editDistance']
+                change_count += 1
+                if len(new_base) < 2:  # deletion or substitution
+                    errors += 1
+                else:  # insertion
+                    errors += len(new_base) - 1
+
+                # Every now and then we actually align the new sequence to its original to get a
+                # more accurate estimate of edit distance.
+                # TODO: this is too slow! I need something more efficient...
+                if change_count % 10 == 0:
+                    cigar = edlib.align(fragment, ''.join(new_fragment_bases), task='path')['cigar']
+                    actual_identity = identity_from_edlib_cigar(cigar)
+                    errors = (1.0 - actual_identity) * frag_len
 
     # Remove the buffer bases.
     new_fragment_bases = new_fragment_bases[k_size:-k_size]

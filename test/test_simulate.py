@@ -54,107 +54,60 @@ class TestPerfectSequenceFragment(unittest.TestCase):
             self.assertTrue(q in 'ABCDEFGHI')
 
 
-class TestRandomErrorSequenceFragment(unittest.TestCase):
+class TestSequenceFragment(unittest.TestCase):
     """
     Tests the sequence_fragment function with a random error model.
     """
     def setUp(self):
         self.null = open(os.devnull, 'w')
-        self.model = badread.error_model.ErrorModel('random', output=self.null)
-        self.trials = 100
+        self.trials = 20
+        self.identities_to_test = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65]
+        self.read_lengths_to_test = [10000, 1000]
+        self.read_delta = 0.01
+        self.mean_delta = 0.002
+        print()  # TEMP
 
     def tearDown(self):
         self.null.close()
 
-    def test_random_70_identity(self):
+    def identity_test(self, target_identity, read_length, model):
         identity_sum = 0.0
         for _ in range(self.trials):
-            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-            seq, qual = badread.simulate.sequence_fragment(frag, 0.7, None, None, self.model)
-            identity_sum += 1.0 - (edlib.align(frag, seq, task='path')['editDistance'] / len(frag))
-        mean_identity = identity_sum / self.trials
-        self.assertAlmostEqual(mean_identity, 0.7, delta=0.001)
-
-    def test_random_80_identity(self):
-        identity_sum = 0.0
-        for _ in range(self.trials):
-            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-            seq, qual = badread.simulate.sequence_fragment(frag, 0.8, None, None, self.model)
+            frag = badread.misc.get_random_sequence(read_length)
+            seq, qual = badread.simulate.sequence_fragment(frag, target_identity, None, None, model)
             cigar = edlib.align(frag, seq, task='path')['cigar']
-            identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
+            read_identity = badread.error_model.identity_from_edlib_cigar(cigar)
+            identity_sum += read_identity
+
+            # if target_identity == 1.0:
+            #     self.assertEqual(read_identity, 1.0)
+            # else:
+            #     self.assertAlmostEqual(read_identity, target_identity, delta=self.read_delta)
+
         mean_identity = identity_sum / self.trials
-        self.assertAlmostEqual(mean_identity, 0.8, delta=0.001)
+        # if target_identity == 1.0:
+        #     self.assertEqual(mean_identity, 1.0)
+        # else:
+        #     self.assertAlmostEqual(mean_identity, target_identity, delta=self.mean_delta)
 
-    def test_random_90_identity(self):
-        identity_sum = 0.0
-        for _ in range(self.trials):
-            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-            seq, qual = badread.simulate.sequence_fragment(frag, 0.9, None, None, self.model)
-            cigar = edlib.align(frag, seq, task='path')['cigar']
-            identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-        mean_identity = identity_sum / self.trials
-        self.assertAlmostEqual(mean_identity, 0.9, delta=0.001)
+        print('\t'.join(str(x) for x in [read_length, model.type, target_identity, mean_identity]))  # TEMP
 
-    def test_random_100_identity(self):
-        identity_sum = 0.0
-        for _ in range(self.trials):
-            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-            seq, qual = badread.simulate.sequence_fragment(frag, 1.0, None, None, self.model)
-            cigar = edlib.align(frag, seq, task='path')['cigar']
-            identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-        mean_identity = identity_sum / self.trials
-        self.assertEqual(mean_identity, 1.0)
+    def test_random_identity(self):
+        model = badread.error_model.ErrorModel('random', output=self.null)
+        for identity in self.identities_to_test:
+            for read_length in self.read_lengths_to_test:
+                self.identity_test(identity, read_length, model)
 
-
-class TestNanoporeSequenceFragment(unittest.TestCase):
-    """
-    Tests the sequence_fragment function with a Nanopore-based error model.
-    """
-    def setUp(self):
-        self.null = open(os.devnull, 'w')
-        self.trials = 100
+    def test_nanopore_identity(self):
         model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'nanopore_7-mer_model'
-        self.model = badread.error_model.ErrorModel(model_file, output=self.null)
+        model = badread.error_model.ErrorModel(model_file, output=self.null)
+        for identity in self.identities_to_test:
+            for read_length in self.read_lengths_to_test:
+                self.identity_test(identity, read_length, model)
 
-    def tearDown(self):
-        self.null.close()
-    #
-    # def test_nanopore_70_identity(self):
-    #     identity_sum = 0.0
-    #     for _ in range(self.trials):
-    #         frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-    #         seq, qual = badread.simulate.sequence_fragment(frag, 0.7, None, None, self.model)
-    #         cigar = edlib.align(frag, seq, task='path')['cigar']
-    #         identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-    #     mean_identity = identity_sum / self.trials
-    #     self.assertAlmostEqual(mean_identity, 0.7, delta=0.001)
-    #
-    # def test_nanopore_80_identity(self):
-    #     identity_sum = 0.0
-    #     for _ in range(self.trials):
-    #         frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-    #         seq, qual = badread.simulate.sequence_fragment(frag, 0.8, None, None, self.model)
-    #         cigar = edlib.align(frag, seq, task='path')['cigar']
-    #         identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-    #     mean_identity = identity_sum / self.trials
-    #     self.assertAlmostEqual(mean_identity, 0.8, delta=0.001)
-
-    def test_nanopore_90_identity(self):
-        identity_sum = 0.0
-        for _ in range(self.trials):
-            frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-            seq, qual = badread.simulate.sequence_fragment(frag, 0.9, None, None, self.model)
-            cigar = edlib.align(frag, seq, task='path')['cigar']
-            identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-        mean_identity = identity_sum / self.trials
-        self.assertAlmostEqual(mean_identity, 0.9, delta=0.001)
-
-    # def test_nanopore_100_identity(self):
-    #     identity_sum = 0.0
-    #     for _ in range(self.trials):
-    #         frag = badread.misc.get_random_sequence(random.randint(50, 1000))
-    #         seq, qual = badread.simulate.sequence_fragment(frag, 1.0, None, None, self.model)
-    #         cigar = edlib.align(frag, seq, task='path')['cigar']
-    #         identity_sum += badread.error_model.identity_from_edlib_cigar(cigar)
-    #     mean_identity = identity_sum / self.trials
-    #     self.assertEqual(mean_identity, 1.0)
+    def test_pacbio_identity(self):
+        model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'pacbio_7-mer_model'
+        model = badread.error_model.ErrorModel(model_file, output=self.null)
+        for identity in self.identities_to_test:
+            for read_length in self.read_lengths_to_test:
+                self.identity_test(identity, read_length, model)
