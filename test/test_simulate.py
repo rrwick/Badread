@@ -17,12 +17,16 @@ If not, see <http://www.gnu.org/licenses/>.
 import edlib
 import os
 import pathlib
-import random
+import statistics
 import unittest
+
 import badread.simulate
 import badread.identities
 import badread.error_model
 import badread.misc
+
+
+VERBOSE = False  # Turn this on to see detailed read identity output
 
 
 class TestPerfectSequenceFragment(unittest.TestCase):
@@ -62,43 +66,58 @@ class TestSequenceFragment(unittest.TestCase):
         self.null = open(os.devnull, 'w')
         self.trials = 20
         self.identities_to_test = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65]
-        self.read_lengths_to_test = [10000, 1000]
-        self.read_delta = 0.01
-        self.mean_delta = 0.002
-        print()  # TEMP
+        self.read_lengths_to_test = [30000, 10000, 3000, 1000]
+        self.read_delta = 0.5
+        self.mean_delta = 0.05
 
     def tearDown(self):
         self.null.close()
 
     def identity_test(self, target_identity, read_length, model):
-        identity_sum = 0.0
-        for _ in range(self.trials):
+        target_errors = 1.0 - target_identity
+        read_delta = self.read_delta * target_errors
+        mean_delta = self.mean_delta * target_errors
+
+        if VERBOSE:
+            print('\nRead length: {}, target identity: {}'.format(read_length, target_identity))
+            print('    allowed error per read:   {:.4f}'.format(read_delta))
+            print('    allowed error in mean:    {:.4f}'.format(mean_delta))
+            print('    identities: ', end='')
+
+        read_identities = []
+        for i in range(self.trials):
             frag = badread.misc.get_random_sequence(read_length)
             seq, qual = badread.simulate.sequence_fragment(frag, target_identity, None, None, model)
             cigar = edlib.align(frag, seq, task='path')['cigar']
             read_identity = badread.error_model.identity_from_edlib_cigar(cigar)
-            identity_sum += read_identity
+            read_identities.append(read_identity)
 
-            # if target_identity == 1.0:
-            #     self.assertEqual(read_identity, 1.0)
-            # else:
-            #     self.assertAlmostEqual(read_identity, target_identity, delta=self.read_delta)
+            if VERBOSE:
+                print('{:.4f}'.format(read_identity), flush=True,
+                      end='\n                ' if (i+1) % 20 == 0 else ' ')
 
-        mean_identity = identity_sum / self.trials
-        # if target_identity == 1.0:
-        #     self.assertEqual(mean_identity, 1.0)
-        # else:
-        #     self.assertAlmostEqual(mean_identity, target_identity, delta=self.mean_delta)
+            self.assertAlmostEqual(read_identity, target_identity, delta=read_delta)
 
-        print('\t'.join(str(x) for x in [read_length, model.type, target_identity, mean_identity]))  # TEMP
+        mean_identity = statistics.mean(read_identities)
+        if VERBOSE:
+            print('\r' if self.trials % 20 == 0 else '\n', end='')
+            print('    mean:       {:.4f}'.format(mean_identity))
+
+        self.assertAlmostEqual(mean_identity, target_identity, delta=mean_delta)
+        if VERBOSE:
+            print('    PASS')
 
     def test_random_identity(self):
+        if VERBOSE:
+            print('\n\nRANDOM ERROR MODEL\n------------------')
         model = badread.error_model.ErrorModel('random', output=self.null)
         for identity in self.identities_to_test:
             for read_length in self.read_lengths_to_test:
                 self.identity_test(identity, read_length, model)
 
     def test_nanopore_identity(self):
+        if VERBOSE:
+            print('\n\nNANOPORE ERROR MODEL\n--------------------')
         model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'nanopore_7-mer_model'
         model = badread.error_model.ErrorModel(model_file, output=self.null)
         for identity in self.identities_to_test:
@@ -106,6 +125,8 @@ class TestSequenceFragment(unittest.TestCase):
                 self.identity_test(identity, read_length, model)
 
     def test_pacbio_identity(self):
+        if VERBOSE:
+            print('\n\nPACBIO ERROR MODEL\n------------------')
         model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'pacbio_7-mer_model'
         model = badread.error_model.ErrorModel(model_file, output=self.null)
         for identity in self.identities_to_test:

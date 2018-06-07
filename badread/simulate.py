@@ -20,6 +20,7 @@ from .misc import load_fasta, get_random_sequence, reverse_complement, random_ch
 from .error_model import ErrorModel, identity_from_edlib_cigar
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
+from . import settings
 
 
 def simulate(args):
@@ -218,10 +219,6 @@ def sequence_fragment(fragment, target_identity, glitches, skips, error_model):
     errors = 0.0
     change_count = 0
 
-    # # The target identity is the threshold below which we stop adding errors. It is therefore a
-    # # little bit higher than the identity we're aiming for.
-    # target_identity = 1.0 - ((1.0 - target_identity) * ((frag_len - 1) / frag_len))
-
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
     while True:
 
@@ -250,17 +247,40 @@ def sequence_fragment(fragment, target_identity, glitches, skips, error_model):
                 new_fragment_bases[i+j] = new_base
                 change_count += 1
                 if len(new_base) < 2:  # deletion or substitution
-                    errors += 1
+                    new_errors = 1
                 else:  # insertion
-                    errors += len(new_base) - 1
+                    new_errors = len(new_base) - 1
 
-                # Every now and then we actually align the new sequence to its original to get a
-                # more accurate estimate of edit distance.
-                # TODO: this is too slow! I need something more efficient...
-                if change_count % 10 == 0:
-                    cigar = edlib.align(fragment, ''.join(new_fragment_bases), task='path')['cigar']
-                    actual_identity = identity_from_edlib_cigar(cigar)
-                    errors = (1.0 - actual_identity) * frag_len
+                # As the identity gets lower, adding errors has less effect (presumably because
+                # adding an error can shift the alignment in a way that makes the overall identity
+                # no worse or even better). So we scale our new error count down a bit using our
+                # current estimate of the identity.
+                errors += new_errors * (estimated_identity ** 1.5)
+
+                # Every now and then we actually align a piece of the new sequence to its original
+                # to improve our estimate of the read's identity.
+                if change_count % settings.ALIGNMENT_INTERVAL == 0:
+
+                    # If the sequence is short enough, we align the whole thing and get an exact
+                    # identity.
+                    if frag_len <= settings.ALIGNMENT_SIZE:
+                        cigar = edlib.align(fragment, ''.join(new_fragment_bases),
+                                            task='path')['cigar']
+                        actual_identity = identity_from_edlib_cigar(cigar)
+                        errors = (1.0 - actual_identity) * frag_len
+
+                    # If the sequence is longer, we align a random part of the sequence and use
+                    # the result to update the error estimate.
+                    else:
+                        pos = random.randint(0, frag_len - settings.ALIGNMENT_SIZE)
+                        pos2 = pos+settings.ALIGNMENT_SIZE
+                        cigar = edlib.align(fragment[pos:pos2],
+                                            ''.join(new_fragment_bases[pos:pos2]),
+                                            task='path')['cigar']
+                        actual_identity = identity_from_edlib_cigar(cigar)
+                        estimated_errors = (1.0 - actual_identity) * frag_len
+                        weight = settings.ALIGNMENT_SIZE / frag_len
+                        errors = (estimated_errors * weight) + (errors * (1-weight))
 
     # Remove the buffer bases.
     new_fragment_bases = new_fragment_bases[k_size:-k_size]
