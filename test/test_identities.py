@@ -29,12 +29,12 @@ class TestConstantIdentity(unittest.TestCase):
         self.null.close()
 
     def test_constant_identity_1(self):
-        identities = badread.identities.Identities('constant', 100, output=self.null)
+        identities = badread.identities.Identities(100, 4, 100, output=self.null)
         for _ in range(100):
             self.assertEqual(identities.get_identity(), 1.0)
 
     def test_constant_identity_2(self):
-        identities = badread.identities.Identities('constant', 80, output=self.null)
+        identities = badread.identities.Identities(80, 4, 80, output=self.null)
         for _ in range(100):
             self.assertEqual(identities.get_identity(), 0.8)
 
@@ -49,32 +49,32 @@ class TestBetaIdentity(unittest.TestCase):
         self.null.close()
 
     def test_beta_identity_1(self):
-        identities = badread.identities.Identities('beta', 90, 4, 100, output=self.null)
+        identities = badread.identities.Identities(90, 4, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_2(self):
-        identities = badread.identities.Identities('beta', 90, 4, 95, output=self.null)
+        identities = badread.identities.Identities(90, 4, 95, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_3(self):
-        identities = badread.identities.Identities('beta', 90, 4, 90, output=self.null)
+        identities = badread.identities.Identities(90, 4, 90, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_4(self):
-        identities = badread.identities.Identities('beta', 90, 3, 100, output=self.null)
+        identities = badread.identities.Identities(90, 3, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_5(self):
-        identities = badread.identities.Identities('beta', 90, 2, 100, output=self.null)
+        identities = badread.identities.Identities(90, 2, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
     def test_beta_identity_6(self):
-        identities = badread.identities.Identities('beta', 90, 8, 100, output=self.null)
+        identities = badread.identities.Identities(90, 8, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
 
@@ -93,19 +93,19 @@ class TestPerfectErrorModel(unittest.TestCase):
         self.null.close()
 
     def test_perfect_error_model_1(self):
-        identities = badread.identities.Identities('constant', 100, error_model=self.model,
+        identities = badread.identities.Identities(100, 4, 100, error_model=self.model,
                                                    output=self.null)
         for _ in range(10):
             self.assertEqual(identities.get_identity(), 1.0)
 
     def test_perfect_error_model_2(self):
-        identities = badread.identities.Identities('constant', 80, error_model=self.model,
+        identities = badread.identities.Identities(80, 4, 80, error_model=self.model,
                                                    output=self.null)
         for _ in range(10):
             self.assertEqual(identities.get_identity(), 1.0)
 
     def test_perfect_error_model_3(self):
-        identities = badread.identities.Identities('beta', 90, 4, 95, error_model=self.model,
+        identities = badread.identities.Identities(90, 4, 95, error_model=self.model,
                                                    output=self.null)
         for _ in range(10):
             self.assertEqual(identities.get_identity(), 1.0)

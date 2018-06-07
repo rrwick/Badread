@@ -15,21 +15,16 @@ import numpy as np
 import scipy.special
 import sys
 from .quickhist import quickhist_gamma
+from .misc import float_to_str
 
 
 class FragmentLengths(object):
 
-    def __init__(self, distribution, mean, stdev, output=sys.stderr):
-        self.distribution = distribution
+    def __init__(self, mean, stdev, output=sys.stderr):
         self.mean = mean
         self.stdev = stdev
-        assert distribution == 'constant' or distribution == 'gamma'
         print('', file=output)
-        if self.distribution == 'gamma' and self.stdev == 0:
-            print('Switching from "gamma" to "constant" read length distribution because '
-                  'stdev equals 0', file=output)
-            self.distribution = 'constant'
-        if self.distribution == 'constant':
+        if self.stdev == 0:
             self.gamma_k, self.gamma_t = None, None
             print('Using a constant fragment length of {} bp'.format(mean), file=output)
         else:  # gamma distribution
@@ -37,15 +32,15 @@ class FragmentLengths(object):
             gamma_a, gamma_b, self.gamma_k, self.gamma_t = gamma_parameters(mean, stdev)
             print('  k (shape) = ' + '%.4e' % self.gamma_k, file=output)
             print('  theta (scale) = ' + '%.4e' % self.gamma_t, file=output)
-            print('  mean: {} bp'.format(mean), file=output)
-            print('  stdev: {} bp'.format(stdev), file=output)
+            print('  mean: {} bp'.format(float_to_str(mean)), file=output)
+            print('  stdev: {} bp'.format(float_to_str(stdev)), file=output)
             n50 = int(round(find_n_value(gamma_a, gamma_b, 50)))
             print('  theoretical N50: {} bp'.format(n50),
                   file=output)
             quickhist_gamma(gamma_a, gamma_b, n50, 8, output=output)
 
     def get_fragment_length(self):
-        if self.distribution == 'constant':
+        if self.stdev == 0:
             return self.mean
         else:  # gamma distribution
             return int(round(np.random.gamma(self.gamma_k, self.gamma_t)))

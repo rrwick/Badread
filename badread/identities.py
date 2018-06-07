@@ -14,35 +14,25 @@ If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 import sys
 from .quickhist import quickhist_beta
+from .misc import float_to_str
 
 
 class Identities(object):
 
-    def __init__(self, distribution, mean, shape=None, max_identity=100, error_model=None,
+    def __init__(self, mean, shape, max_identity, error_model=None,
                  output=sys.stderr):
-        self.distribution = distribution
         self.mean = mean / 100.0  # convert from percentage
         self.shape = shape
         self.max_identity = max_identity / 100.0  # convert from percentage
-        assert distribution == 'constant' or distribution == 'beta'
         print('', file=output)
 
         if error_model is not None and error_model.type == 'perfect':
             if self.max_identity < 1:
-                print('Setting max identity to 100% based on perfect error model', file=output)
+                print('Setting identity to 100% based on perfect error model', file=output)
                 self.max_identity = 1
-            if self.mean < 1:
-                print('Setting mean identity to 100% based on perfect error model', file=output)
                 self.mean = 1
-            if self.distribution != 'constant':
-                print('Switching to "constant" identity based on perfect error model', file=output)
-                self.distribution = 'constant'
 
-        if self.distribution == 'beta' and self.mean == self.max_identity:
-            self.distribution = 'constant'
-            print('Switching from "beta" to "constant" identity distribution because '
-                  'mean identity equals max identity', file=output)
-        if self.distribution == 'constant':
+        if self.mean == self.max_identity:
             self.beta_a, self.beta_b = None, None
             print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)
         else:  # beta distribution
@@ -50,13 +40,13 @@ class Identities(object):
             self.beta_a, self.beta_b = beta_parameters(mean, shape, max_identity)
             print('  alpha (shape) = ' + '%.4e' % self.beta_a, file=output)
             print('  beta (shape)  = ' + '%.4e' % self.beta_b, file=output)
-            print('  mean: {}%'.format(self.mean * 100), file=output)
-            print('  max:  {}%'.format(self.max_identity * 100), file=output)
-            print('  shape: {}'.format(self.shape), file=output)
+            print('  mean: {}%'.format(float_to_str(self.mean * 100)), file=output)
+            print('  max:  {}%'.format(float_to_str(self.max_identity * 100)), file=output)
+            print('  shape: {}'.format(float_to_str(self.shape)), file=output)
             quickhist_beta(self.beta_a, self.beta_b, self.max_identity, 8, output=output)
 
     def get_identity(self):
-        if self.distribution == 'constant':
+        if self.mean == self.max_identity:
             return self.mean
         else:  # beta distribution
             return self.max_identity * np.random.beta(self.beta_a, self.beta_b)

@@ -149,3 +149,19 @@ def get_random_sequence(length):
 def random_chance(chance):
     assert 0.0 <= chance <= 1.0
     return random.random() < chance
+
+
+END_FORMATTING = '\033[0m'
+BOLD = '\033[1m'
+
+
+def bold(text):
+    return BOLD + text + END_FORMATTING
+
+
+def float_to_str(v, decimals=1):
+    if float(int(v)) == v:
+        return str(int(v))
+    else:
+        formatter = '%.' + str(decimals) + 'f'
+        return formatter % v

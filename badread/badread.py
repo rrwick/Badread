@@ -16,6 +16,8 @@ import pathlib
 import sys
 from .help_formatter import MyParser, MyHelpFormatter
 from .version import __version__
+from .misc import bold
+from . import settings
 
 
 def main():
@@ -64,7 +66,9 @@ def main():
 
 
 def simulate_subparser(subparsers):
-    group = subparsers.add_parser('simulate', description='Simulate bad reads',
+    group = subparsers.add_parser('simulate', description=bold('Badread: a long read simulator '
+                                                               'that can imitate many types of '
+                                                               'read problems'),
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -74,36 +78,17 @@ def simulate_subparser(subparsers):
                                help='Either an absolute value (e.g. 250M) or a relative depth '
                                     '(e.g. 25x)')
 
-    length_args = group.add_argument_group('Fragment lengths',
-                                           description='If "--lengths constant" is used, all '
-                                                       'fragments will be the same length (set by '
-                                                       '--mean_frag_length). If "--frag_lengths '
-                                                       'gamma" is used, lengths will generated '
-                                                       'from a gamma distribution: '
-                                                       'desmos.com/calculator/rddlqip1if')
-    length_args.add_argument('--lengths', type=str, choices=['constant', 'gamma'],
-                             default='gamma', help='Fragment length distribution')
-    length_args.add_argument('--mean_frag_length', type=int, default=10000,
-                             help='Mean fragment length (in bp)')
-    length_args.add_argument('--frag_length_stdev', type=int, default=9000,
-                             help='Gamma distribution standard deviation (in bp)')
-
-    id_args = group.add_argument_group('Read identities',
-                                       description='Read identities are generated with a beta '
-                                                   'distribution: '
-                                                   'desmos.com/calculator/t03zr2thap')
-    id_args.add_argument('--error_model', type=str, default='random',
-                         help='Can be "random" (for random errors), "perfect" (for no errors) or '
-                              'a filename for a read error model (for realistic errors)')
-    id_args.add_argument('--identities', choices=['constant', 'beta'],
-                         default='beta', help='Sequencing identity distribution')
-    id_args.add_argument('--mean_identity', type=float, default=85,
-                         help='Mean read identity (as a percentage)')
-    id_args.add_argument('--max_identity', type=float, default=95,
-                         help='Maximum read identity (as a percentage)')
-    id_args.add_argument('--identity_shape', type=int, default=4,
-                         help='Shape parameter - large values produce a tighter distribution '
-                              'around the mean')
+    sim_args = group.add_argument_group('Simulation parameters',
+                                        description='Length and identity and error distributions')
+    sim_args.add_argument('--length', type=str, default='10000,9000',
+                          help='Fragment length distribution (mean and stdev in bp, '
+                               'default: DEFAULT)')
+    sim_args.add_argument('--identity', type=str, default='85,95,4',
+                          help='Sequencing identity distribution (mean, max and shape, '
+                               'default: DEFAULT)')
+    sim_args.add_argument('--error_model', type=str, default='random',
+                          help='Can be "random" (for random errors), "perfect" (for no errors) '
+                               'or a filename for a read error model (for realistic errors)')
 
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
@@ -113,27 +98,24 @@ def simulate_subparser(subparsers):
     problem_args.add_argument('--end_adapter', type=str, default='GCAATACGTAACTGAACGAAGT',
                               help='Adapter sequence for ends of reads')
     problem_args.add_argument('--start_adapter_params', type=str, default='0.9,0.6',
-                              help='Rate and amount (comma-separated) for adapters on starts of '
-                                   'reads')
+                              help='Rate and amount for adapters on starts of reads')
     problem_args.add_argument('--end_adapter_params', type=str, default='0.5,0.2',
-                              help='Rate and amount (comma-separated) for adapters on ends of '
-                                   'reads')
+                              help='Rate and amount for adapters on ends of reads')
 
-    problem_args = group.add_argument_group('Read problems',
+    problem_args = group.add_argument_group('Problems',
                                             description='Ways reads can go wrong')
-    problem_args.add_argument('--junk_read_rate', type=float, default=0.02,
-                              help='This fraction of reads will be low-complexity junk')
-    problem_args.add_argument('--random_read_rate', type=float, default=0.01,
-                              help='This fraction of reads will be random sequence')
-    problem_args.add_argument('--chimera_rate', type=float, default=0.01,
-                              help='Rate at which separate fragments join together')
-    problem_args.add_argument('--glitches', type=str, default='50,8000',
+    problem_args.add_argument('--junk_reads', type=float, default=2,
+                              help='This percentage of reads will be low-complexity junk')
+    problem_args.add_argument('--random_reads', type=float, default=1,
+                              help='This percentage of reads will be random sequence')
+    problem_args.add_argument('--chimeras', type=float, default=1,
+                              help='Percentage at which separate fragments join together')
+    problem_args.add_argument('--glitches', type=str, default='5000,50,50',
                               help='Read glitch parameters')
-    problem_args.add_argument('--skips', type=str, default='10,8000',
-                              help='Read skip parameters')
     problem_args.add_argument('--lose_small_plasmids', action='store_true',
-                              help='If set, then small circular plasmids are lost when the read '
-                                   'length is too high')
+                              help='If set, then small circular plasmids are lost when the '
+                                   'fragment length is too high (default: small plasmids are '
+                                   'included regardless of fragment length)')
 
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
@@ -187,16 +169,66 @@ def plot_subparser(subparsers):
 
 
 def check_simulate_args(args):
-    args.error_model = args.error_model.lower()
-    if args.error_model != 'perfect' and args.error_model != 'random':
+    model = args.error_model.lower()
+    if model != 'perfect' and model != 'random':
         if not pathlib.Path(args.error_model).is_file():
             sys.exit('Error: {} is not a file\n'
                      '  --error_model must be "random", "perfect" or a '
                      'filename'.format(args.error_model))
 
+    if args.chimeras > 50:
+        sys.exit('Error: --chimeras cannot be greater than 50')
+    if args.junk_reads > 100:
+        sys.exit('Error: --junk_reads cannot be greater than 100')
+    if args.random_reads > 100:
+        sys.exit('Error: --random_reads cannot be greater than 100')
+    if args.junk_reads + args.random_reads > 100:
+        sys.exit('Error: --junk_reads and --random_reads cannot sum to more than 100')
+
+    try:
+        length_parameters = [float(x) for x in args.length.split(',')]
+        args.mean_frag_length = length_parameters[0]
+        args.frag_length_stdev = length_parameters[1]
+    except (ValueError, IndexError):
+        sys.exit('Error: could not parse --length values')
+    if args.mean_frag_length <= settings.MIN_MEAN_READ_LENGTH:
+        sys.exit('Error: mean read length must be at '
+                 'least {}'.format(settings.MIN_MEAN_READ_LENGTH))
+    if args.frag_length_stdev < 0:
+        sys.exit('Error: read length stdev cannot be negative')
+
+    try:
+        identity_parameters = [float(x) for x in args.identity.split(',')]
+        args.mean_identity = identity_parameters[0]
+        args.max_identity = identity_parameters[1]
+        args.identity_shape = identity_parameters[2]
+    except (ValueError, IndexError):
+        sys.exit('Error: could not parse --identity values')
+    if args.mean_identity > 100.0:
+        sys.exit('Error: mean read identity cannot be more than 100')
+    if args.max_identity > 100.0:
+        sys.exit('Error: max read identity cannot be more than 100')
+    if args.mean_identity <= settings.MIN_MEAN_READ_IDENTITY:
+        sys.exit('Error: mean read identity must be at '
+                 'least {}'.format(settings.MIN_MEAN_READ_IDENTITY))
+    if args.max_identity <= settings.MIN_MEAN_READ_IDENTITY:
+        sys.exit('Error: max read identity must be at '
+                 'least {}'.format(settings.MIN_MEAN_READ_IDENTITY))
     if args.mean_identity > args.max_identity:
         sys.exit('Error: mean identity ({}) cannot be larger than max '
                  'identity ({})'.format(args.mean_identity, args.max_identity))
+    if args.identity_shape <= 0.0:
+        sys.exit('Error: read identity shape must be a positive value')
+
+    try:
+        glitch_parameters = [float(x) for x in args.glitches.split(',')]
+        args.glitch_rate = glitch_parameters[0]
+        args.glitch_size = glitch_parameters[1]
+        args.glitch_skip = glitch_parameters[2]
+    except (ValueError, IndexError):
+        sys.exit('Error: could not parse --glitches values')
+    if args.glitch_rate < 0 or args.glitch_size < 0 or args.glitch_skip < 0:
+        sys.exit('Error: --glitches must contain non-negative values')
 
 
 if __name__ == '__main__':

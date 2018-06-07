@@ -16,7 +16,8 @@ import numpy as np
 import random
 import sys
 import uuid
-from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance
+from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance, \
+    float_to_str
 from .error_model import ErrorModel, identity_from_edlib_cigar
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
@@ -27,17 +28,18 @@ def simulate(args):
     ref_seqs, ref_depths, ref_circular = load_fasta(args.reference)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
     target_size = get_target_size(ref_seqs, args.quantity)
-    frag_lengths = FragmentLengths(args.lengths, args.mean_frag_length, args.frag_length_stdev)
+    frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev)
     error_model = ErrorModel(args.error_model)
-    identities = Identities(args.identities, args.mean_identity, args.identity_shape,
-                            args.max_identity, error_model)
+    identities = Identities(args.mean_identity, args.identity_shape, args.max_identity, error_model)
 
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter_params)
     end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter_params)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
+    chimera_rate = args.chimeras / 100  # percentage to fraction
+    print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
 
     print('', file=sys.stderr)
-    print('Generating reads', file=sys.stderr)
+    print_progress(0)
     total_size = 0
     while total_size < target_size:
         fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter)]
@@ -47,7 +49,7 @@ def simulate(args):
         fragment.append(frag_seq)
         info += frag_info
 
-        while random_chance(args.chimera_rate):
+        while random_chance(chimera_rate):
             info.append('chimera')
             if random_chance(0.25):
                 fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter))
@@ -62,8 +64,8 @@ def simulate(args):
         fragment = ''.join(fragment)
 
         read_identity = identities.get_identity()
-        seq, quals = sequence_fragment(fragment, read_identity, args.glitches, args.skips,
-                                       error_model)
+        seq, quals = sequence_fragment(fragment, read_identity, args.glitch_rate, args.glitch_size,
+                                       args.glitch_skip, error_model)
         read_name = uuid.uuid4()
 
         print('@{} {}'.format(read_name, ','.join(info)))
@@ -72,10 +74,9 @@ def simulate(args):
         print(quals)
 
         total_size += len(fragment)
+        print_progress(total_size)
 
-    # print('', file=sys.stderr)
-    # print('N50: {}'.format(get_n50(reads)), file=sys.stderr)
-    # print('Mean identity: {:.4f}'.format(get_mean_id(reads)), file=sys.stderr)
+    print('\n', file=sys.stderr)
 
 
 def get_ref_contig_weights(ref_seqs, ref_depths):
@@ -132,10 +133,12 @@ def get_fragment_type(args):
     """
     Returns either 'junk_seq', 'random_seq' or 'good'
     """
+    junk_read_rate = args.junk_reads / 100      # percentage to fraction
+    random_read_rate = args.random_reads / 100  # percentage to fraction
     random_draw = random.random()
-    if random_draw < args.junk_read_rate:
+    if random_draw < junk_read_rate:
         return 'junk'
-    elif random_draw < args.junk_read_rate + args.random_read_rate:
+    elif random_draw < junk_read_rate + random_read_rate:
         return 'random'
     else:
         return 'good'
@@ -198,10 +201,9 @@ def get_junk_fragment(fragment_length):
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, target_identity, glitches, skips, error_model):
-
-    # TODO: add glitches
-    # TODO: add skips
+def sequence_fragment(fragment, target_identity, glitch_rate, glitch_size, glitch_skip,
+                      error_model):
+    fragment = add_glitches(fragment, glitch_rate, glitch_size, glitch_skip)
 
     if error_model.type == 'perfect':
         q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
@@ -351,3 +353,44 @@ def adapter_parameters(param_str):
         except ValueError:
             pass
     sys.exit('Error: adapter parameters must be two comma-separated values between 0 and 1')
+
+
+def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
+    print('', file=sys.stderr)
+    if glitch_rate == 0:
+        print('Reads will have no glitches', file=sys.stderr)
+    else:
+        print('Read glitches:', file=sys.stderr)
+        print('  rate (mean distance between glitches): {}'.format(float_to_str(glitch_rate)),
+              file=sys.stderr)
+        print('  size (mean length of random sequence): {}'.format(float_to_str(glitch_size)),
+              file=sys.stderr)
+        print('  skip (mean sequence lost per glitch):  {}'.format(float_to_str(glitch_skip)),
+              file=sys.stderr)
+
+
+def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
+    if glitch_rate == 0:
+        return fragment
+    i = 0
+    new_fragment = []
+    while True:
+        dist_to_glitch = np.random.geometric(p=1/glitch_rate)
+        new_fragment.append(fragment[i:i + dist_to_glitch])
+        i += dist_to_glitch
+        if i >= len(fragment):
+            break
+
+        # Add a glitch!
+        if glitch_size > 0:
+            new_fragment.append(get_random_sequence(np.random.geometric(p=1/glitch_size)))
+        if glitch_skip > 0:
+            i += np.random.geometric(p=1/glitch_skip)
+        if i >= len(fragment):
+            break
+
+    return ''.join(new_fragment)
+
+
+def print_progress(bp):
+    print('\rGenerating reads: {:,} bp'.format(bp), file=sys.stderr, flush=True, end='')
