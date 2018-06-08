@@ -111,7 +111,10 @@ def load_fasta(filename):
                 name = line[1:]
                 short_name = name.split()[0]
                 if 'depth=' in name.lower():
-                    depths[short_name] = float(p.search(name.lower()).group(1))
+                    try:
+                        depths[short_name] = float(p.search(name.lower()).group(1))
+                    except ValueError:
+                        depths[short_name] = 1.0
                 else:
                     depths[short_name] = 1.0
                 circular[short_name] = 'circular=true' in name.lower()

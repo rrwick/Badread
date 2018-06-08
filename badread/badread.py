@@ -93,18 +93,19 @@ def simulate_subparser(subparsers):
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
                                                         'and end of reads')
-    problem_args.add_argument('--start_adapter', type=str, default='AATGTACTTCGTTCAGTTACGTATTGCT',
-                              help='Adapter sequence for starts of reads')
-    problem_args.add_argument('--end_adapter', type=str, default='GCAATACGTAACTGAACGAAGT',
-                              help='Adapter sequence for ends of reads')
-    problem_args.add_argument('--start_adapter_params', type=str, default='0.9,0.6',
+    problem_args.add_argument('--start_adapter', type=str, default='0.9,0.6',
                               help='Rate and amount for adapters on starts of reads')
-    problem_args.add_argument('--end_adapter_params', type=str, default='0.5,0.2',
+    problem_args.add_argument('--end_adapter', type=str, default='0.5,0.2',
                               help='Rate and amount for adapters on ends of reads')
+    problem_args.add_argument('--start_adapter_seq', type=str,
+                              default='AATGTACTTCGTTCAGTTACGTATTGCT',
+                              help='Adapter sequence for starts of reads')
+    problem_args.add_argument('--end_adapter_seq', type=str, default='GCAATACGTAACTGAACGAAGT',
+                              help='Adapter sequence for ends of reads')
 
     problem_args = group.add_argument_group('Problems',
                                             description='Ways reads can go wrong')
-    problem_args.add_argument('--junk_reads', type=float, default=2,
+    problem_args.add_argument('--junk_reads', type=float, default=1,
                               help='This percentage of reads will be low-complexity junk')
     problem_args.add_argument('--random_reads', type=float, default=1,
                               help='This percentage of reads will be random sequence')
@@ -112,7 +113,7 @@ def simulate_subparser(subparsers):
                               help='Percentage at which separate fragments join together')
     problem_args.add_argument('--glitches', type=str, default='5000,50,50',
                               help='Read glitch parameters')
-    problem_args.add_argument('--lose_small_plasmids', action='store_true',
+    problem_args.add_argument('--small_plasmid_bias', action='store_true',
                               help='If set, then small circular plasmids are lost when the '
                                    'fragment length is too high (default: small plasmids are '
                                    'included regardless of fragment length)')
@@ -169,6 +170,8 @@ def plot_subparser(subparsers):
 
 
 def check_simulate_args(args):
+    # TODO: make sure reference exists
+
     model = args.error_model.lower()
     if model != 'perfect' and model != 'random':
         if not pathlib.Path(args.error_model).is_file():

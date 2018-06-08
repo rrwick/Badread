@@ -42,7 +42,7 @@ class TestPerfectSequenceFragment(unittest.TestCase):
 
     def test_sequence_fragment_1(self):
         frag = 'GACCCAGTTTTTTTACTGATTCAGCGTAGGTGCTCTGATCTTCACGCATCTTTGACCGCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, 1.0, 0, 0, 0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, 1.0, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:
@@ -51,7 +51,7 @@ class TestPerfectSequenceFragment(unittest.TestCase):
     def test_sequence_fragment_2(self):
         # Beta distribution parameters are ignored for perfect error models.
         frag = 'TATAAAGACCCCACTTTTGAAGCCAGAGGTAATGGCCGTGATGGCGTTAAATTCCCTTCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, 0.9, 0, 0, 0, self.model)
+        seq, qual = badread.simulate.sequence_fragment(frag, 0.9, self.model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
         for q in qual:
@@ -87,7 +87,7 @@ class TestSequenceFragment(unittest.TestCase):
         read_identities = []
         for i in range(self.trials):
             frag = badread.misc.get_random_sequence(read_length)
-            seq, qual = badread.simulate.sequence_fragment(frag, target_identity, 0, 0, 0, model)
+            seq, qual = badread.simulate.sequence_fragment(frag, target_identity, model)
             cigar = edlib.align(frag, seq, task='path')['cigar']
             read_identity = badread.error_model.identity_from_edlib_cigar(cigar)
             read_identities.append(read_identity)

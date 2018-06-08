@@ -32,8 +32,8 @@ def simulate(args):
     error_model = ErrorModel(args.error_model)
     identities = Identities(args.mean_identity, args.identity_shape, args.max_identity, error_model)
 
-    start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter_params)
-    end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter_params)
+    start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
+    end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
     chimera_rate = args.chimeras / 100  # percentage to fraction
     print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
@@ -42,7 +42,7 @@ def simulate(args):
     print_progress(0)
     total_size = 0
     while total_size < target_size:
-        fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter)]
+        fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter_seq)]
         info = []
         frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
                                            ref_contigs, ref_contig_weights, ref_circular, args)
@@ -52,20 +52,20 @@ def simulate(args):
         while random_chance(chimera_rate):
             info.append('chimera')
             if random_chance(0.25):
-                fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter))
+                fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount,
+                                                args.end_adapter_seq))
             if random_chance(0.25):
                 fragment.append(get_start_adapter(start_adapt_rate, start_adapt_amount,
-                                                  args.start_adapter))
+                                                  args.start_adapter_seq))
             frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
                                                ref_contigs, ref_contig_weights, ref_circular, args)
             fragment.append(frag_seq)
             info += frag_info
-        fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter))
+        fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter_seq))
         fragment = ''.join(fragment)
-
+        fragment = add_glitches(fragment, args.glitch_rate, args.glitch_size, args.glitch_skip)
         read_identity = identities.get_identity()
-        seq, quals = sequence_fragment(fragment, read_identity, args.glitch_rate, args.glitch_size,
-                                       args.glitch_skip, error_model)
+        seq, quals = sequence_fragment(fragment, read_identity, error_model)
         read_name = uuid.uuid4()
 
         print('@{} {}'.format(read_name, ','.join(info)))
@@ -118,7 +118,7 @@ def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_con
     elif fragment_type == 'random':
         return get_random_sequence(fragment_length), ['random_seq']
 
-    # The get_real_fragment function can return nothing (due to --lose_small_plasmids) so we try
+    # The get_real_fragment function can return nothing (due to --small_plasmid_bias) so we try
     # repeatedly until we get a result.
     for _ in range(100):
         seq, info = get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
@@ -166,10 +166,10 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
         return seq
 
     # If the reference contig is circular and the fragment length is too long, then we either
-    # fail to get the read (if --lose_small_plasmids was used) or bring the fragment size back
+    # fail to get the read (if --small_plasmid_bias was used) or bring the fragment size back
     # down to the contig size.
     if fragment_length > len(seq) and ref_circular[contig]:
-        if args.lose_small_plasmids:
+        if args.small_plasmid_bias:
             return '', ''
         else:
             fragment_length = len(seq)
@@ -196,14 +196,12 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
 
 
 def get_junk_fragment(fragment_length):
-    repeat_length = random.randint(1, 8)
+    repeat_length = random.randint(1, 5)
     repeat_count = int(round(fragment_length / repeat_length))
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, target_identity, glitch_rate, glitch_size, glitch_skip,
-                      error_model):
-    fragment = add_glitches(fragment, glitch_rate, glitch_size, glitch_skip)
+def sequence_fragment(fragment, target_identity, error_model):
 
     if error_model.type == 'perfect':
         q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
@@ -299,6 +297,8 @@ def sequence_fragment(fragment, target_identity, glitch_rate, glitch_size, glitc
 
 
 def get_start_adapter(rate, amount, adapter):
+    if not adapter:
+        return ''
     if random_chance(rate):
         if amount == 1.0:
             return adapter
@@ -309,6 +309,8 @@ def get_start_adapter(rate, amount, adapter):
 
 
 def get_end_adapter(rate, amount, adapter):
+    if not adapter:
+        return ''
     if random_chance(rate):
         if amount == 1.0:
             return adapter
