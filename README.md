@@ -135,7 +135,7 @@ ATGACGAGCGAAAATAACAGCTTACTTCTGAACCTTCAGGAAGTTGATAAGACAACCGGCGAAGTTGTTA
 ...
 ```
 
-An example eukaryote genome reference FASTA might look like this:
+A eukaryote genome reference FASTA might look like this:
 ```
 >chromosome_I depth=1.0
 CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACA
@@ -206,13 +206,14 @@ Badread defines identity the same way as BLAST does: the number of matching base
 Original sequence:  ACGACTCAGCAGACG-GACTAGCTT
 ```
 
-Since DNA has only a 4 letter alphabet, two completely random sequences can typically align with >50% identity. As an example, here are two random sequences aligned to each other:
+Since DNA has only a 4 letter alphabet, two completely random sequences can typically align with >50% identity. As an example, here are two random sequences aligned to each other which match in 32 places over 59 alignment positions, giving an identity of 54%:
 ```
 AAT-CGGCGCGTCCCGCGTTTCGGAAATTGA-C-ACTCTGACG-GTT---AGCACAG--
 | | ||| | | |  || ||  ||   | || | | | ||| | |||   || | ||  
 ATTACGG-GAG-C--GC-TTA-GGC--T-GAACTATTATGATGCGTTGCGAGAAAAGGA
 ```
-They match in 32 places over 59 alignment positions, giving an identity of 54%. This means that any read with less than about 60% identity is difficult to distinguish from random sequence.
+
+This means that any read with less than about 60% identity is difficult to distinguish from random sequence.
 
 
 #### Badread identity distributions
@@ -250,7 +251,7 @@ Badread generates read identities from a [beta distribution](https://en.wikipedi
     <tr>
         <td>
             <img align="right" src="images/identity_dist/70-85-4.png" alt="Default identity distribution" width="350">
-            A low mean and max (<code>--identity 70,85,4</code>) results in very poor reads (like what you might have encountered in the [early days of Nanopore sequencing](http://nextgenseek.com/2014/06/behold-oxford-nanopore-reads-are-here/))
+            A low mean and max (<code>--identity 70,85,4</code>) gives very poor reads (like what you might have encountered in the <a href="http://nextgenseek.com/2014/06/behold-oxford-nanopore-reads-are-here/">early days of Nanopore sequencing</a>).
         </td>
     </tr>
 </table>

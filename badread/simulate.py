@@ -221,6 +221,11 @@ def sequence_fragment(fragment, target_identity, error_model):
 
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
     while True:
+        # If we have changed almost every base in the fragment, then we can give up (the identity
+        # is about as low as we can make it). This is likely to only happen when the target
+        # identity is very low (below 60%).
+        if change_count > 0.9 * frag_len:
+            break
 
         # To gauge the identity, we first use the number of changes we've added to the fragment,
         # which will probably under-estimate the identity, but it's fast.
