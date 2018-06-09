@@ -16,6 +16,7 @@ Badread is a long read simulator tool that makes – you guessed it – bad read
      * [Fragment lengths](#fragment-lengths)
      * [Read identities](#read-identities)
      * [Error model](#error-model)
+     * [QScores](#qscores)
      * [Adapters](#adapters)
      * [Junk and random reads](#junk-and-random-reads)
      * [Chimeras](#chimeras)
@@ -264,6 +265,10 @@ You can interactively explore different values using [this Desmos plot](https://
 
 
 
+### QScores
+
+
+
 ### Adapters
 
 The default values are those for the Nanopore ligation adapters:
@@ -352,7 +357,27 @@ Badread comes with some other functionality, in addition to its main read-genera
 
 ### Generating an error model
 
+Badread comes with two k-mer-based errors: one that I built with Oxford Nanopore reads (MinION, R9.4 flowcell) and one that I built with PacBio reads (PacBio RS II, CLR). If you'd like to build your own model, keep reading!
 
+Requirements:
+* Long reads at least a Gbp would be good.
+* A high quality reference FASTA. Ideally this is a high quality FASTA of the same genome as the reads came from. Illumina-polished genomes are probably best.
+* [minimap2](https://github.com/lh3/minimap2) (my favourite long read aligner)
+
+First, you must align your long reads to your reference. Make sure to use minimap2's `-c` option so it includes the CIGAR string in the output:
+```
+minimap2 -c -x map-ont reference.fasta.gz reads.fastq.gz | gzip > alignments.paf.gz
+```
+
+Now give the files to `badread model` to build the model:
+```
+badread-runner.py model --reference reference.fasta.gz --reads reads.fastq.gz --alignment alignments.paf.gz > new_model
+```
+
+Options:
+* `--k_size`: Smaller values result in smaller model files. Larger values give bigger files but more more specific error modelling. Larger k-mers will require more reads/alignments to build. Default: 7.
+* `--max_alignments`: Limits the model-building to only using this many alignments. Useful if you have a lot of reads/alignments and are running out of RAM. Default: use all alignments.
+* `--max_alt`: How many alternatives to save for each k-mer. Larger values give more specific error models but larger model files. Default: 25.
 
 
 

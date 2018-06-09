@@ -29,24 +29,37 @@ def plot_window_identity(args):
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
         _, _, errors_per_read_pos = align_sequences(read_seq, ref_seq, a)
-        positions, identities = get_window_identity(errors_per_read_pos, args.window, a.read_start)
-        plot_one_alignment(positions, identities, args.window, a, len(reads[a.read_name][0]))
+        positions, identities = get_window_means(errors_per_read_pos, args.window, a.read_start,
+                                                 convert_to_identity=True)
+
+        if args.qual:
+            read_qual = [ord(q) - 33 for q in read_qual]
+            _, qualities = get_window_means(read_qual, args.window, a.read_start,
+                                            convert_to_identity=False)
+        else:
+            qualities = None
+
+        plot_one_alignment(positions, identities, qualities, args.window, a,
+                           len(reads[a.read_name][0]))
 
 
-def get_window_identity(errors_per_read_pos, window_size, read_start):
-    positions, identities = [], []
+def get_window_means(errors_per_read_pos, window_size, read_start, convert_to_identity=True):
+    positions, means = [], []
     window_sum = sum(errors_per_read_pos[:window_size])
     for i in range(len(errors_per_read_pos) - window_size):
         window_start = i
         window_end = i + window_size
         window_centre = i + (window_size // 2)
 
-        identities.append(100.0 * (1.0 - window_sum / window_size))
+        if convert_to_identity:
+            means.append(100.0 * (1.0 - window_sum / window_size))
+        else:
+            means.append(window_sum / window_size)
         positions.append(read_start + window_centre)
 
         window_sum -= errors_per_read_pos[window_start]
         window_sum += errors_per_read_pos[window_end]
-    return positions, identities
+    return positions, means
 
 
 class MyAxes(matplotlib.axes.Axes):
@@ -59,14 +72,20 @@ class MyAxes(matplotlib.axes.Axes):
 matplotlib.projections.register_projection(MyAxes)
 
 
-def plot_one_alignment(positions, identities, window_size, alignment, read_length):
-    fig, (ax1) = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
+def plot_one_alignment(positions, identities, qualities, window_size, alignment, read_length):
+    fig, ax1 = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
     ax1.plot(positions, identities, '-', color='#8F0505')
-    # ax1.fill_between(positions, 0, identities, color='#5EA7C9')
+
     plt.ylabel('% identity ({} bp windows)'.format(window_size))
     plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length,
                                                     alignment.percent_identity))
-    plt.gca().set_xlim([0,10000])
-    plt.gca().set_ylim([50,100])
+    ax1.set_xlim([0,10000])
+    ax1.set_ylim([50, 100])
+
+    if qualities is not None:
+        ax2 = ax1.twinx()
+        ax2.plot(positions, qualities, '-', color='#05058F')
+        ax2.set_ylim([5, 25])
+
     fig.canvas.manager.toolbar.pan()
     plt.show()

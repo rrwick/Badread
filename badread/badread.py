@@ -124,7 +124,7 @@ def simulate_subparser(subparsers):
 
 
 def model_subparser(subparsers):
-    group = subparsers.add_parser('model', description='Generate error model',
+    group = subparsers.add_parser('model', description='Generate a Badread error model',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -139,7 +139,8 @@ def model_subparser(subparsers):
     required_args.add_argument('--k_size', type=int, default=7,
                                help='Error model k-mer size')
     required_args.add_argument('--max_alignments', type=int,
-                               help='Only use this many alignments when generating error model')
+                               help='Only use this many alignments when generating error model '
+                                    '(default: use all alignments)')
     required_args.add_argument('--max_alt', type=int, default=25,
                                help='Only save up to this many alternatives to each k-mer')
 
@@ -160,9 +161,11 @@ def plot_subparser(subparsers):
     required_args.add_argument('--alignment', type=str, required=True,
                                help='PAF alignment of reads aligned to reference')
 
-    required_args = group.add_argument_group('Optional arguments')
-    required_args.add_argument('--window', type=int, default=100,
+    optional_args = group.add_argument_group('Optional arguments')
+    optional_args.add_argument('--window', type=int, default=100,
                                help='Window size in bp')
+    optional_args.add_argument('--qual', action='store_true',
+                               help='Include qscores in plot (default: only show identity)')
 
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,

@@ -98,7 +98,7 @@ def load_alignments(filename, max_alignments=None):
     return best_alignments
 
 
-def align_sequences(read_seq, ref_seq, alignment):
+def align_sequences(read_seq, ref_seq, alignment, gap_char='-'):
     read, ref = [], []
     read_pos, ref_pos = 0, 0
     errors_per_read_pos = [0] * len(read_seq)
@@ -117,13 +117,13 @@ def align_sequences(read_seq, ref_seq, alignment):
             ref_pos += cigar_size
         if cigar_type == 'I':
             read.append(read_seq[read_pos:read_pos+cigar_size])
-            ref.append('-' * cigar_size)
+            ref.append(gap_char * cigar_size)
             for i in range(cigar_size):
                 errors_per_read_pos[read_pos+i] += 1
             alignment.insertions += cigar_size
             read_pos += cigar_size
         if cigar_type == 'D':
-            read.append('-' * cigar_size)
+            read.append(gap_char * cigar_size)
             ref.append(ref_seq[ref_pos:ref_pos+cigar_size])
             errors_per_read_pos[read_pos] += cigar_size
             alignment.deletions += cigar_size
