@@ -43,7 +43,8 @@ class FragmentLengths(object):
         if self.stdev == 0:
             return self.mean
         else:  # gamma distribution
-            return int(round(np.random.gamma(self.gamma_k, self.gamma_t)))
+            fragment_length = int(round(np.random.gamma(self.gamma_k, self.gamma_t)))
+            return max(fragment_length, 1)
 
 
 def gamma_parameters(gamma_mean, gamma_stdev):
