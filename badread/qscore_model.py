@@ -35,8 +35,16 @@ def make_qscore_model(args, output=sys.stderr):
     i = 0
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
+        if a.read_name not in reads:
+            sys.exit('Error: could not find read {}\n'
+                     'are you sure your read file and alignment file match?'.format(a.read_name))
+        if a.ref_name not in refs:
+            sys.exit('Error: could not find reference {}\nare you sure '
+                     'your reference file and alignment file match?'.format(a.ref_name))
+
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
+
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
         aligned_read_seq, aligned_read_qual, aligned_ref_seq, _ = \
