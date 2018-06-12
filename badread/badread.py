@@ -169,6 +169,9 @@ def qscore_model_subparser(subparsers):
     required_args = group.add_argument_group('Optional arguments')
     required_args.add_argument('--k_size', type=int, default=9,
                                help='Qscore model k-mer size (must be odd, default: DEFAULT)')
+    required_args.add_argument('--max_del', type=int, default=3,
+                               help='Deletion runs longer than this will be collapsed to reduce '
+                                    'the number of possible alignments')
     required_args.add_argument('--max_alignments', type=int,
                                help='Only use this many alignments when generating qscore model '
                                     '(default: use all alignments)')

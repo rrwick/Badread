@@ -12,7 +12,7 @@ If not, see <http://www.gnu.org/licenses/>.
 """
 
 import collections
-import edlib
+import re
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement
@@ -29,6 +29,9 @@ def make_qscore_model(args, output=sys.stderr):
     overall_qscores = collections.defaultdict(int)
     per_cigar_qscores = collections.defaultdict(lambda: collections.defaultdict(int))
 
+    p = re.compile('D{' + str(args.max_del) + ',}')
+    max_del = 'D' * args.max_del
+
     i = 0
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
@@ -42,15 +45,30 @@ def make_qscore_model(args, output=sys.stderr):
         while True:
             if end > len(aligned_read_seq):
                 break
-            read_kmer = aligned_read_seq[start:end].replace(' ', '')
-            if len(read_kmer) < args.k_size:
+            read_kmer = aligned_read_seq[start:end]
+            if len(read_kmer.replace(' ', '')) < args.k_size:
                 end += 1
                 continue
             read_kmer_qual = aligned_read_qual[start:end].replace(' ', '')
-            assert len(read_kmer) == len(read_kmer_qual) == args.k_size
-            ref_kmer = aligned_ref_seq[start:end].replace(' ', '')
+            assert len(read_kmer.replace(' ', '')) == len(read_kmer_qual) == args.k_size
+            ref_kmer = aligned_ref_seq[start:end]
 
-            cigar = edlib.align(read_kmer, ref_kmer, task='path')['cigar']
+            cigar = []
+            for i, read_base in enumerate(read_kmer):
+                ref_base = ref_kmer[i]
+                assert read_base != ' ' or ref_base != ' '
+                if read_base == ref_base:
+                    cigar.append('=')
+                elif read_base == ' ':
+                    cigar.append('D')
+                elif ref_base == ' ':
+                    cigar.append('I')
+                else:
+                    cigar.append('X')
+            cigar = ''.join(cigar)
+            assert len(cigar.replace('D', '')) == args.k_size
+            cigar = p.sub(max_del, cigar)
+
             qscore = read_kmer_qual[(args.k_size - 1) // 2]
             qscore = ord(qscore) - 33
 
