@@ -162,9 +162,13 @@ def bold(text):
     return BOLD + text + END_FORMATTING
 
 
-def float_to_str(v, decimals=1):
+def float_to_str(v, decimals=1, trim_zeros=False):
     if float(int(v)) == v:
         return str(int(v))
     else:
         formatter = '%.' + str(decimals) + 'f'
-        return formatter % v
+        result = formatter % v
+        if trim_zeros:
+            while result.endswith('0'):
+                result = result[:-1]
+        return result
