@@ -26,7 +26,8 @@ def main():
 
     subparsers = parser.add_subparsers(title='Commands', dest='subparser_name')
     simulate_subparser(subparsers)
-    model_subparser(subparsers)
+    error_model_subparser(subparsers)
+    qscore_model_subparser(subparsers)
     plot_subparser(subparsers)
 
     longest_choice_name = max(len(c) for c in subparsers.choices)
@@ -56,9 +57,13 @@ def main():
         from .simulate import simulate
         simulate(args)
 
-    elif args.subparser_name == 'model':
+    elif args.subparser_name == 'error_model':
         from .error_model import make_error_model
         make_error_model(args)
+
+    elif args.subparser_name == 'qscore_model':
+        from .qscore_model import make_qscore_model
+        make_qscore_model(args)
 
     elif args.subparser_name == 'plot':
         from .plot_window_identity import plot_window_identity
@@ -123,8 +128,8 @@ def simulate_subparser(subparsers):
                             help='Show this help message and exit')
 
 
-def model_subparser(subparsers):
-    group = subparsers.add_parser('model', description='Generate a Badread error model',
+def error_model_subparser(subparsers):
+    group = subparsers.add_parser('error_model', description='Generate a Badread error model',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -143,6 +148,30 @@ def model_subparser(subparsers):
                                     '(default: use all alignments)')
     required_args.add_argument('--max_alt', type=int, default=25,
                                help='Only save up to this many alternatives to each k-mer')
+
+    other_args = group.add_argument_group('Other')
+    other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                            help='Show this help message and exit')
+
+
+def qscore_model_subparser(subparsers):
+    group = subparsers.add_parser('qscore_model', description='Generate a Badread qscore model',
+                                  formatter_class=MyHelpFormatter, add_help=False)
+
+    required_args = group.add_argument_group('Required arguments')
+    required_args.add_argument('--reference', type=str, required=True,
+                               help='Reference FASTA file')
+    required_args.add_argument('--reads', type=str, required=True,
+                               help='FASTQ of real reads')
+    required_args.add_argument('--alignment', type=str, required=True,
+                               help='PAF alignment of reads aligned to reference')
+
+    required_args = group.add_argument_group('Optional arguments')
+    required_args.add_argument('--k_size', type=int, default=9,
+                               help='Qscore model k-mer size (must be odd, default: DEFAULT)')
+    required_args.add_argument('--max_alignments', type=int,
+                               help='Only use this many alignments when generating qscore model '
+                                    '(default: use all alignments)')
 
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,

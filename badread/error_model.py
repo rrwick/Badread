@@ -37,7 +37,7 @@ def make_error_model(args, output=sys.stderr):
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
-        aligned_read_seq, aligned_ref_seq, _ = align_sequences(read_seq, ref_seq, a)
+        aligned_read_seq, _, aligned_ref_seq, _ = align_sequences(read_seq, read_qual, ref_seq, a)
         start, end = 0, 0
         while True:
             if end > len(aligned_ref_seq):

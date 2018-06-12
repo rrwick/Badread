@@ -28,7 +28,7 @@ def plot_window_identity(args):
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
-        _, _, errors_per_read_pos = align_sequences(read_seq, ref_seq, a)
+        _, _, _, errors_per_read_pos = align_sequences(read_seq, read_qual, ref_seq, a)
         positions, identities = get_window_means(errors_per_read_pos, args.window, a.read_start,
                                                  convert_to_identity=True)
 
@@ -65,7 +65,7 @@ def get_window_means(errors_per_read_pos, window_size, read_start, convert_to_id
 class MyAxes(matplotlib.axes.Axes):
     name = 'MyAxes'
 
-    def drag_pan(self, button, key, x, y):
+    def drag_pan(self, button, _, x, y):
         matplotlib.axes.Axes.drag_pan(self, button, 'x', x, y)  # pretend key=='x'
 
 
@@ -79,7 +79,7 @@ def plot_one_alignment(positions, identities, qualities, window_size, alignment,
     plt.ylabel('% identity ({} bp windows)'.format(window_size))
     plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length,
                                                     alignment.percent_identity))
-    ax1.set_xlim([0,10000])
+    ax1.set_xlim([0, 10000])
     ax1.set_ylim([50, 100])
 
     if qualities is not None:
