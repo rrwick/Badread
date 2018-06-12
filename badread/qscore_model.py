@@ -36,10 +36,10 @@ def make_qscore_model(args, output=sys.stderr):
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
         if a.read_name not in reads:
-            sys.exit('Error: could not find read {}\n'
+            sys.exit('\nError: could not find read {}\n'
                      'are you sure your read file and alignment file match?'.format(a.read_name))
         if a.ref_name not in refs:
-            sys.exit('Error: could not find reference {}\nare you sure '
+            sys.exit('\nError: could not find reference {}\nare you sure '
                      'your reference file and alignment file match?'.format(a.ref_name))
 
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
@@ -104,9 +104,10 @@ def make_qscore_model(args, output=sys.stderr):
 
 def print_qscore_fractions(qscores):
     total = sum(qscores.values())
+    print('{};'.format(total), end='')
     for q in sorted(qscores.keys()):
         frac = qscores[q] / total
-        print('{};{}:{:.6f},'.format(total, q, frac), end='')
+        print('{}:{:.6f},'.format(q, frac), end='')
     print()
 
 
