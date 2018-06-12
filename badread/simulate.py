@@ -19,6 +19,7 @@ import uuid
 from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance, \
     float_to_str
 from .error_model import ErrorModel, identity_from_edlib_cigar
+from .qscore_model import QScoreModel, align_sequences_from_edlib_cigar
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
 from . import settings
@@ -30,6 +31,7 @@ def simulate(args):
     target_size = get_target_size(ref_seqs, args.quantity)
     frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev)
     error_model = ErrorModel(args.error_model)
+    qscore_model = QScoreModel(args.qscore_model)
     identities = Identities(args.mean_identity, args.identity_shape, args.max_identity, error_model)
 
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
@@ -65,7 +67,7 @@ def simulate(args):
         fragment = ''.join(fragment)
         fragment = add_glitches(fragment, args.glitch_rate, args.glitch_size, args.glitch_skip)
         read_identity = identities.get_identity()
-        seq, quals = sequence_fragment(fragment, read_identity, error_model)
+        seq, quals = sequence_fragment(fragment, read_identity, error_model, qscore_model)
         read_name = uuid.uuid4()
 
         print('@{} {}'.format(read_name, ','.join(info)))
@@ -201,7 +203,7 @@ def get_junk_fragment(fragment_length):
     return get_random_sequence(repeat_length) * repeat_count
 
 
-def sequence_fragment(fragment, target_identity, error_model):
+def sequence_fragment(fragment, target_identity, error_model, qscore_model):
 
     if error_model.type == 'perfect':
         q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
@@ -287,18 +289,51 @@ def sequence_fragment(fragment, target_identity, error_model):
                         weight = settings.ALIGNMENT_SIZE / frag_len
                         errors = (estimated_errors * weight) + (errors * (1-weight))
 
-    # Remove the buffer bases.
-    new_fragment_bases = new_fragment_bases[k_size:-k_size]
-    seq = ''.join(new_fragment_bases)
+    start_trim = len(''.join(new_fragment_bases[:k_size]))
+    end_trim = len(''.join(new_fragment_bases[-k_size:]))
 
-    qual = 'A' * len(seq)
-    # TODO: Phred quality scores
-    # TODO: Phred quality scores
-    # TODO: Phred quality scores
-    # TODO: Phred quality scores
-    # TODO: Phred quality scores
+    seq = ''.join(new_fragment_bases)
+    qual = get_qscores(seq, fragment, qscore_model)
+    assert(len(seq) == len(qual))
+
+    seq = seq[start_trim:-end_trim]
+    qual = qual[start_trim:-end_trim]
 
     return seq, qual
+
+
+def get_qscores(seq, frag, qscore_model):
+    assert len(seq) > 0
+
+    # TODO: I fear this full sequence alignment will be slow for long and inaccurate sequences.
+    #       Can I break it into chunks for better performance?
+    cigar = edlib.align(seq, frag, task='path')['cigar']
+    aligned_seq, aligned_frag, full_cigar = align_sequences_from_edlib_cigar(seq, frag, cigar)
+    aligned_len = len(aligned_seq)
+    qscores = []
+    for i in range(aligned_len):
+        if full_cigar[i] == 'D':
+            continue
+        start, end = i, i
+        partial_cigar = full_cigar[i]
+        k_size = 1
+        while start > 0 and end < aligned_len - 1 and k_size < qscore_model.kmer_size:
+            start -= 1
+            while full_cigar[start] == 'D':
+                start -= 1
+            end += 1
+            while full_cigar[end] == 'D':
+                end += 1
+            partial_cigar = full_cigar[start:end+1]
+            k_size = len(partial_cigar.replace('D', ''))
+            assert k_size % 2 == 1  # should be an odd length k-mer
+            if k_size >= qscore_model.kmer_size:
+                break
+        assert k_size <= qscore_model.kmer_size
+        q = qscore_model.get_qscore(partial_cigar)
+        qscores.append(q)
+
+    return ''.join(qscores)
 
 
 def get_start_adapter(rate, amount, adapter):

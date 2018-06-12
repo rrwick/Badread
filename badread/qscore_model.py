@@ -12,10 +12,12 @@ If not, see <http://www.gnu.org/licenses/>.
 """
 
 import collections
+import random
 import re
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, float_to_str
+from . import settings
 
 
 def make_qscore_model(args, output=sys.stderr):
@@ -116,3 +118,94 @@ def print_qscore_fractions(cigar, qscores, min_occur):
         frac_str = float_to_str(frac, decimals=6, trim_zeros=True)
         print('{}:{},'.format(q, frac_str), end='')
     print()
+
+
+class QScoreModel(object):
+
+    def __init__(self, model_type_or_filename, output=sys.stderr):
+        self.scores = {}
+        self.probabilities = {}
+        self.kmer_size = 1
+        print('', file=output)
+
+        if model_type_or_filename == 'random':
+            print('Using a random qscore model', file=output)
+            self.type = 'random'
+            for c in ['=', 'X', 'I']:
+                top_q = settings.RANDOM_QSCORE_MAX
+                self.scores[c] = list(range(1, top_q + 1))
+                self.probabilities[c] = [1 / top_q] * top_q
+
+        elif model_type_or_filename == 'ideal':
+            print('Using an ideal qscore model', file=output)
+            self.type = 'ideal'
+
+            # TODO: build some qscore distributions for 3-mers.
+            #       ===    ->   good scores
+            #       =      ->   moderate scores
+            #       I, X   ->   bad scores
+
+        else:
+            print('Loading qscore model from {}'.format(model_type_or_filename), file=output)
+            self.type = 'model'
+            last_cigar_len = 0
+            with open(model_type_or_filename, 'rt') as model_file:
+                for line in model_file:
+                    parts = line.strip().split(';')
+                    try:
+                        if parts[0] == 'overall':
+                            continue
+
+                        cigar = parts[0]
+                        k = len(cigar.replace('D', ''))
+                        if k > self.kmer_size:
+                            self.kmer_size = k
+
+                        print(' ' * last_cigar_len, end='')
+                        print('\r  ' + cigar, file=output, end='')
+                        last_cigar_len = len(cigar)
+                        scores_and_probs = [x.split(':') for x in parts[2].split(',') if x]
+                        self.scores[cigar] = [int(x[0]) for x in scores_and_probs]
+                        self.probabilities[cigar] = [float(x[1]) for x in scores_and_probs]
+                    except (IndexError, ValueError):
+                        sys.exit('Error: {} does not seem to be a valid qscore model '
+                                 'file'.format(model_type_or_filename))
+                print('\r  done' + ' ' * (last_cigar_len - 4), file=output)
+
+    def get_qscore(self, cigar):
+        if self.type == 'random':
+            qscore = random.randint(1, 30)
+        else:
+            while True:
+                assert len(cigar.replace('D', '')) % 2 == 1
+                if cigar in self.scores:
+                    scores = self.scores[cigar]
+                    probs = self.probabilities[cigar]
+                    qscore = random.choices(scores, weights=probs)[0]
+                    break
+                cigar = cigar[1:-1].strip('D')
+        return chr(qscore + 33)
+
+
+def align_sequences_from_edlib_cigar(seq, frag, cigar, gap_char='-'):
+    aligned_seq, aligned_frag, full_cigar = [], [], []
+    seq_pos, frag_pos = 0, 0
+    cigar_parts = re.findall(r'\d+[IDX=]', cigar)
+    for c in cigar_parts:
+        cigar_type = c[-1]
+        cigar_size = int(c[:-1])
+        if cigar_type == '=' or cigar_type == 'X':
+            aligned_seq.append(seq[seq_pos:seq_pos+cigar_size])
+            aligned_frag.append(frag[frag_pos:frag_pos+cigar_size])
+            seq_pos += cigar_size
+            frag_pos += cigar_size
+        elif cigar_type == 'I':
+            aligned_seq.append(seq[seq_pos:seq_pos+cigar_size])
+            aligned_frag.append(gap_char * cigar_size)
+            seq_pos += cigar_size
+        elif cigar_type == 'D':
+            aligned_seq.append(gap_char * cigar_size)
+            aligned_frag.append(frag[frag_pos:frag_pos+cigar_size])
+            frag_pos += cigar_size
+        full_cigar.append(cigar_type * cigar_size)
+    return ''.join(aligned_seq), ''.join(aligned_frag), ''.join(full_cigar)

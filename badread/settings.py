@@ -29,3 +29,7 @@ ALIGNMENT_SIZE = 1000
 # identity (e.g. 50%) as that might break some things. These settings control how low they can go.
 MIN_MEAN_READ_LENGTH = 100
 MIN_MEAN_READ_IDENTITY = 50
+
+
+# If a random qscore model is used, this controls the range of the qualities.
+RANDOM_QSCORE_MAX = 20

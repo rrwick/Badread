@@ -132,3 +132,5 @@ def align_sequences(read_seq, read_qual, ref_seq, alignment, gap_char='-'):
             alignment.deletions += cigar_size
             ref_pos += cigar_size
     return ''.join(read), ''.join(qual), ''.join(ref), errors_per_read_pos
+
+

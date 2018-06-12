@@ -93,7 +93,10 @@ def simulate_subparser(subparsers):
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='random',
                           help='Can be "random" (for random errors), "perfect" (for no errors) '
-                               'or a filename for a read error model (for realistic errors)')
+                               'or a model filename for realistic errors')
+    sim_args.add_argument('--qscore_model', type=str, default='random',
+                          help='Can be "random" (for random qscores) or a model filename for '
+                               'realistic qscores')
 
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
