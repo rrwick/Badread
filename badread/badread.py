@@ -97,6 +97,9 @@ def simulate_subparser(subparsers):
     sim_args.add_argument('--qscore_model', type=str, default='random',
                           help='Can be "random" (for random qscores) or a model filename (for '
                                'realistic qscores)')
+    sim_args.add_argument('--seed', type=int,
+                          help='Random number generator seed for deterministic output (default: '
+                               'different output each time)')
 
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '

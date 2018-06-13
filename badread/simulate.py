@@ -33,7 +33,9 @@ def simulate(args):
     error_model = ErrorModel(args.error_model)
     qscore_model = QScoreModel(args.qscore_model)
     identities = Identities(args.mean_identity, args.identity_shape, args.max_identity, error_model)
-
+    if args.seed is not None:
+        random.seed(args.seed)
+        np.random.seed(args.seed)
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
     end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)

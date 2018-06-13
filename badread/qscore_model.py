@@ -219,9 +219,8 @@ class QScoreModel(object):
                     k = len(cigar.replace('D', ''))
                     if k > self.kmer_size:
                         self.kmer_size = k
-
-                    print(' ' * last_cigar_len, file=output, end='')
-                    print('\r  ' + cigar, file=output, end='')
+                    print('\r  ' + cigar + (' ' * (last_cigar_len - len(cigar))),
+                          file=output, end='')
                     last_cigar_len = len(cigar)
                     scores_and_probs = [x.split(':') for x in parts[2].split(',') if x]
                     self.scores[cigar] = [int(x[0]) for x in scores_and_probs]
