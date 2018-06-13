@@ -216,6 +216,29 @@ class TestLoadQScoreModel(unittest.TestCase):
         self.assertEqual(self.model.type, 'model')
 
 
+class TestLoadBuiltInModels(unittest.TestCase):
+    """
+    Loads the Nanopore and PacBio models that come with Badread.
+    """
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_nanopore(self):
+        model = badread.qscore_model.QScoreModel('nanopore', output=self.null)
+        self.assertGreater(len(model.scores), 1000)
+        self.assertEqual(model.kmer_size, 9)
+        self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
+
+    def test_pacbio(self):
+        model = badread.qscore_model.QScoreModel('pacbio', output=self.null)
+        self.assertGreater(len(model.scores), 1000)
+        self.assertEqual(model.kmer_size, 9)
+        self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
+
+
 class TestLoadedQScoreModelDistributions(unittest.TestCase):
     """
     Loads a simple qscore error model and tests to make sure the distributions which come from

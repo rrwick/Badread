@@ -13,6 +13,8 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import collections
 import edlib
+import os
+import pathlib
 import random
 import re
 import sys
@@ -161,11 +163,16 @@ class QScoreModel(object):
         self.scores, self.probabilities = {}, {}
         self.kmer_size = 1
         self.type = None
+        this_script_dir = pathlib.Path(os.path.dirname(os.path.realpath(__file__)))
 
         if model_type_or_filename == 'random':
             self.set_up_random_model(output)
         elif model_type_or_filename == 'ideal':
             self.set_up_ideal_model(output)
+        elif model_type_or_filename == 'nanopore':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore.gz'), output)
+        elif model_type_or_filename == 'pacbio':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'pacbio.gz'), output)
         else:
             self.load_from_file(model_type_or_filename, output)
 

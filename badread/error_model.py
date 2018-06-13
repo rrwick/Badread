@@ -14,6 +14,7 @@ If not, see <http://www.gnu.org/licenses/>.
 import collections
 import edlib
 import itertools
+import os
 import pathlib
 import random
 import re
@@ -80,11 +81,16 @@ class ErrorModel(object):
         self.alternatives = {}
         self.probabilities = {}
         self.mutations_by_base = {}
+        this_script_dir = pathlib.Path(os.path.dirname(os.path.realpath(__file__)))
 
         if model_type_or_filename == 'random':
             print('\nUsing a random error model', file=output)
             self.type = 'random'
             self.kmer_size = 1
+        elif model_type_or_filename == 'nanopore':
+            self.load_from_file(str(this_script_dir / 'error_models' / 'nanopore.gz'), output)
+        elif model_type_or_filename == 'pacbio':
+            self.load_from_file(str(this_script_dir / 'error_models' / 'pacbio.gz'), output)
         else:
             self.load_from_file(model_type_or_filename, output)
 

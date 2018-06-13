@@ -186,6 +186,27 @@ class TestLoadErrorModel(unittest.TestCase):
         self.assertAlmostEqual(probs[5], 0.005422)
 
 
+class TestLoadBuiltInModels(unittest.TestCase):
+    """
+    Loads the Nanopore and PacBio models that come with Badread.
+    """
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_nanopore(self):
+        model = badread.error_model.ErrorModel('nanopore', output=self.null)
+        self.assertEqual(model.kmer_size, 7)
+        self.assertEqual(len(model.alternatives), 16384)
+
+    def test_pacbio(self):
+        model = badread.error_model.ErrorModel('pacbio', output=self.null)
+        self.assertEqual(model.kmer_size, 7)
+        self.assertEqual(len(model.alternatives), 16384)
+
+
 class Test4MerErrorModel(unittest.TestCase):
     """
     Uses a simple 4-mer error model to make errors.
