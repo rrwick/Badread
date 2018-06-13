@@ -152,7 +152,7 @@ class TestLoadErrorModel(unittest.TestCase):
     """
     def setUp(self):
         null = open(os.devnull, 'w')
-        model_filename = os.path.join(os.path.dirname(__file__), '4-mer_model')
+        model_filename = os.path.join(os.path.dirname(__file__), '4-mer_error_model')
         self.model = badread.error_model.ErrorModel(model_filename, output=null)
         null.close()
 
@@ -192,7 +192,7 @@ class Test4MerErrorModel(unittest.TestCase):
     """
     def setUp(self):
         null = open(os.devnull, 'w')
-        model_filename = os.path.join(os.path.dirname(__file__), '4-mer_model')
+        model_filename = os.path.join(os.path.dirname(__file__), '4-mer_error_model')
         self.model = badread.error_model.ErrorModel(model_filename, output=null)
         null.close()
 

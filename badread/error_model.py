@@ -81,32 +81,34 @@ class ErrorModel(object):
         self.probabilities = {}
         self.mutations_by_base = {}
 
-        print('', file=output)
         if model_type_or_filename == 'random':
-            print('Using a random error model', file=output)
+            print('\nUsing a random error model', file=output)
             self.type = 'random'
             self.kmer_size = 1
         else:
-            print('Loading error model from {}'.format(model_type_or_filename), file=output)
-            self.type = 'model'
-            with get_open_func(model_type_or_filename)(model_type_or_filename, 'rt') as model_file:
-                for line in model_file:
-                    kmer = line.split(',', 1)[0]
-                    print('\r  ' + kmer, file=output, end='')
+            self.load_from_file(model_type_or_filename, output)
 
-                    # All k-mers in the model must be the same size.
-                    if self.kmer_size is None:
-                        self.kmer_size = len(kmer)
-                    else:
-                        assert self.kmer_size == len(kmer)
+    def load_from_file(self, filename, output):
+        print('\nLoading error model from {}'.format(filename), file=output)
+        self.type = 'model'
+        with get_open_func(filename)(filename, 'rt') as model_file:
+            for line in model_file:
+                kmer = line.split(',', 1)[0]
+                print('\r  ' + kmer, file=output, end='')
 
-                    alternatives = [x.split(',') for x in line.strip().split(';') if x]
-                    assert alternatives[0][0] == kmer
+                # All k-mers in the model must be the same size.
+                if self.kmer_size is None:
+                    self.kmer_size = len(kmer)
+                else:
+                    assert self.kmer_size == len(kmer)
 
-                    self.alternatives[kmer] = [align_kmers(kmer, x[0]) for x in alternatives]
-                    self.probabilities[kmer] = [float(x[1]) for x in alternatives]
-            print('\r  done' + ' ' * (self.kmer_size - 4),  # spaces to cover up last k-mer
-                  file=output)
+                alternatives = [x.split(',') for x in line.strip().split(';') if x]
+                assert alternatives[0][0] == kmer
+
+                self.alternatives[kmer] = [align_kmers(kmer, x[0]) for x in alternatives]
+                self.probabilities[kmer] = [float(x[1]) for x in alternatives]
+        print('\r  done' + ' ' * (self.kmer_size - 4),  # spaces to cover up last k-mer
+              file=output)
 
     def add_errors_to_kmer(self, kmer):
         """

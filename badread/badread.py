@@ -213,11 +213,17 @@ def plot_subparser(subparsers):
 def check_simulate_args(args):
     # TODO: make sure reference exists
 
-    model = args.error_model.lower()
-    if model != 'random' and not pathlib.Path(args.error_model).is_file():
-            sys.exit('Error: {} is not a file\n'
-                     '  --error_model must be "random", "perfect" or a '
-                     'filename'.format(args.error_model))
+    error_model = args.error_model.lower()
+    if error_model != 'random' and not pathlib.Path(args.error_model).is_file():
+        sys.exit('Error: {} is not a file\n'
+                 '  --error_model must be "random" or a filename'.format(args.error_model))
+
+    qscore_model = args.qscore_model.lower()
+    if qscore_model != 'random' and qscore_model != 'ideal' and \
+            not pathlib.Path(args.error_model).is_file():
+        sys.exit('Error: {} is not a file\n'
+                 '  --qscore_model must be "random", "ideal" or a '
+                 'filename'.format(args.error_model))
 
     if args.chimeras > 50:
         sys.exit('Error: --chimeras cannot be greater than 50')

@@ -19,7 +19,7 @@ import uuid
 from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance, \
     float_to_str
 from .error_model import ErrorModel, identity_from_edlib_cigar
-from .qscore_model import QScoreModel, align_sequences_from_edlib_cigar
+from .qscore_model import QScoreModel, get_qscores
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
 from . import settings
@@ -298,40 +298,6 @@ def sequence_fragment(fragment, target_identity, error_model, qscore_model):
     return seq, qual
 
 
-def get_qscores(seq, frag, qscore_model):
-    assert len(seq) > 0
-
-    # TODO: I fear this full sequence alignment will be slow for long and inaccurate sequences.
-    #       Can I break it into chunks for better performance?
-    cigar = edlib.align(seq, frag, task='path')['cigar']
-    aligned_seq, aligned_frag, full_cigar = align_sequences_from_edlib_cigar(seq, frag, cigar)
-    aligned_len = len(aligned_seq)
-    qscores = []
-    for i in range(aligned_len):
-        if full_cigar[i] == 'D':
-            continue
-        start, end = i, i
-        partial_cigar = full_cigar[i]
-        k_size = 1
-        while start > 0 and end < aligned_len - 1 and k_size < qscore_model.kmer_size:
-            start -= 1
-            while full_cigar[start] == 'D':
-                start -= 1
-            end += 1
-            while full_cigar[end] == 'D':
-                end += 1
-            partial_cigar = full_cigar[start:end+1]
-            k_size = len(partial_cigar.replace('D', ''))
-            assert k_size % 2 == 1  # should be an odd length k-mer
-            if k_size >= qscore_model.kmer_size:
-                break
-        assert k_size <= qscore_model.kmer_size
-        q = qscore_model.get_qscore(partial_cigar)
-        qscores.append(q)
-
-    return ''.join(qscores)
-
-
 def get_start_adapter(rate, amount, adapter):
     if not adapter:
         return ''
@@ -356,10 +322,6 @@ def get_end_adapter(rate, amount, adapter):
 
 
 def get_adapter_frag_length(amount, adapter):
-    """
-    Uses a beta distribution to choose the fragment length.
-    desmos.com/calculator/l2ssxwgqqf
-    """
     beta_a = 2.0 * amount
     beta_b = 2.0 - beta_a
     return round(int(len(adapter) * np.random.beta(beta_a, beta_b)))

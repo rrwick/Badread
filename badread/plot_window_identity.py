@@ -15,6 +15,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement
+from .qscore_model import qscore_char_to_val
 
 
 def plot_window_identity(args):
@@ -33,7 +34,7 @@ def plot_window_identity(args):
                                                  convert_to_identity=True)
 
         if args.qual:
-            read_qual = [ord(q) - 33 for q in read_qual]
+            read_qual = [qscore_char_to_val(q) for q in read_qual]
             _, qualities = get_window_means(read_qual, args.window, a.read_start,
                                             convert_to_identity=False)
         else:

@@ -32,4 +32,14 @@ MIN_MEAN_READ_IDENTITY = 50
 
 
 # If a random qscore model is used, this controls the range of the qualities.
+RANDOM_QSCORE_MIN = 1
 RANDOM_QSCORE_MAX = 20
+
+
+# If an ideal qscore model is used, these settings control the range of qualities.
+IDEAL_QSCORE_GOOD_MIN = 36
+IDEAL_QSCORE_GOOD_MAX = 40
+IDEAL_QSCORE_MEDIUM_MIN = 11
+IDEAL_QSCORE_MEDIUM_MAX = 15
+IDEAL_QSCORE_BAD_MIN = 1
+IDEAL_QSCORE_BAD_MAX = 5
