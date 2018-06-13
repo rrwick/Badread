@@ -29,28 +29,34 @@ def get_qscores(seq, frag, qscore_model):
     # TODO: I fear this full sequence alignment will be slow for long and inaccurate sequences.
     #       Can I break it into chunks for better performance?
     cigar = edlib.align(seq, frag, task='path')['cigar']
+
     aligned_seq, aligned_frag, full_cigar = align_sequences_from_edlib_cigar(seq, frag, cigar)
-    aligned_len = len(aligned_seq)
+    unaligned_len = len(seq)
+    margins = (qscore_model.kmer_size - 1) // 2
     qscores = []
-    for i in range(aligned_len):
-        if full_cigar[i] == 'D':
-            continue
-        start, end = i, i
-        partial_cigar = full_cigar[i]
-        k_size = 1
-        while start > 0 and end < aligned_len - 1 and k_size < qscore_model.kmer_size:
-            start -= 1
-            while full_cigar[start] == 'D':
-                start -= 1
-            end += 1
-            while full_cigar[end] == 'D':
-                end += 1
-            partial_cigar = full_cigar[start:end+1]
-            k_size = len(partial_cigar.replace('D', ''))
-            assert k_size % 2 == 1  # should be an odd length k-mer
-            if k_size >= qscore_model.kmer_size:
-                break
+
+    seq_pos_to_alignment_pos = {}
+    i, j = 0, 0
+    for c in full_cigar:
+        if c != 'D':
+            seq_pos_to_alignment_pos[i] = j
+            i += 1
+        j += 1
+
+    for i in range(unaligned_len):
+        start = i - margins
+        end = i + margins
+        while start < 0 or end >= unaligned_len:  # pull back to a smaller k-mer near the seq ends
+            start += 1
+            end -= 1
+        start = seq_pos_to_alignment_pos[start]
+        end = seq_pos_to_alignment_pos[end]
+        partial_cigar = full_cigar[start:end + 1]
+        assert not partial_cigar.startswith('D')
+        assert not partial_cigar.endswith('D')
+        k_size = len(partial_cigar.replace('D', ''))
         assert k_size <= qscore_model.kmer_size
+        assert k_size % 2 == 1  # should be an odd length k-mer
         q = qscore_model.get_qscore(partial_cigar)
         qscores.append(q)
 

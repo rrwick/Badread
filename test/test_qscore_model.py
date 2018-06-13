@@ -370,3 +370,33 @@ class TestGetQScoresLoadedModel(unittest.TestCase):
     def test_get_qscores_2(self):
         self.check_min_positions('ACGACTCACGTCAGACT',
                                  'ACGACTACGTCAGACT', 6)
+
+
+class TestBugs(unittest.TestCase):
+    """
+    These tests are for bugs I found (and fixed).
+    """
+    def setUp(self):
+        null = open(os.devnull, 'w')
+        self.model = badread.qscore_model.QScoreModel('nanopore', output=null)
+        null.close()
+
+    def test_bug_1(self):
+        """
+        This case involves an alignment that ends in deletions. It caused a crash in the
+        get_qscores function.
+        """
+        seq = 'CGGGCGCAACGCGTTCGATGCTCCACGTCAGTGAGCCTAAGCATATAAGCGAAAGGCT'
+        frag = 'CGTCCGCTACGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
+        qscores = badread.qscore_model.get_qscores(seq, frag, self.model)
+        self.assertEqual(len(seq), len(qscores))
+
+    def test_bug_2(self):
+        """
+        This case involves an alignment that starts with deletions. It caused a crash in the
+        get_qscores function.
+        """
+        seq = 'CGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
+        frag = 'ATATCGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
+        qscores = badread.qscore_model.get_qscores(seq, frag, self.model)
+        self.assertEqual(len(seq), len(qscores))
