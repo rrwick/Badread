@@ -77,35 +77,3 @@ class TestBetaIdentity(unittest.TestCase):
         identities = badread.identities.Identities(90, 8, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
-
-
-class TestPerfectErrorModel(unittest.TestCase):
-    """
-    If the error model was set to 'perfect', then we always use 100% identity, regardless of the
-    settings.
-    """
-
-    def setUp(self):
-        self.null = open(os.devnull, 'w')
-        self.model = badread.error_model.ErrorModel('perfect', output=self.null)
-
-    def tearDown(self):
-        self.null.close()
-
-    def test_perfect_error_model_1(self):
-        identities = badread.identities.Identities(100, 4, 100, error_model=self.model,
-                                                   output=self.null)
-        for _ in range(10):
-            self.assertEqual(identities.get_identity(), 1.0)
-
-    def test_perfect_error_model_2(self):
-        identities = badread.identities.Identities(80, 4, 80, error_model=self.model,
-                                                   output=self.null)
-        for _ in range(10):
-            self.assertEqual(identities.get_identity(), 1.0)
-
-    def test_perfect_error_model_3(self):
-        identities = badread.identities.Identities(90, 4, 95, error_model=self.model,
-                                                   output=self.null)
-        for _ in range(10):
-            self.assertEqual(identities.get_identity(), 1.0)

@@ -26,12 +26,6 @@ class Identities(object):
         self.max_identity = max_identity / 100.0  # convert from percentage
         print('', file=output)
 
-        if error_model is not None and error_model.type == 'perfect':
-            if self.max_identity < 1:
-                print('Setting identity to 100% based on perfect error model', file=output)
-                self.max_identity = 1
-                self.mean = 1
-
         if self.mean == self.max_identity:
             self.beta_a, self.beta_b = None, None
             print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)

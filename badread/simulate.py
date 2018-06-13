@@ -205,10 +205,6 @@ def get_junk_fragment(fragment_length):
 
 def sequence_fragment(fragment, target_identity, error_model, qscore_model):
 
-    if error_model.type == 'perfect':
-        q_string = ''.join(random.choice('ABCDEFGHI') for _ in range(len(fragment)))
-        return fragment, q_string
-
     # Buffer the fragment a bit so errors can be added to the first and last bases.
     k_size = error_model.kmer_size
     fragment = get_random_sequence(k_size) + fragment + get_random_sequence(k_size)

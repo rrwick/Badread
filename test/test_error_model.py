@@ -358,34 +358,3 @@ class TestRandomErrorModel(unittest.TestCase):
             new_kmer = self.model.add_errors_to_kmer('ACGT')
             new_kmers.add('_'.join(new_kmer))
         self.assertEqual(len(new_kmers), 44)
-
-
-class TestPerfectErrorModel(unittest.TestCase):
-    """
-    Tests a perfect error model (no errors ever added to k-mers).
-    """
-    def setUp(self):
-        null = open(os.devnull, 'w')
-        self.model = badread.error_model.ErrorModel('perfect', output=null)
-        null.close()
-
-    def test_k_size(self):
-        self.assertEqual(self.model.kmer_size, 1)
-
-    def test_1_mer(self):
-        all_1_mers = [''.join(x) for x in itertools.product('ACGT', repeat=1)]
-        for kmer in all_1_mers:
-            new_kmer = self.model.add_errors_to_kmer(kmer)
-            self.assertEqual(new_kmer, [x for x in kmer])
-
-    def test_2_mer(self):
-        all_2_mers = [''.join(x) for x in itertools.product('ACGT', repeat=2)]
-        for kmer in all_2_mers:
-            new_kmer = self.model.add_errors_to_kmer(kmer)
-            self.assertEqual(new_kmer, [x for x in kmer])
-
-    def test_3_mer(self):
-        all_3_mers = [''.join(x) for x in itertools.product('ACGT', repeat=3)]
-        for kmer in all_3_mers:
-            new_kmer = self.model.add_errors_to_kmer(kmer)
-            self.assertEqual(new_kmer, [x for x in kmer])

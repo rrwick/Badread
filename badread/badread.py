@@ -92,11 +92,11 @@ def simulate_subparser(subparsers):
                           help='Sequencing identity distribution (mean, max and shape, '
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='random',
-                          help='Can be "random" (for random errors), "perfect" (for no errors) '
-                               'or a model filename for realistic errors')
+                          help='Can be "random" (for random errors) or a model filename (for '
+                               'realistic errors)')
     sim_args.add_argument('--qscore_model', type=str, default='random',
-                          help='Can be "random" (for random qscores) or a model filename for '
-                               'realistic qscores')
+                          help='Can be "random" (for random qscores) or a model filename (for '
+                               'realistic qscores)')
 
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
@@ -214,8 +214,7 @@ def check_simulate_args(args):
     # TODO: make sure reference exists
 
     model = args.error_model.lower()
-    if model != 'perfect' and model != 'random':
-        if not pathlib.Path(args.error_model).is_file():
+    if model != 'random' and not pathlib.Path(args.error_model).is_file():
             sys.exit('Error: {} is not a file\n'
                      '  --error_model must be "random", "perfect" or a '
                      'filename'.format(args.error_model))

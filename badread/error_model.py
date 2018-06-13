@@ -14,6 +14,7 @@ If not, see <http://www.gnu.org/licenses/>.
 import collections
 import edlib
 import itertools
+import pathlib
 import random
 import re
 import sys
@@ -85,11 +86,6 @@ class ErrorModel(object):
             print('Using a random error model', file=output)
             self.type = 'random'
             self.kmer_size = 1
-        elif model_type_or_filename == 'perfect':
-            print('Using a perfect error model (reads will have no base-level errors)',
-                  file=output)
-            self.type = 'perfect'
-            self.kmer_size = 1
         else:
             print('Loading error model from {}'.format(model_type_or_filename), file=output)
             self.type = 'model'
@@ -119,8 +115,6 @@ class ErrorModel(object):
         """
         if self.type == 'random':
             return add_one_random_change(kmer)
-        elif self.type == 'perfect':
-            return [x for x in kmer]
 
         if kmer not in self.alternatives:
             return add_one_random_change(kmer)
