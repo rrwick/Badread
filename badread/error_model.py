@@ -19,7 +19,7 @@ import re
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, random_chance, get_random_base, \
-    get_random_different_base
+    get_random_different_base, get_open_func
 
 
 def make_error_model(args, output=sys.stderr):
@@ -93,7 +93,7 @@ class ErrorModel(object):
         else:
             print('Loading error model from {}'.format(model_type_or_filename), file=output)
             self.type = 'model'
-            with open(model_type_or_filename, 'rt') as model_file:
+            with get_open_func(model_type_or_filename)(model_type_or_filename, 'rt') as model_file:
                 for line in model_file:
                     kmer = line.split(',', 1)[0]
                     print('\r  ' + kmer, file=output, end='')

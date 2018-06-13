@@ -16,7 +16,7 @@ import random
 import re
 import sys
 from .alignment import load_alignments, align_sequences
-from .misc import load_fasta, load_fastq, reverse_complement, float_to_str
+from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_open_func
 from . import settings
 
 
@@ -149,7 +149,7 @@ class QScoreModel(object):
             print('Loading qscore model from {}'.format(model_type_or_filename), file=output)
             self.type = 'model'
             last_cigar_len = 0
-            with open(model_type_or_filename, 'rt') as model_file:
+            with get_open_func(model_type_or_filename)(model_type_or_filename, 'rt') as model_file:
                 for line in model_file:
                     parts = line.strip().split(';')
                     try:
