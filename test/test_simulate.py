@@ -50,14 +50,13 @@ class TestPerfectSequenceFragment(unittest.TestCase):
         self.assertEqual(len(frag), len(qual))
 
 
-
 class TestSequenceFragment(unittest.TestCase):
     """
     Tests the sequence_fragment function with a random error model.
     """
     def setUp(self):
         self.null = open(os.devnull, 'w')
-        self.trials = 10
+        self.trials = 20
         self.identities_to_test = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65]
         self.read_lengths_to_test = [10000, 3000, 1000]
         self.read_delta = 0.5
