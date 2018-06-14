@@ -159,8 +159,10 @@ class TestIdealModel(unittest.TestCase):
         self.assertEqual(self.model.type, 'ideal')
 
     def test_scores_and_probs_cigars(self):
-        self.assertEqual(sorted(self.model.scores.keys()), sorted(['===', '=', 'X', 'I']))
-        self.assertEqual(sorted(self.model.probabilities.keys()), sorted(['===', '=', 'X', 'I']))
+        self.assertEqual(sorted(self.model.scores.keys()),
+                         sorted(['=========', '=======', '=====', '===', '=', 'X', 'I']))
+        self.assertEqual(sorted(self.model.probabilities.keys()),
+                         sorted(['=========', '=======', '=====', '===', '=', 'X', 'I']))
 
     def one_cigar_test(self, cigar, dist_min, dist_max):
         qscores = []
@@ -173,21 +175,33 @@ class TestIdealModel(unittest.TestCase):
         self.assertAlmostEqual(statistics.mean(qscores), target_mean, delta=0.5)
         self.assertAlmostEqual(statistics.stdev(qscores), target_stdev, delta=0.5)
 
-    def test_good_cigar(self):
-        self.one_cigar_test('===', badread.settings.IDEAL_QSCORE_GOOD_MIN,
-                            badread.settings.IDEAL_QSCORE_GOOD_MAX)
+    def test_nine_matches_cigar(self):
+        self.one_cigar_test('=========', badread.settings.IDEAL_QSCORE_RANK_6_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_6_MAX)
 
-    def test_medium_cigar(self):
-        self.one_cigar_test('=', badread.settings.IDEAL_QSCORE_MEDIUM_MIN,
-                            badread.settings.IDEAL_QSCORE_MEDIUM_MAX)
+    def test_seven_matches_cigar(self):
+        self.one_cigar_test('=======', badread.settings.IDEAL_QSCORE_RANK_5_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_5_MAX)
 
-    def test_bad_cigar_1(self):
-        self.one_cigar_test('I', badread.settings.IDEAL_QSCORE_BAD_MIN,
-                            badread.settings.IDEAL_QSCORE_BAD_MAX)
+    def test_five_matches_cigar(self):
+        self.one_cigar_test('=====', badread.settings.IDEAL_QSCORE_RANK_4_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_4_MAX)
 
-    def test_bad_cigar_2(self):
-        self.one_cigar_test('X', badread.settings.IDEAL_QSCORE_BAD_MIN,
-                            badread.settings.IDEAL_QSCORE_BAD_MAX)
+    def test_three_matches_cigar(self):
+        self.one_cigar_test('===', badread.settings.IDEAL_QSCORE_RANK_3_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_3_MAX)
+
+    def test_one_match_cigar(self):
+        self.one_cigar_test('=', badread.settings.IDEAL_QSCORE_RANK_2_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_2_MAX)
+
+    def test_insertion_cigar(self):
+        self.one_cigar_test('I', badread.settings.IDEAL_QSCORE_RANK_1_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_1_MAX)
+
+    def test_mismatch_cigar(self):
+        self.one_cigar_test('X', badread.settings.IDEAL_QSCORE_RANK_1_MIN,
+                            badread.settings.IDEAL_QSCORE_RANK_1_MAX)
 
 
 class TestLoadQScoreModel(unittest.TestCase):
@@ -290,7 +304,7 @@ class TestGetQScoresRandom(unittest.TestCase):
         min_indices = set()
         max_indices = set()
         for _ in range(self.trials):
-            qscores = badread.qscore_model.get_qscores(sequence, fragment, self.model)
+            qscores, _, _ = badread.qscore_model.get_qscores(sequence, fragment, self.model)
             self.assertEqual(len(qscores), len(sequence))
             qscores = [badread.qscore_model.qscore_char_to_val(q) for q in qscores]
             min_indices.add(qscores.index(min(qscores)))
@@ -325,7 +339,7 @@ class TestGetQScoresIdeal(unittest.TestCase):
     def check_min_positions(self, sequence, fragment, expected_min):
         min_indices = set()
         for _ in range(self.trials):
-            qscores = badread.qscore_model.get_qscores(sequence, fragment, self.model)
+            qscores, _, _ = badread.qscore_model.get_qscores(sequence, fragment, self.model)
             self.assertEqual(len(qscores), len(sequence))
             qscores = [badread.qscore_model.qscore_char_to_val(q) for q in qscores]
             min_indices.add(qscores.index(min(qscores)))
@@ -356,7 +370,7 @@ class TestGetQScoresLoadedModel(unittest.TestCase):
     def check_min_positions(self, sequence, fragment, expected_min):
         min_position_counts = collections.defaultdict(int)
         for _ in range(self.trials):
-            qscores = badread.qscore_model.get_qscores(sequence, fragment, self.model)
+            qscores, _, _ = badread.qscore_model.get_qscores(sequence, fragment, self.model)
             self.assertEqual(len(qscores), len(sequence))
             qscores = [badread.qscore_model.qscore_char_to_val(q) for q in qscores]
             min_position_counts[qscores.index(min(qscores))] += 1
@@ -388,7 +402,7 @@ class TestBugs(unittest.TestCase):
         """
         seq = 'CGGGCGCAACGCGTTCGATGCTCCACGTCAGTGAGCCTAAGCATATAAGCGAAAGGCT'
         frag = 'CGTCCGCTACGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
-        qscores = badread.qscore_model.get_qscores(seq, frag, self.model)
+        qscores, _, _ = badread.qscore_model.get_qscores(seq, frag, self.model)
         self.assertEqual(len(seq), len(qscores))
 
     def test_bug_2(self):
@@ -398,5 +412,5 @@ class TestBugs(unittest.TestCase):
         """
         seq = 'CGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
         frag = 'ATATCGGCGGCAGTTCCCCATTCTTCCCCCGCATCGAGTGATAAACCGTAAACATGGGCGTAGACGGCATCCCCT'
-        qscores = badread.qscore_model.get_qscores(seq, frag, self.model)
+        qscores, _, _ = badread.qscore_model.get_qscores(seq, frag, self.model)
         self.assertEqual(len(seq), len(qscores))

@@ -17,9 +17,11 @@ import os
 import pathlib
 import random
 import re
+import statistics
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_open_func
+from .error_model import identity_from_edlib_cigar
 from . import settings
 
 
@@ -29,11 +31,13 @@ def get_qscores(seq, frag, qscore_model):
     # TODO: I fear this full sequence alignment will be slow for long and inaccurate sequences.
     #       Can I break it into chunks for better performance?
     cigar = edlib.align(seq, frag, task='path')['cigar']
+    actual_identity = identity_from_edlib_cigar(cigar)
 
     aligned_seq, aligned_frag, full_cigar = align_sequences_from_edlib_cigar(seq, frag, cigar)
     unaligned_len = len(seq)
     margins = (qscore_model.kmer_size - 1) // 2
-    qscores = []
+
+    qscores, error_probs = [], []
 
     seq_pos_to_alignment_pos = {}
     i, j = 0, 0
@@ -58,9 +62,13 @@ def get_qscores(seq, frag, qscore_model):
         assert k_size <= qscore_model.kmer_size
         assert k_size % 2 == 1  # should be an odd length k-mer
         q = qscore_model.get_qscore(partial_cigar)
-        qscores.append(q)
 
-    return ''.join(qscores)
+        qscores.append(q)
+        error_probs.append(qscore_char_to_error_prob(q))
+
+    identity_by_qscores = 1.0 - statistics.mean(error_probs)
+
+    return ''.join(qscores), actual_identity, identity_by_qscores
 
 
 def make_qscore_model(args, output=sys.stderr):
@@ -137,10 +145,9 @@ def make_qscore_model(args, output=sys.stderr):
                 while aligned_read_seq[start] == ' ':
                     start += 1
                 end += 1
-
-        i += 1
         if i % 1000 == 0:
-            print('.', end='', file=output, flush=True)
+            i += 1
+        print('.', end='', file=output, flush=True)
     print('', file=output, flush=True)
 
     print_qscore_fractions('overall', overall_qscores, 0)
@@ -191,6 +198,7 @@ class QScoreModel(object):
     def set_up_random_model(self, output):
         print('\nUsing a random qscore model', file=output)
         self.type = 'random'
+        self.kmer_size = 1
         for c in ['=', 'X', 'I']:
             self.scores[c], self.probabilities[c] = \
                 uniform_dist_scores_and_probs(settings.RANDOM_QSCORE_MIN,
@@ -199,16 +207,30 @@ class QScoreModel(object):
     def set_up_ideal_model(self, output):
         print('\nUsing an ideal qscore model', file=output)
         self.type = 'ideal'
-        self.scores['==='], self.probabilities['==='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_GOOD_MIN,
-                                          settings.IDEAL_QSCORE_GOOD_MAX)
-        self.scores['='], self.probabilities['='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_MEDIUM_MIN,
-                                          settings.IDEAL_QSCORE_MEDIUM_MAX)
+        self.kmer_size = 9
+
+        # Lowest quality: mismatches and insertions.
         for c in ['X', 'I']:
             self.scores[c], self.probabilities[c] = \
-                uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_BAD_MIN,
-                                              settings.IDEAL_QSCORE_BAD_MAX)
+                uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_1_MIN,
+                                              settings.IDEAL_QSCORE_RANK_1_MAX)
+
+        # Increasing quality with length of match run
+        self.scores['='], self.probabilities['='] = \
+            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_2_MIN,
+                                          settings.IDEAL_QSCORE_RANK_2_MAX)
+        self.scores['==='], self.probabilities['==='] = \
+            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_3_MIN,
+                                          settings.IDEAL_QSCORE_RANK_3_MAX)
+        self.scores['====='], self.probabilities['====='] = \
+            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_4_MIN,
+                                          settings.IDEAL_QSCORE_RANK_4_MAX)
+        self.scores['======='], self.probabilities['======='] = \
+            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_5_MIN,
+                                          settings.IDEAL_QSCORE_RANK_5_MAX)
+        self.scores['========='], self.probabilities['========='] = \
+            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_6_MIN,
+                                          settings.IDEAL_QSCORE_RANK_6_MAX)
 
     def load_from_file(self, filename, output):
         print('\nLoading qscore model from {}'.format(filename), file=output)
@@ -290,3 +312,11 @@ def qscore_char_to_val(q):
 
 def qscore_val_to_char(q):
     return chr(q + 33)
+
+
+def qscore_val_to_error_prob(q):
+    return 10.0 ** (-q/10.0)
+
+
+def qscore_char_to_error_prob(q):
+    return qscore_val_to_error_prob(qscore_char_to_val(q))

@@ -51,7 +51,7 @@ def simulate(args):
         frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
                                            ref_contigs, ref_contig_weights, ref_circular, args)
         fragment.append(frag_seq)
-        info += frag_info
+        info.append(','.join(frag_info))
 
         while random_chance(chimera_rate):
             info.append('chimera')
@@ -64,15 +64,22 @@ def simulate(args):
             frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
                                                ref_contigs, ref_contig_weights, ref_circular, args)
             fragment.append(frag_seq)
-            info += frag_info
+            info.append(','.join(frag_info))
         fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter_seq))
         fragment = ''.join(fragment)
         fragment = add_glitches(fragment, args.glitch_rate, args.glitch_size, args.glitch_skip)
-        read_identity = identities.get_identity()
-        seq, quals = sequence_fragment(fragment, read_identity, error_model, qscore_model)
+        target_identity = identities.get_identity()
+
+        seq, quals, actual_identity, identity_by_qscores = \
+            sequence_fragment(fragment, target_identity, error_model, qscore_model)
+
+        info.append('length={}'.format(len(seq)))
+        info.append('read_identity={:.2f}%'.format(actual_identity * 100.0))
+        info.append('identity_according_to_qscores={:.2f}%'.format(identity_by_qscores * 100.0))
+
         read_name = uuid.uuid4()
 
-        print('@{} {}'.format(read_name, ','.join(info)))
+        print('@{} {}'.format(read_name, ' '.join(info)))
         print(seq)
         print('+')
         print(quals)
@@ -291,13 +298,13 @@ def sequence_fragment(fragment, target_identity, error_model, qscore_model):
     end_trim = len(''.join(new_fragment_bases[-k_size:]))
 
     seq = ''.join(new_fragment_bases)
-    qual = get_qscores(seq, fragment, qscore_model)
+    qual, actual_identity, identity_by_qscores = get_qscores(seq, fragment, qscore_model)
     assert(len(seq) == len(qual))
 
     seq = seq[start_trim:-end_trim]
     qual = qual[start_trim:-end_trim]
 
-    return seq, qual
+    return seq, qual, actual_identity, identity_by_qscores
 
 
 def get_start_adapter(rate, amount, adapter):
