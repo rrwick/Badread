@@ -44,8 +44,8 @@ class TestPerfectSequenceFragment(unittest.TestCase):
 
     def test_perfect_sequence_fragment(self):
         frag = 'GACCCAGTTTTTTTACTGATTCAGCGTAGGTGCTCTGATCTTCACGCATCTTTGACCGCC'
-        seq, qual = badread.simulate.sequence_fragment(frag, 1.0, self.error_model,
-                                                       self.qscore_model)
+        seq, qual, _, _ = badread.simulate.sequence_fragment(frag, 1.0, self.error_model,
+                                                             self.qscore_model)
         self.assertEqual(frag, seq)
         self.assertEqual(len(frag), len(qual))
 
@@ -61,6 +61,7 @@ class TestSequenceFragment(unittest.TestCase):
         self.read_lengths_to_test = [10000, 3000, 1000]
         self.read_delta = 0.5
         self.mean_delta = 0.05
+        self.repo_dir = pathlib.Path(__file__).parent.parent
 
     def tearDown(self):
         self.null.close()
@@ -79,8 +80,8 @@ class TestSequenceFragment(unittest.TestCase):
         read_identities = []
         for i in range(self.trials):
             frag = badread.misc.get_random_sequence(read_length)
-            seq, qual = badread.simulate.sequence_fragment(frag, target_identity, error_model,
-                                                           qscore_model)
+            seq, qual, _, _ = badread.simulate.sequence_fragment(frag, target_identity,
+                                                                 error_model, qscore_model)
             cigar = edlib.align(frag, seq, task='path')['cigar']
             read_identity = badread.error_model.identity_from_edlib_cigar(cigar)
             read_identities.append(read_identity)
@@ -112,7 +113,7 @@ class TestSequenceFragment(unittest.TestCase):
     def test_nanopore_identity(self):
         if VERBOSE:
             print('\n\nNANOPORE ERROR MODEL\n--------------------')
-        model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'nanopore_errors.gz'
+        model_file = self.repo_dir / 'badread' / 'error_models' / 'nanopore.gz'
         error_model = badread.error_model.ErrorModel(model_file, output=self.null)
         qscore_model = badread.qscore_model.QScoreModel('random', output=self.null)
         for identity in self.identities_to_test:
@@ -122,7 +123,7 @@ class TestSequenceFragment(unittest.TestCase):
     def test_pacbio_identity(self):
         if VERBOSE:
             print('\n\nPACBIO ERROR MODEL\n------------------')
-        model_file = pathlib.Path(__file__).parent.parent / 'error_models' / 'pacbio_errors.gz'
+        model_file = self.repo_dir / 'badread' / 'error_models' / 'pacbio.gz'
         error_model = badread.error_model.ErrorModel(model_file, output=self.null)
         qscore_model = badread.qscore_model.QScoreModel('random', output=self.null)
         for identity in self.identities_to_test:
