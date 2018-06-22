@@ -184,6 +184,8 @@ def qscore_model_subparser(subparsers):
     required_args.add_argument('--min_occur', type=int, default=100,
                                help='CIGARs which occur less than this many times will not be '
                                     'included in the model')
+    required_args.add_argument('--max_output', type=int, default=10000,
+                               help='The outputted model will be limited to this many lines')
 
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,

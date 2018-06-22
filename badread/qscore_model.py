@@ -151,10 +151,15 @@ def make_qscore_model(args, output=sys.stderr):
     print('', file=output, flush=True)
 
     print_qscore_fractions('overall', overall_qscores, 0)
-    for cigar in sorted(per_cigar_qscores.keys(),
-                        key=lambda x: (len(x.replace('D', '')),
-                                       1 / sum(per_cigar_qscores[x].values()))):
+
+    # Output CIGARS in order of most-common to least-common.
+    i = 0
+    for cigar in sorted(per_cigar_qscores.keys(), reverse=True,
+                        key=lambda x: sum(per_cigar_qscores[x].values())):
         print_qscore_fractions(cigar, per_cigar_qscores[cigar], args.min_occur)
+        i += 1
+        if i >= args.max_output:
+            break
 
 
 def print_qscore_fractions(cigar, qscores, min_occur):
