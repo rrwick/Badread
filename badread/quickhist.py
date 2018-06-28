@@ -106,7 +106,6 @@ def quickhist_gamma(a, b, n50, height, output=sys.stderr):
         # These are the original functions to get the density:
         # frag_y = (b ** a) * (x ** (a-1)) * (np.exp(-x * b) / (scipy.special.gamma(a)))
         # base_y = (b ** (a+1)) * (x ** a) * (np.exp(-x * b) / (scipy.special.gamma(a+1)))
-
         # But to avoid overflows, I had to log-ify them:
         frag_y = np.exp((-x*b) + ((a-1)*np.log(x)) + (a*np.log(b)) - scipy.special.gammaln(a))
         base_y = np.exp((-x*b) + (a*np.log(x)) + ((a+1)*np.log(b)) - scipy.special.gammaln(a+1))
@@ -132,9 +131,13 @@ def quickhist_beta(a, b, max_identity, height, output=sys.stderr):
     for b_val in bins:
         x = b_val - (bin_size / 200)  # take the value from the middle of the bin
         if x < 1:
-            y.append(x**(a-1) * (1-x)**(b-1) / scipy.special.beta(a, b))
+            # This is the original function to get the density:
+            # beta = x**(a-1) * (1-x)**(b-1) / scipy.special.beta(a, b)
+            # But to avoid overflows, I had to log-ify it:
+            beta = np.exp((a-1)*np.log(x) + (b-1)*np.log(1-x) - scipy.special.betaln(a, b))
         else:
-            y.append(0.0)
+            beta = 0.0
+        y.append(beta)
     bins *= max_identity
     shape = (hist_min, hist_max)
     draw_hist(y, shape, len(bins), height, tick_interval, output=output)
