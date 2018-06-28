@@ -13,6 +13,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
 import scipy.special
+import scipy.stats
 import sys
 from .quickhist import quickhist_gamma
 from .misc import float_to_str
@@ -60,6 +61,10 @@ def gamma_parameters(gamma_mean, gamma_stdev):
 
 
 def find_n_value(a, b, n):
+    """
+    Uses the integral of the base distribution function to binary search for the N50 (or N-whatever)
+    value.
+    """
     target = 1.0 - (n / 100.0)
     bottom_range = 0.0
     top_range = 1.0
@@ -80,11 +85,15 @@ def find_n_value(a, b, n):
 
 
 def base_distribution_integral(a, b, x):
-    # TODO: this function bombs out if the value of a is too large.
-    #       Could I use log-gamma functions to avoid this, perhaps?
-    g = scipy.special.gamma(a+1)
-    h = inc_gamma(a+1, b*x)
-    return (g - h) / g
+    # This is how I originally computed it, but the values could overflow with large a:
+    # g = scipy.special.gamma(a+1)
+    # h = inc_gamma(a+1, b*x)
+    # integral = 1 - (h / g)
+
+    # So this implementation uses logs to avoid overflow:
+    integral = 1.0 - np.exp(inc_gamma_ln(a+1, b*x) - scipy.special.gammaln(a+1))
+
+    return integral
 
 
 def inc_gamma(a, b):
@@ -94,3 +103,10 @@ def inc_gamma(a, b):
     https://stackoverflow.com/questions/38713199/incomplete-gamma-function-in-scipy
     """
     return scipy.special.gamma(a) * (1-scipy.special.gammainc(a, b))
+
+
+def inc_gamma_ln(a, b):
+    """
+    Natural log of the inc_gamma function.
+    """
+    return scipy.special.gammaln(a) + np.log(1-scipy.stats.gamma.cdf(b, a))
