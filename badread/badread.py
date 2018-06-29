@@ -89,7 +89,7 @@ def simulate_subparser(subparsers):
                           help='Fragment length distribution (mean and stdev in bp, '
                                'default: DEFAULT)')
     sim_args.add_argument('--identity', type=str, default='85,95,5',
-                          help='Sequencing identity distribution (mean, max and shape, '
+                          help='Sequencing identity distribution (mean, max and stdev, '
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='random',
                           help='Can be "random" (for random errors) or a model filename (for '
@@ -257,7 +257,7 @@ def check_simulate_args(args):
         identity_parameters = [float(x) for x in args.identity.split(',')]
         args.mean_identity = identity_parameters[0]
         args.max_identity = identity_parameters[1]
-        args.identity_shape = identity_parameters[2]
+        args.identity_stdev = identity_parameters[2]
     except (ValueError, IndexError):
         sys.exit('Error: could not parse --identity values')
     if args.mean_identity > 100.0:
@@ -273,8 +273,8 @@ def check_simulate_args(args):
     if args.mean_identity > args.max_identity:
         sys.exit('Error: mean identity ({}) cannot be larger than max '
                  'identity ({})'.format(args.mean_identity, args.max_identity))
-    if args.identity_shape <= 0.0:
-        sys.exit('Error: read identity shape must be a positive value')
+    if args.identity_stdev <= 0.0:
+        sys.exit('Error: read identity stdev must be a positive value')
 
     try:
         glitch_parameters = [float(x) for x in args.glitches.split(',')]

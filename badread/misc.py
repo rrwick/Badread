@@ -96,7 +96,7 @@ def load_fastq(filename):
 def load_fasta(filename):
     fasta_seqs = collections.OrderedDict()
     depths, circular = {}, {}
-    p = re.compile('depth=([\d\.]+)')
+    p = re.compile('depth=([\d.]+)')
     with get_open_func(filename)(filename, 'rt') as fasta_file:
         name = ''
         sequence = []
@@ -172,3 +172,14 @@ def float_to_str(v, decimals=1, trim_zeros=False):
             while result.endswith('0'):
                 result = result[:-1]
         return result
+
+
+def print_in_two_columns(l1p1, l2p1, l3p1, l1p2, l2p2, l3p2, output, space_between=6):
+    part_1_len = max(len(l1p1), len(l2p1), len(l3p1)) + space_between
+    format_str = '{:<' + str(part_1_len) + '}'
+    l1p1 = format_str.format(l1p1)
+    l2p1 = format_str.format(l2p1)
+    l3p1 = format_str.format(l3p1)
+    print(l1p1 + l1p2, file=output)
+    print(l2p1 + l2p2, file=output)
+    print(l3p1 + l3p2, file=output)

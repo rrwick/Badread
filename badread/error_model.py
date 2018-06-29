@@ -97,6 +97,7 @@ class ErrorModel(object):
     def load_from_file(self, filename, output):
         print('\nLoading error model from {}'.format(filename), file=output)
         self.type = 'model'
+        count = 0
         with get_open_func(filename)(filename, 'rt') as model_file:
             for line in model_file:
                 kmer = line.split(',', 1)[0]
@@ -113,7 +114,8 @@ class ErrorModel(object):
 
                 self.alternatives[kmer] = [align_kmers(kmer, x[0]) for x in alternatives]
                 self.probabilities[kmer] = [float(x[1]) for x in alternatives]
-        print('\r  done' + ' ' * (self.kmer_size - 4),  # spaces to cover up last k-mer
+                count += 1
+        print('\r  done: loaded error distributions for {} {}-mers'.format(count, self.kmer_size),
               file=output)
 
     def add_errors_to_kmer(self, kmer):

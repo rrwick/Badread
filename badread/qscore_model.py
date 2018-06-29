@@ -241,13 +241,13 @@ class QScoreModel(object):
         print('\nLoading qscore model from {}'.format(filename), file=output)
         self.type = 'model'
         last_cigar_len = 0
+        count = 0
         with get_open_func(filename)(filename, 'rt') as model_file:
             for line in model_file:
                 parts = line.strip().split(';')
                 try:
                     if parts[0] == 'overall':
                         continue
-
                     cigar = parts[0]
                     k = len(cigar.replace('D', ''))
                     if k > self.kmer_size:
@@ -258,10 +258,12 @@ class QScoreModel(object):
                     scores_and_probs = [x.split(':') for x in parts[2].split(',') if x]
                     self.scores[cigar] = [int(x[0]) for x in scores_and_probs]
                     self.probabilities[cigar] = [float(x[1]) for x in scores_and_probs]
+                    count += 1
                 except (IndexError, ValueError):
                     sys.exit('Error: {} does not seem to be a valid qscore model '
                              'file'.format(filename))
-            print('\r  done' + ' ' * (last_cigar_len - 4), file=output)
+            print('\r  done: loaded qscore distributions for {} alignments'.format(count),
+                  file=output)
 
     def get_qscore(self, cigar):
         """

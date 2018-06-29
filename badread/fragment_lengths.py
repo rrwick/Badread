@@ -16,7 +16,7 @@ import scipy.special
 import scipy.stats
 import sys
 from .quickhist import quickhist_gamma
-from .misc import float_to_str
+from .misc import float_to_str, print_in_two_columns
 
 
 class FragmentLengths(object):
@@ -31,13 +31,14 @@ class FragmentLengths(object):
         else:  # gamma distribution
             print('Generating fragment lengths from a gamma distribution:', file=output)
             gamma_a, gamma_b, self.gamma_k, self.gamma_t = gamma_parameters(mean, stdev)
-            print('  k (shape) = ' + '%.4e' % self.gamma_k, file=output)
-            print('  theta (scale) = ' + '%.4e' % self.gamma_t, file=output)
-            print('  mean: {} bp'.format(float_to_str(mean)), file=output)
-            print('  stdev: {} bp'.format(float_to_str(stdev)), file=output)
             n50 = int(round(find_n_value(gamma_a, gamma_b, 50)))
-            print('  theoretical N50: {} bp'.format(n50),
-                  file=output)
+            print_in_two_columns('  mean  = {:>6} bp'.format(float_to_str(mean)),
+                                 '  stdev = {:>6} bp'.format(float_to_str(stdev)),
+                                 '  N50   = {:>6} bp'.format(n50),
+                                 'parameters:',
+                                 '  k (shape)     = {:.4e}'.format(self.gamma_k),
+                                 '  theta (scale) = {:.4e}'.format(self.gamma_t),
+                                 output=output)
             quickhist_gamma(gamma_a, gamma_b, n50, 8, output=output)
 
     def get_fragment_length(self):

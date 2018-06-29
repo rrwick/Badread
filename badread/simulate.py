@@ -28,11 +28,10 @@ from . import settings
 def simulate(args):
     ref_seqs, ref_depths, ref_circular = load_fasta(args.reference)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
-    target_size = get_target_size(ref_seqs, args.quantity)
     frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev)
+    identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity)
     error_model = ErrorModel(args.error_model)
     qscore_model = QScoreModel(args.qscore_model)
-    identities = Identities(args.mean_identity, args.identity_shape, args.max_identity, error_model)
     if args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
@@ -42,9 +41,13 @@ def simulate(args):
     chimera_rate = args.chimeras / 100  # percentage to fraction
     print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
 
+    target_size = get_target_size(ref_seqs, args.quantity)
     print('', file=sys.stderr)
-    print_progress(0)
-    total_size = 0
+    print('Target read set size: {:,} bp'.format(target_size), file=sys.stderr)
+
+    print('', file=sys.stderr)
+    count, total_size = 0, 0
+    print_progress(count, total_size, target_size)
     while total_size < target_size:
         fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter_seq)]
         info = []
@@ -85,7 +88,8 @@ def simulate(args):
         print(quals)
 
         total_size += len(fragment)
-        print_progress(total_size)
+        count += 1
+        print_progress(count, total_size, target_size)
 
     print('\n', file=sys.stderr)
 
@@ -370,11 +374,11 @@ def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
         print('Reads will have no glitches', file=sys.stderr)
     else:
         print('Read glitches:', file=sys.stderr)
-        print('  rate (mean distance between glitches): {}'.format(float_to_str(glitch_rate)),
+        print('  rate (mean distance between glitches) = {:>5}'.format(float_to_str(glitch_rate)),
               file=sys.stderr)
-        print('  size (mean length of random sequence): {}'.format(float_to_str(glitch_size)),
+        print('  size (mean length of random sequence) = {:>5}'.format(float_to_str(glitch_size)),
               file=sys.stderr)
-        print('  skip (mean sequence lost per glitch):  {}'.format(float_to_str(glitch_skip)),
+        print('  skip (mean sequence lost per glitch)  = {:>5}'.format(float_to_str(glitch_skip)),
               file=sys.stderr)
 
 
@@ -401,5 +405,10 @@ def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
     return ''.join(new_fragment)
 
 
-def print_progress(bp):
-    print('\rGenerating reads: {:,} bp'.format(bp), file=sys.stderr, flush=True, end='')
+def print_progress(count, bp, target):
+    plural = ' ' if count == 1 else 's'
+    percent = int(1000.0 * bp / target) / 10
+    if percent > 100.0:
+        percent = 100.0
+    print('\rGenerating reads: {:,} read{}   {:,} bp   {:.1f}%'.format(count, plural, bp, percent),
+          file=sys.stderr, flush=True, end='')
