@@ -26,7 +26,7 @@ from . import settings
 
 
 def simulate(args):
-    ref_seqs, ref_depths, ref_circular = load_fasta(args.reference)
+    ref_seqs, ref_depths, ref_circular = load_reference(args.reference)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
     frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev)
     identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity)
@@ -95,8 +95,8 @@ def simulate(args):
 
 
 def get_ref_contig_weights(ref_seqs, ref_depths):
-    ref_contigs = [x[0] for x in ref_depths]
-    ref_contig_weights = [x[1] * len(ref_seqs[x[0]]) for x in ref_depths]
+    ref_contigs = [x[0] for x in ref_depths.items()]
+    ref_contig_weights = [x[1] * len(ref_seqs[x[0]]) for x in ref_depths.items()]
     return ref_contigs, ref_contig_weights
 
 
@@ -412,3 +412,21 @@ def print_progress(count, bp, target):
         percent = 100.0
     print('\rGenerating reads: {:,} read{}   {:,} bp   {:.1f}%'.format(count, plural, bp, percent),
           file=sys.stderr, flush=True, end='')
+
+
+def load_reference(reference):
+    print('', file=sys.stderr)
+    print('Loading reference from {}'.format(reference), file=sys.stderr)
+    ref_seqs, ref_depths, ref_circular = load_fasta(reference)
+    plural = '' if len(ref_seqs) == 1 else 's'
+    total_size = sum(len(s) for s in ref_seqs.values())
+    print('  {:,} contig{}:'.format(len(ref_seqs), plural), file=sys.stderr)
+    longest_contig_name = max(len(x) for x in ref_seqs)
+    for contig in ref_seqs:
+        contig_name = contig + ','
+        contig_name = contig_name.ljust(longest_contig_name+1)
+        circular_linear = 'circular,' if ref_circular[contig] else 'linear,  '
+        print('    {} {} depth={:.2f}x'.format(contig_name, circular_linear, ref_depths[contig]),
+              file=sys.stderr)
+    print('  total size: {:,} bp'.format(total_size), file=sys.stderr)
+    return ref_seqs, ref_depths, ref_circular

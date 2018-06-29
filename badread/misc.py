@@ -122,7 +122,7 @@ def load_fasta(filename):
                 sequence.append(line)
         if name:
             fasta_seqs[name.split()[0]] = ''.join(sequence)
-    return fasta_seqs, list(depths.items()), circular
+    return fasta_seqs, depths, circular
 
 
 RANDOM_SEQ_DICT = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
