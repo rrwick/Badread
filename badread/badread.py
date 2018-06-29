@@ -85,7 +85,7 @@ def simulate_subparser(subparsers):
 
     sim_args = group.add_argument_group('Simulation parameters',
                                         description='Length and identity and error distributions')
-    sim_args.add_argument('--length', type=str, default='10000,9000',
+    sim_args.add_argument('--length', type=str, default='15000,13000',
                           help='Fragment length distribution (mean and stdev in bp, '
                                'default: DEFAULT)')
     sim_args.add_argument('--identity', type=str, default='85,95,5',
@@ -122,7 +122,7 @@ def simulate_subparser(subparsers):
                               help='This percentage of reads will be random sequence')
     problem_args.add_argument('--chimeras', type=float, default=1,
                               help='Percentage at which separate fragments join together')
-    problem_args.add_argument('--glitches', type=str, default='5000,50,50',
+    problem_args.add_argument('--glitches', type=str, default='10000,25,25',
                               help='Read glitch parameters')
     problem_args.add_argument('--small_plasmid_bias', action='store_true',
                               help='If set, then small circular plasmids are lost when the '
