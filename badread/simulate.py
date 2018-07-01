@@ -60,10 +60,10 @@ def simulate(args):
 
         while random_chance(chimera_rate):
             info.append('chimera')
-            if random_chance(0.25):
+            if random_chance(settings.CHIMERA_END_ADAPTER_CHANCE):
                 fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount,
                                                 args.end_adapter_seq))
-            if random_chance(0.25):
+            if random_chance(settings.CHIMERA_START_ADAPTER_CHANCE):
                 fragment.append(get_start_adapter(start_adapt_rate, start_adapt_amount,
                                                   args.start_adapter_seq))
             frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
