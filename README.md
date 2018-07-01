@@ -2,7 +2,7 @@
 
 Badread is a long read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
 
-Badread is pretty good at generating realistic simulated long read sets, but its focus is more on providing users with _control_ over the simulated reads. This is because I made Badread for the purpose of testing long read assemblers. With it, one can increase the rate of different types of read problems, to see how they affect assembly quality.
+Badread is pretty good at generating realistic simulated long read sets, but its focus is more on providing users with _control_ over the simulated reads. I made Badread for the purpose of testing long read assemblers. With it, one can increase the rate of different types of read problems, to see how they affect assembly quality.
 
 
 
@@ -78,22 +78,22 @@ If you run Badread this way, it's up to you to make sure that all [necessary Pyt
 
 __Generate fake Nanopore reads at 50x depth:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model nanopore | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model nanopore --qscore_model nanopore | gzip > reads.fastq.gz
 ```
 
 __Generate 200 Mbp of fake PacBio reads:__
 ```
-badread simulate --reference ref.fasta --quantity 200M --error_model pacbio | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 200M --error_model pacbio --qscore_model pacbio | gzip > reads.fastq.gz
 ```
 
-__Generate very bad fake reads:__
+__Generate very bad reads:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model nanopore --glitches 1000,100,100 --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model nanopore --qscore_model nanopore --glitches 1000,100,100 --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 | gzip > reads.fastq.gz
 ```
 
-__Generate very nice fake reads:__
+__Generate very nice reads:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model random --glitches --qscore_model ideal 0,0,0 --junk_reads 0 --random_reads 0 --chimeras 0 --identity 95,100,4 --start_adapter 0,0 --end_adapter 0,0 | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model random --qscore_model ideal --glitches 0,0,0 --junk_reads 0 --random_reads 0 --chimeras 0 --identity 95,100,4 --start_adapter 0,0 --end_adapter 0,0 | gzip > reads.fastq.gz
 ```
 
 
@@ -280,11 +280,11 @@ Badread simulates this effect if you use the `--small_plasmid_bias` option. When
 ### Glitches
 
 Glitches are points in the read where the sequence is briefly messed up. They are controlled by three parameters:
-* glitch rate: how often glitches occur
-* glitch size: how much random sequence is added to the read
-* glitch skip: how much read sequence is lost
+* rate: how often glitches occur
+* size: how much random sequence is added to the read
+* skip: how much read sequence is lost
 
-These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart.
+These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off with `--glitches 0,0,0`.
 
 To better understand glitches, take a look at the [Glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
 
@@ -311,7 +311,7 @@ minimap2 -c -x map-ont reference.fasta.gz reads.fastq.gz | gzip > alignments.paf
 
 Now give the files to `badread model` to build the model:
 ```
-badread-runner.py model --reference reference.fasta.gz --reads reads.fastq.gz --alignment alignments.paf.gz > new_model
+badread model --reference reference.fasta.gz --reads reads.fastq.gz --alignment alignments.paf.gz > new_model
 ```
 
 Options:
@@ -323,6 +323,11 @@ Options:
 
 ### Visualising error rates in reads
 
+This tool was mainly for me to use when developing Badread, but I left it in case anyone else finds in useful. Use it to see a plot for each read's identity over a sliding window:
+```
+minimap2 -c -x map-ont reference.fasta.gz reads.fastq.gz | gzip > alignments.paf.gz
+badread plot --reference reference.fasta.gz --reads reads.fastq.gz --alignment alignments.paf.gz
+```
 
 
 
