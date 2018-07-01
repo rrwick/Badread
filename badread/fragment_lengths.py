@@ -97,13 +97,14 @@ def base_distribution_integral(a, b, x):
     return integral
 
 
-def inc_gamma(a, b):
-    """
-    SciPy seems to define the incomplete Gamma function a bit differently than WolframAlpha (which
-    I used to do the calc), so this function should represent a WolframAlpha incomplete Gamma.
-    https://stackoverflow.com/questions/38713199/incomplete-gamma-function-in-scipy
-    """
-    return scipy.special.gamma(a) * (1-scipy.special.gammainc(a, b))
+# No longer needed, because I'm using inc_gamma_ln instead, but keeping it here for reference.
+# def inc_gamma(a, b):
+#     """
+#     SciPy seems to define the incomplete Gamma function a bit differently than WolframAlpha (which
+#     I used to do the calc), so this function should represent a WolframAlpha incomplete Gamma.
+#     https://stackoverflow.com/questions/38713199/incomplete-gamma-function-in-scipy
+#     """
+#     return scipy.special.gamma(a) * (1-scipy.special.gammainc(a, b))
 
 
 def inc_gamma_ln(a, b):

@@ -80,7 +80,6 @@ class ErrorModel(object):
         self.kmer_size = None
         self.alternatives = {}
         self.probabilities = {}
-        self.mutations_by_base = {}
         this_script_dir = pathlib.Path(os.path.dirname(os.path.realpath(__file__)))
 
         if model_type_or_filename == 'random':

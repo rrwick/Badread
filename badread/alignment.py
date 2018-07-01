@@ -31,7 +31,7 @@ class Alignment(object):
         self.strand = line_parts[4]
 
         self.ref_name = line_parts[5]
-        self.ref_length = int(line_parts[6])
+        # self.ref_length = int(line_parts[6])
         self.ref_start = int(line_parts[7])
         self.ref_end = int(line_parts[8])
 
@@ -102,7 +102,6 @@ def align_sequences(read_seq, read_qual, ref_seq, alignment, gap_char='-'):
     read, qual, ref = [], [], []
     read_pos, ref_pos = 0, 0
     errors_per_read_pos = [0] * len(read_seq)
-    alignment.insertions, alignment.deletions, alignment.mismatches = 0, 0, 0
     for c in alignment.cigar_parts:
         cigar_type = c[-1]
         cigar_size = int(c[:-1])
@@ -113,7 +112,6 @@ def align_sequences(read_seq, read_qual, ref_seq, alignment, gap_char='-'):
             for i in range(cigar_size):
                 if read_seq[read_pos+i] != ref_seq[ref_pos+i]:
                     errors_per_read_pos[read_pos+i] += 1
-                    alignment.mismatches += 1
             read_pos += cigar_size
             ref_pos += cigar_size
         if cigar_type == 'I':
@@ -122,14 +120,12 @@ def align_sequences(read_seq, read_qual, ref_seq, alignment, gap_char='-'):
             ref.append(gap_char * cigar_size)
             for i in range(cigar_size):
                 errors_per_read_pos[read_pos+i] += 1
-            alignment.insertions += cigar_size
             read_pos += cigar_size
         if cigar_type == 'D':
             read.append(gap_char * cigar_size)
             qual.append(gap_char * cigar_size)
             ref.append(ref_seq[ref_pos:ref_pos+cigar_size])
             errors_per_read_pos[read_pos] += cigar_size
-            alignment.deletions += cigar_size
             ref_pos += cigar_size
     return ''.join(read), ''.join(qual), ''.join(ref), errors_per_read_pos
 
