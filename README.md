@@ -78,22 +78,22 @@ If you run Badread this way, it's up to you to make sure that all [necessary Pyt
 
 __Generate fake Nanopore reads at 50x depth:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model nanopore_7-mer_model | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model nanopore | gzip > reads.fastq.gz
 ```
 
 __Generate 200 Mbp of fake PacBio reads:__
 ```
-badread simulate --reference ref.fasta --quantity 200M --error_model pacbio_7-mer_model | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 200M --error_model pacbio | gzip > reads.fastq.gz
 ```
 
 __Generate very bad fake reads:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model nanopore_7-mer_model --glitches 1000,100,100 --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,3.5 | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model nanopore --glitches 1000,100,100 --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 | gzip > reads.fastq.gz
 ```
 
 __Generate very nice fake reads:__
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model random --glitches 0,0,0 --junk_reads 0 --random_reads 0 --chimeras 0 --identity 95,100,4 --start_adapter 0,0 --end_adapter 0,0 | gzip > reads.fastq.gz
+badread simulate --reference ref.fasta --quantity 50x --error_model random --glitches --qscore_model ideal 0,0,0 --junk_reads 0 --random_reads 0 --chimeras 0 --identity 95,100,4 --start_adapter 0,0 --end_adapter 0,0 | gzip > reads.fastq.gz
 ```
 
 
@@ -175,7 +175,7 @@ There are two ways to think about fragment lengths: the distribution of the frag
     </tr>
 </table>
 
-You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/xguyriao4q).
+You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/xrkqgzt4o5).
 
 
 
@@ -214,7 +214,7 @@ Badread generates read identities from a [beta distribution](https://en.wikipedi
     </tr>
 </table>
 
-You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/0uim6donx6).
+You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/q7qw6rq2lb).
 
 
 ### Error model
@@ -239,30 +239,19 @@ The possible values for the `--qscore_model` argument are:
 For more information, see the [QScore models page on the wiki](https://github.com/rrwick/Badread/wiki/QScore-models).
 
 
+
 ### Adapters
 
-The default values are those for the Nanopore ligation adapters:
-```
---start_adapter_seq AATGTACTTCGTTCAGTTACGTATTGCT --end_adapter_seq GCAATACGTAACTGAACGAAGT
-```
+Adapter sequences are controlled with the `--start_adapter_seq` and `--end_adapter_seq` options. The default adapters are those for the Nanopore ligation adapters. To see what those sequences are and some alternatives, check out the [Adapter sequences page on the wiki](https://github.com/rrwick/Badread/wiki/Adapter-sequences).
 
-Alternatives include:
+How much adapter is added to the start/end of a read is controlled by two parameters: rate and amount. Rate is the percent chance that the adapter will appear at all. E.g. a start-adapter rate of 90 means that 10% of reads will have no adapter at their start and 90% of reads will have some adapter at their start. Think of it like a Bernoulli distribution.
 
-* a barcoded Nanopore adapter:
-```
---start_adapter_seq AATGTACTTCGTTCAGTTACGTATTGCTAAGGTTAACACAAAGACACCGACAACTTTCTTCAGCACCT --end_adapter_seq AGGTGCTGAAGAAAGTTGTCGGTGTCTTTGTGTTAACCTTAGCAATACGTAACTGAACGAAGT
-```
+Amount controls how much of the adapter, on average, appears on the read. E.g. a start-adapter rate of 60 means that when an adapter is on the start of the read, it has an expected length of 60% its full length. Start-adapters are truncated at the start and end-adapters are truncated at the end. The actual distribution of amount is controlled by a beta distribution, and you can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/qzza86553k).
 
-* the Nanopore rapid adapter:
-```
---start_adapter_seq GTTTTCGCATTTATCGTGAAACGCTTTCGCGTTTTTCGTGCGCCGCTTCA --end_adapter_seq ""
-```
-* a barcoded Nanopore rapid adapter:
-```
---start_adapter_seq AATGTACTTCGTTCAGTTACGGCTTGGGTGTTTAACCAAGAAAGTTGTCGGTGTCTTTGTGGTTTTCGCATTTATCGTGAAACGCTTTCGCGTTTTTCGTGCGCCGCTTCA --end_adapter_seq ""
-```
-
-Or anything else you want to put on your reads!
+To turn off adapters entirely, you can either set the sequences to nothing:<br>
+`--start_adapter_seq "" --end_adapter_seq ""`<br>
+Or set the rate/amount to 0:<br>
+`--start_adapter 0,0 --end_adapter 0,0`
 
 
 

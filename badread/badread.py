@@ -91,12 +91,10 @@ def simulate_subparser(subparsers):
     sim_args.add_argument('--identity', type=str, default='85,95,5',
                           help='Sequencing identity distribution (mean, max and stdev, '
                                'default: DEFAULT)')
-    sim_args.add_argument('--error_model', type=str, default='random',
-                          help='Can be "random" (for random errors) or a model filename (for '
-                               'realistic errors)')
-    sim_args.add_argument('--qscore_model', type=str, default='random',
-                          help='Can be "random" (for random qscores) or a model filename (for '
-                               'realistic qscores)')
+    sim_args.add_argument('--error_model', type=str, default='nanopore',
+                          help='Can be "nanopore", "pacbio", "random" or a model filename')
+    sim_args.add_argument('--qscore_model', type=str, default='nanopore',
+                          help='Can be "nanopore", "pacbio", "random", "ideal" or a model filename')
     sim_args.add_argument('--seed', type=int,
                           help='Random number generator seed for deterministic output (default: '
                                'different output each time)')
@@ -104,9 +102,9 @@ def simulate_subparser(subparsers):
     problem_args = group.add_argument_group('Adapters',
                                             description='Controls adapter sequences on the start '
                                                         'and end of reads')
-    problem_args.add_argument('--start_adapter', type=str, default='0.9,0.6',
+    problem_args.add_argument('--start_adapter', type=str, default='90,60',
                               help='Rate and amount for adapters on starts of reads')
-    problem_args.add_argument('--end_adapter', type=str, default='0.5,0.2',
+    problem_args.add_argument('--end_adapter', type=str, default='50,20',
                               help='Rate and amount for adapters on ends of reads')
     problem_args.add_argument('--start_adapter_seq', type=str,
                               default='AATGTACTTCGTTCAGTTACGTATTGCT',

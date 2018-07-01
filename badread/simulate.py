@@ -40,6 +40,8 @@ def simulate(args):
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
     chimera_rate = args.chimeras / 100  # percentage to fraction
     print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
+    print_adapter_summary(start_adapt_rate, start_adapt_amount, args.start_adapter_seq,
+                          end_adapt_rate, end_adapt_amount, args.end_adapter_seq)
 
     target_size = get_target_size(ref_seqs, args.quantity)
     print('', file=sys.stderr)
@@ -312,7 +314,7 @@ def sequence_fragment(fragment, target_identity, error_model, qscore_model):
 
 
 def get_start_adapter(rate, amount, adapter):
-    if not adapter:
+    if not adapter or rate == 0.0 or amount == 0.0:
         return ''
     if random_chance(rate):
         if amount == 1.0:
@@ -324,7 +326,7 @@ def get_start_adapter(rate, amount, adapter):
 
 
 def get_end_adapter(rate, amount, adapter):
-    if not adapter:
+    if not adapter or rate == 0.0 or amount == 0.0:
         return ''
     if random_chance(rate):
         if amount == 1.0:
@@ -362,7 +364,7 @@ def adapter_parameters(param_str):
     parts = param_str.split(',')
     if len(parts) == 2:
         try:
-            return [float(x) for x in parts]
+            return [float(x) / 100 for x in parts]
         except ValueError:
             pass
     sys.exit('Error: adapter parameters must be two comma-separated values between 0 and 1')
@@ -380,6 +382,27 @@ def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
               file=sys.stderr)
         print('  skip (mean sequence lost per glitch)  = {:>5}'.format(float_to_str(glitch_skip)),
               file=sys.stderr)
+
+
+def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amount, end_seq):
+    print('', file=sys.stderr)
+    using_start_adapters = (start_seq and start_rate > 0.0 and start_amount > 0.0)
+    using_end_adapters = (end_seq and end_rate > 0.0 and end_amount > 0.0)
+    if using_start_adapters:
+        print('Start adapters:', file=sys.stderr)
+        print('  seq: {}'.format(start_seq), file=sys.stderr)
+        print('  rate:   {:.1f}%'.format(start_rate * 100.0), file=sys.stderr)
+        print('  amount: {:.1f}%'.format(start_amount * 100.0), file=sys.stderr)
+    else:
+        print('Start adapters: none', file=sys.stderr)
+    print('', file=sys.stderr)
+    if using_end_adapters:
+        print('End adapters:', file=sys.stderr)
+        print('  seq: {}'.format(end_seq), file=sys.stderr)
+        print('  rate:   {:.1f}%'.format(end_rate * 100.0), file=sys.stderr)
+        print('  amount: {:.1f}%'.format(end_amount * 100.0), file=sys.stderr)
+    else:
+        print('End adapters: none', file=sys.stderr)
 
 
 def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
