@@ -1,6 +1,8 @@
 <p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
 
-Badread is a long read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more. You can use Badread to generate a realistic read set (with a normal amount of problems) or turn up the problems for a truly terrible read set. I made it for the purposes of testing long read assemblers. With it, one can see how different types of read problems affect assembly quality.
+Badread is a long read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
+
+Badread is pretty good at generating realistic simulated long read sets, but its focus is more on providing users with _control_ over the simulated reads. This is because I made Badread for the purpose of testing long read assemblers. With it, one can increase the rate of different types of read problems, to see how they affect assembly quality.
 
 
 
@@ -16,7 +18,7 @@ Badread is a long read simulator tool that makes – you guessed it – bad read
      * [Fragment lengths](#fragment-lengths)
      * [Read identities](#read-identities)
      * [Error model](#error-model)
-     * [QScores](#qscores)
+     * [QScore model](#qscore-model)
      * [Adapters](#adapters)
      * [Junk and random reads](#junk-and-random-reads)
      * [Chimeras](#chimeras)
@@ -162,36 +164,18 @@ Badread generates fragment lengths from a [gamma distribution](https://en.wikipe
 
 Note that these parameters control the length of the _fragments_, not the final _reads_. These differ because: adapters are added to fragments, glitches can lengthen/shorten fragments, adding read errors can change the length (especially if the error model is biased towards insertions or deletions) and chimeras are made by concatenating multiple fragments together.
 
-There are two ways to think about fragment lengths, and the plots below show both: the distribution of the fragment lengths (blue) and the distribution of the amount of bases in the fragments (red). The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
+There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of the amount of bases in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
 
 <table>
     <tr>
         <td>
-            <img align="right" src="images/frag_length_dist/10000-9000.png" alt="Default length distribution" width="350">
-            Badread's default is <code>--length 10000,9000</code> (mean=10000, stdev=9000) which corresponds to a typical decent long-read sequencing run (N50=15.5 kbp).
+            <img align="right" src="images/default_frag_lengths.png" alt="Default length distribution" width="400">
+            Badread's default is <code>--length 15000,13000</code> (mean=15000, stdev=13000) which corresponds to a decent Nanopore run (N50=22.6 kbp). The fragment length distribution is in blue, while the base distribution is in red.
         </td>
     </tr>
 </table>
 
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/frag_length_dist/2000-2000.png" alt="Shorter length distribution" width="350">
-            Using <code>--length 2000,2000</code> (mean=2000, stdev=2000) will give a shorter read distribution (N50=3.3 kbp) corresponding to a not-so-great sequencing run.
-        </td>
-    </tr>
-</table>
-
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/frag_length_dist/12000-20000.png" alt="Longer length distribution" width="350">
-            Using <code>--length 12000,20000</code> (mean=2000, stdev=2000) will give a longer read distribution (N50=34.8 kbp) corresponding to a very nice sequencing run.
-        </td>
-    </tr>
-</table>
-
-You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/yaexntzlha).
+You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/xguyriao4q).
 
 
 
@@ -219,54 +203,40 @@ This means that any read with less than about 60% identity is difficult to disti
 
 #### Badread identity distributions
 
-Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). There are three parameters: `mean,max,shape`. Max sets the upper end of the distribution. Shape controls the variance: larger values create a tighter distribution around the mean, while smaller values make a broader distribution.
+Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). There are three parameters: `mean,max,stdev`. Max sets the upper end of the distribution. Stdev controls the shape: smaller values create a tighter distribution around the mean, while larger values make a broader distribution.
 
 <table>
     <tr>
         <td>
-            <img align="right" src="images/identity_dist/85-95-4.png" alt="Default identity distribution" width="350">
-            Badread's default is <code>--identity 85,95,4</code> which corresponds to a typical decent Nanopore sequencing run.
+            <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
+            Badread's default is <code>--identity 85,95,5</code> which corresponds to a decent Nanopore sequencing run.
         </td>
     </tr>
 </table>
 
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/identity_dist/85-95-12.png" alt="Default identity distribution" width="350">
-            Increasing the shape parameter (<code>--identity 85,95,12</code>) results in a tighter distribution around the mean – fewer very good and very bad reads.
-        </td>
-    </tr>
-</table>
-
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/identity_dist/95-100-4.png" alt="Default identity distribution" width="350">
-            Increase the mean and max (<code>--identity 95,100,4</code>) to simulate a very high quality (unrealistically so) read set.
-        </td>
-    </tr>
-</table>
-
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/identity_dist/70-85-4.png" alt="Default identity distribution" width="350">
-            A low mean and max (<code>--identity 70,85,4</code>) gives very poor reads (like what you might have encountered in the <a href="http://nextgenseek.com/2014/06/behold-oxford-nanopore-reads-are-here/">early days of Nanopore sequencing</a>).
-        </td>
-    </tr>
-</table>
-
-You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/iehjnd6s84).
-
+You can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/0uim6donx6).
 
 
 ### Error model
 
+The possible values for the `--error_model` argument are:
+* `nanopore`: a model trained on real Nanopore reads (the default)
+* `pacbio`: a model trained on real PacBio reads
+* `random`: a random error model with 1/3 chance each of insertion, deletion and substitution
+* a filepath for a trained model
+
+For more information, see the [Error models page on the wiki](https://github.com/rrwick/Badread/wiki/Error-models).
 
 
-### QScores
+### QScore model
 
+The possible values for the `--qscore_model` argument are:
+* `nanopore`: a model trained on real Nanopore reads (the default)
+* `pacbio`: a model trained on real PacBio reads
+* `random`: a model where qscores are meaningless, give no indication of read or base quality
+* `ideal`: a model where scores are unrealistically informative about read and base quality
+
+For more information, see the [QScore models page on the wiki](https://github.com/rrwick/Badread/wiki/QScore-models).
 
 
 ### Adapters
@@ -327,26 +297,7 @@ Glitches are points in the read where the sequence is briefly messed up. They ar
 
 These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart.
 
-To better understand glitches, let's look at some dotplots comparing a sequence in Badread before glitches are added on the x axis and after glitches (but before sequencing errors) on the y axis:
-
-| 5000,100,100 | 1000,100,100 | 200,100,100 |
-| --- | --- | --- |
-| <img src="images/glitch_dotplots/5000-100-100.png" width="200" /> | <img src="images/glitch_dotplots/1000-100-100.png" width="200" /> | <img src="images/glitch_dotplots/200-100-100.png" width="200" /> |
-
-The three dotplots above show 10 kbp reads where the glitch rate is varied. You can see that the smaller the value, the smaller the space between glitches.
-
-| 1000,100,0 | 1000,0,100 | 1000,100,100 |
-| --- | --- | --- |
-| <img src="images/glitch_dotplots/1000-100-0.png" width="200" /> | <img src="images/glitch_dotplots/1000-0-100.png" width="200" /> | <img src="images/glitch_dotplots/1000-100-100.png" width="200" /> |
-
-These dotplots show the effect of the size and skip parameters. The first has a size of 100 and a skip of 0. This means that each glitch adds random sequence but loses no real sequence, resulting in a longer glitched sequence. The second is the opposite, a size of 0 and a skip of 100, where the glitched sequence is shorter than the original. The third has size and skip both equal to 100, so the glitched sequence should on average be the same length as the original.
-
-The examples shown above are particularly glitchy to illustrate the concept. Badread's default value is `5000,50,50` for a modest amount of glitches. Or you can use `0,0,0` to turn glitches off entirely:
-
-| 5000,50,50 | 0,0,0 |
-| --- | --- |
-| <img src="images/glitch_dotplots/5000-50-50.png" width="200" /> | <img src="images/glitch_dotplots/0-0-0.png" width="200" /> |
-
+To better understand glitches, take a look at the [Glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
 
 
 

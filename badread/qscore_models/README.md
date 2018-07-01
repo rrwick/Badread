@@ -10,7 +10,7 @@
 
 Badread's qscore models describe the probability distribution of [Phred quality scores](https://www.drive5.com/usearch/manual/quality_score.html).
 
-The first line of the file describes the overall qscore distribution of the training data. Here is the first line of the Nanopore qscore model file:
+The first line of the file describes the overall qscore distribution of the training data:
 ```
 overall;119428314;1:0.000065,2:0.002683,3:0.011969,4:0.022982,5:0.03079,6:0.036889,7:0.042461,8:0.047495,9:0.051971,10:0.055876,11:0.058956,12:0.0606,13:0.060621,14:0.059446,15:0.056487,16:0.052028,17:0.047379,18:0.043445,19:0.040219,20:0.037767,21:0.035767,22:0.033816,23:0.031369,24:0.027969,25:0.023457,26:0.018417,27:0.008983,28:0.000093,
 ```
