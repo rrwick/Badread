@@ -24,6 +24,8 @@ class Alignment(object):
 
     def __init__(self, paf_line):
         line_parts = paf_line.strip().split('\t')
+        if len(line_parts) < 11:
+            sys.exit('Error: alignment file does not seem to be in PAF format')
 
         self.read_name = line_parts[0]
         self.read_start = int(line_parts[2])
@@ -70,9 +72,9 @@ class Alignment(object):
                '(' + ('%.3f' % self.percent_identity) + '%)'
 
 
-def load_alignments(filename, max_alignments=None):
+def load_alignments(filename, max_alignments=None, output=sys.stderr):
     i = 0
-    print('Loading alignments', end='', file=sys.stderr, flush=True)
+    print('Loading alignments', end='', file=output, flush=True)
     all_alignments = collections.defaultdict(list)
     with get_open_func(filename)(filename, 'rt') as paf_file:
         for line in paf_file:
@@ -80,12 +82,12 @@ def load_alignments(filename, max_alignments=None):
             all_alignments[a.read_name].append(a)
             i += 1
             if i % 1000 == 0:
-                print('.', end='', file=sys.stderr, flush=True)
+                print('.', end='', file=output, flush=True)
             if i == max_alignments:
                 break
-    print('', file=sys.stderr, flush=True)
+    print('', file=output, flush=True)
     i = 0
-    print('Choosing best alignment per read', end='', file=sys.stderr, flush=True)
+    print('Choosing best alignment per read', end='', file=output, flush=True)
     best_alignments = []
     for read_name, alignments in all_alignments.items():
         best = sorted(alignments, key=lambda x: x.alignment_score)[-1]
@@ -93,8 +95,8 @@ def load_alignments(filename, max_alignments=None):
             best_alignments.append(best)
             i += 1
             if i % 1000 == 0:
-                print('.', end='', file=sys.stderr, flush=True)
-    print('', file=sys.stderr, flush=True)
+                print('.', end='', file=output, flush=True)
+    print('', file=output, flush=True)
     return best_alignments
 
 
@@ -128,5 +130,3 @@ def align_sequences(read_seq, read_qual, ref_seq, alignment, gap_char='-'):
             errors_per_read_pos[read_pos] += cigar_size
             ref_pos += cigar_size
     return ''.join(read), ''.join(qual), ''.join(ref), errors_per_read_pos
-
-
