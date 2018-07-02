@@ -31,7 +31,9 @@ Badread is pretty good at generating realistic simulated long read sets, but its
 
 ## Requirements
 
-Badread runs on MacOS and Linux. Its only dependencies are some Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by pip when installing Badread.
+Badread runs on MacOS and Linux (and maybe Windows too, I haven't tried). It requires Python 3.6 or later.
+
+Badread depends on a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
 
 
 
@@ -102,6 +104,7 @@ badread simulate --reference ref.fasta --quantity 50x --error_model random \
 
 
 
+
 ## Method
 
 Badread simulates reads by roughly following the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences. Here is an overview of all the steps:
@@ -120,6 +123,8 @@ Badread simulates reads by roughly following the process of sequencing real DNA:
 * Generate quality scores for each base using the [qscore model](#error-model).
 * Output the read and quality in FASTQ format.
 * Repeat until the total volume of reads reaches the target amount.
+
+
 
 
 ## Detailed usage
@@ -179,6 +184,8 @@ Other:
   --version                       Show program's version number and exit
 ```
 
+
+
 ### Reference FASTA
 
 The reference genome must be given in FASTA format using the `--reference` argument.
@@ -188,6 +195,7 @@ Each sequence's depth can be specified in the FASTA header using `depth=1.1` or 
 Circular sequences are indicated by including `circular=true` in the FASTA header. This allows reads to loop past the end and back to the start of the sequence.
 
 For a couple of examples, check out [this page on the wiki](https://github.com/rrwick/Badread/wiki/Example-reference-FASTAs).
+
 
 
 ### Fragment lengths
@@ -209,6 +217,7 @@ There are two ways to think about fragment lengths: the distribution of the frag
 </table>
 
 
+
 ### Read identities
 
 Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). There are three parameters: `mean,max,stdev`. Max sets the upper end of the distribution. Stdev controls the shape: smaller values create a tighter distribution around the mean, while larger values make a broader distribution.
@@ -226,6 +235,7 @@ Badread generates read identities from a [beta distribution](https://en.wikipedi
 For detail on how Badread defines identity, check out [this page on the wiki](https://github.com/rrwick/Badread/wiki/Definition-of-identity).
 
 
+
 ### Error model
 
 The possible values for the `--error_model` argument are:
@@ -235,6 +245,7 @@ The possible values for the `--error_model` argument are:
 * a filepath for a trained model
 
 For more information on how error models work, see [this page on the wiki](https://github.com/rrwick/Badread/wiki/Error-models). For instructions on building your own error model, see [this page](https://github.com/rrwick/Badread/wiki/Generating-error-and-qscore-models).
+
 
 
 ### QScore model
@@ -294,6 +305,7 @@ Glitches are points in the read where the sequence is briefly messed up. They ar
 These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off entirely with `--glitches 0,0,0`.
 
 Take a look at the [glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
+
 
 
 
