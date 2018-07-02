@@ -24,19 +24,25 @@ class TestConstantIdentity(unittest.TestCase):
 
     def setUp(self):
         self.null = open(os.devnull, 'w')
+        self.trials = 20
 
     def tearDown(self):
         self.null.close()
 
     def test_constant_identity_1(self):
         identities = badread.identities.Identities(100, 4, 100, output=self.null)
-        for _ in range(100):
+        for _ in range(self.trials):
             self.assertEqual(identities.get_identity(), 1.0)
 
     def test_constant_identity_2(self):
         identities = badread.identities.Identities(80, 4, 80, output=self.null)
-        for _ in range(100):
+        for _ in range(self.trials):
             self.assertEqual(identities.get_identity(), 0.8)
+
+    def test_constant_identity_3(self):
+        identities = badread.identities.Identities(90, 0, 100, output=self.null)
+        for _ in range(self.trials):
+            self.assertEqual(identities.get_identity(), 0.9)
 
 
 class TestBetaIdentity(unittest.TestCase):

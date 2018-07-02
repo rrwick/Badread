@@ -29,6 +29,9 @@ class Identities(object):
         if self.mean == self.max_identity:
             self.beta_a, self.beta_b = None, None
             print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)
+        elif self.stdev == 0.0:
+            self.max_identity = self.mean
+            print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)
         else:  # beta distribution
             print('Generating read identities from a beta distribution:', file=output)
             self.beta_a, self.beta_b = beta_parameters(mean, stdev, max_identity)

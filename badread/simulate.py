@@ -423,23 +423,23 @@ def print_progress(count, bp, target):
     percent = int(1000.0 * bp / target) / 10
     if percent > 100.0:
         percent = 100.0
-    print('\rSimulating: {:,} read{}   {:,} bp   {:.1f}%'.format(count, plural, bp, percent),
+    print('\rSimulating: {:,} read{}  {:,} bp  {:.1f}%'.format(count, plural, bp, percent),
           file=sys.stderr, flush=True, end='')
 
 
-def load_reference(reference):
-    print('', file=sys.stderr)
-    print('Loading reference from {}'.format(reference), file=sys.stderr)
+def load_reference(reference, output=sys.stderr):
+    print('', file=output)
+    print('Loading reference from {}'.format(reference), file=output)
     ref_seqs, ref_depths, ref_circular = load_fasta(reference)
     plural = '' if len(ref_seqs) == 1 else 's'
     total_size = sum(len(s) for s in ref_seqs.values())
-    print('  {:,} contig{}:'.format(len(ref_seqs), plural), file=sys.stderr)
+    print('  {:,} contig{}:'.format(len(ref_seqs), plural), file=output)
     longest_contig_name = max(len(x) for x in ref_seqs)
     for contig in ref_seqs:
         contig_name = contig + ','
         contig_name = contig_name.ljust(longest_contig_name+1)
         circular_linear = 'circular,' if ref_circular[contig] else 'linear,  '
         print('    {} {} depth={:.2f}x'.format(contig_name, circular_linear, ref_depths[contig]),
-              file=sys.stderr)
-    print('  total size: {:,} bp'.format(total_size), file=sys.stderr)
+              file=output)
+    print('  total size: {:,} bp'.format(total_size), file=output)
     return ref_seqs, ref_depths, ref_circular

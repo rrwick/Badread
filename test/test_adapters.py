@@ -14,7 +14,6 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import unittest
 
 import badread.fragment_lengths
@@ -41,6 +40,14 @@ class TestParameterParsing(unittest.TestCase):
     def test_params_4(self):
         with self.assertRaises(SystemExit):
             _, _ = badread.simulate.adapter_parameters('wrong_input')
+
+    def test_params_5(self):
+        with self.assertRaises(SystemExit):
+            _, _ = badread.simulate.adapter_parameters('6,bad')
+
+    def test_params_6(self):
+        with self.assertRaises(SystemExit):
+            _, _ = badread.simulate.adapter_parameters('bad,10')
 
 
 class TestStartAdapters(unittest.TestCase):

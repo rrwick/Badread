@@ -66,6 +66,9 @@ class TestLinearFragments(unittest.TestCase):
                 forward_count += 1
             if fragment in reverse_ref:
                 reverse_count += 1
+
+            # With a linear reference, fragments will either be 1000 bp (the target length) or
+            # less (if they land too close to the sequence end).
             self.assertLessEqual(len(fragment), 1000)
             lengths.append(len(fragment))
 
@@ -81,8 +84,7 @@ class TestLinearFragments(unittest.TestCase):
         self.assertGreater(reverse_count, 10)
         self.assertGreaterEqual(forward_count + reverse_count, self.trials)
 
-        # Most reads will be 1000, because they are in the middle of the ref, but some are shorter
-        # if they are at the ref ends.
+        # While the average will be less than 1000 bp, 1000 should be the most common length.
         most_common_length = max(set(lengths), key=lengths.count)
         self.assertEqual(most_common_length, 1000)
 

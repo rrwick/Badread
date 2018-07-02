@@ -21,7 +21,29 @@ from . import settings
 
 
 def main():
-    parser = MyParser(description='Badread',
+    args = parse_args(sys.argv[1:])
+
+    if args.subparser_name == 'simulate':
+        check_simulate_args(args)
+        from .simulate import simulate
+        simulate(args)
+
+    elif args.subparser_name == 'error_model':
+        from .error_model import make_error_model
+        make_error_model(args)
+
+    elif args.subparser_name == 'qscore_model':
+        from .qscore_model import make_qscore_model
+        make_qscore_model(args)
+
+    elif args.subparser_name == 'plot':
+        from .plot_window_identity import plot_window_identity
+        plot_window_identity(args)
+
+
+def parse_args(args):
+    parser = MyParser(description=bold('Badread: a long read simulator that can imitate many'
+                                       'types of read problems'),
                       formatter_class=MyHelpFormatter, add_help=False)
 
     subparsers = parser.add_subparsers(title='Commands', dest='subparser_name')
@@ -46,34 +68,15 @@ def main():
                            help="Show program's version number and exit")
 
     # If no arguments were used, print the base-level help which lists possible commands.
-    if len(sys.argv) == 1:
+    if len(args) == 0:
         parser.print_help(file=sys.stderr)
         sys.exit(1)
 
-    args = parser.parse_args()
-
-    if args.subparser_name == 'simulate':
-        check_simulate_args(args)
-        from .simulate import simulate
-        simulate(args)
-
-    elif args.subparser_name == 'error_model':
-        from .error_model import make_error_model
-        make_error_model(args)
-
-    elif args.subparser_name == 'qscore_model':
-        from .qscore_model import make_qscore_model
-        make_qscore_model(args)
-
-    elif args.subparser_name == 'plot':
-        from .plot_window_identity import plot_window_identity
-        plot_window_identity(args)
+    return parser.parse_args(args)
 
 
 def simulate_subparser(subparsers):
-    group = subparsers.add_parser('simulate', description=bold('Badread: a long read simulator '
-                                                               'that can imitate many types of '
-                                                               'read problems'),
+    group = subparsers.add_parser('simulate', description='Generate fake long reads',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -133,7 +136,7 @@ def simulate_subparser(subparsers):
 
 
 def error_model_subparser(subparsers):
-    group = subparsers.add_parser('error_model', description='Generate a Badread error model',
+    group = subparsers.add_parser('error_model', description='Build a Badread error model',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -159,7 +162,7 @@ def error_model_subparser(subparsers):
 
 
 def qscore_model_subparser(subparsers):
-    group = subparsers.add_parser('qscore_model', description='Generate a Badread qscore model',
+    group = subparsers.add_parser('qscore_model', description='Build a Badread qscore model',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -191,7 +194,7 @@ def qscore_model_subparser(subparsers):
 
 
 def plot_subparser(subparsers):
-    group = subparsers.add_parser('plot', description='Plot read window identities',
+    group = subparsers.add_parser('plot', description='View read identities over a sliding window',
                                   formatter_class=MyHelpFormatter, add_help=False)
 
     required_args = group.add_argument_group('Required arguments')
@@ -271,8 +274,8 @@ def check_simulate_args(args):
     if args.mean_identity > args.max_identity:
         sys.exit('Error: mean identity ({}) cannot be larger than max '
                  'identity ({})'.format(args.mean_identity, args.max_identity))
-    if args.identity_stdev <= 0.0:
-        sys.exit('Error: read identity stdev must be a positive value')
+    if args.identity_stdev < 0.0:
+        sys.exit('Error: read identity stdev cannot be negative')
 
     try:
         glitch_parameters = [float(x) for x in args.glitches.split(',')]
