@@ -21,6 +21,9 @@ from . import settings
 
 
 def main():
+    if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+        sys.exit('Error: Badread requires Python 3.6 or later')
+
     args = parse_args(sys.argv[1:])
 
     if args.subparser_name == 'simulate':
