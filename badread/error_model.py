@@ -66,11 +66,11 @@ def make_error_model(args, output=sys.stderr):
         if len(alternatives) == 0:
             continue
         total = sum(alternatives.values())
-        print('{},{:.6f}'.format(kmer, alternatives[kmer] / total), end=';')
+        print(f'{kmer},{alternatives[kmer] / total:.6f}', end=';')
         alt_fracs = [(alt_k, count/total) for alt_k, count in alternatives.items() if alt_k != kmer]
         alt_fracs = sorted(alt_fracs, reverse=True, key=lambda x: x[1])
         for k, frac in alt_fracs[:args.max_alt]:
-            print('{},{:.6f}'.format(k, frac), end=';')
+            print(f'{k},{frac:.6f}', end=';')
         print()
 
 
@@ -114,7 +114,7 @@ class ErrorModel(object):
                 self.alternatives[kmer] = [align_kmers(kmer, x[0]) for x in alternatives]
                 self.probabilities[kmer] = [float(x[1]) for x in alternatives]
                 count += 1
-        print('\r  done: loaded error distributions for {} {}-mers'.format(count, self.kmer_size),
+        print(f'\r  done: loaded error distributions for {count} {self.kmer_size}-mers',
               file=output)
 
     def add_errors_to_kmer(self, kmer):

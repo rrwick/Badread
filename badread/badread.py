@@ -67,7 +67,7 @@ def parse_args(args):
     help_args = parser.add_argument_group('Help')
     help_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                            help='Show this help message and exit')
-    help_args.add_argument('--version', action='version', version=__version__,
+    help_args.add_argument('--version', action='version', version='Badread v' + __version__,
                            help="Show program's version number and exit")
 
     # If no arguments were used, print the base-level help which lists possible commands.
@@ -92,7 +92,7 @@ def simulate_subparser(subparsers):
     sim_args = group.add_argument_group('Simulation parameters',
                                         description='Length and identity and error distributions')
     sim_args.add_argument('--length', type=str, default='15000,13000',
-                          help='Fragment length distribution (mean and stdev in bp, '
+                          help='Fragment length distribution (mean and stdev, '
                                'default: DEFAULT)')
     sim_args.add_argument('--identity', type=str, default='85,95,5',
                           help='Sequencing identity distribution (mean, max and stdev, '
@@ -109,14 +109,16 @@ def simulate_subparser(subparsers):
                                             description='Controls adapter sequences on the start '
                                                         'and end of reads')
     problem_args.add_argument('--start_adapter', type=str, default='90,60',
-                              help='Rate and amount for adapters on starts of reads')
+                              help='Adapter parameters for read starts (rate and amount, '
+                                   'default: DEFAULT)')
     problem_args.add_argument('--end_adapter', type=str, default='50,20',
-                              help='Rate and amount for adapters on ends of reads')
+                              help='Adapter parameters for read ends (rate and amount, '
+                                   'default: DEFAULT)')
     problem_args.add_argument('--start_adapter_seq', type=str,
                               default='AATGTACTTCGTTCAGTTACGTATTGCT',
-                              help='Adapter sequence for starts of reads')
+                              help='Adapter sequence for read starts')
     problem_args.add_argument('--end_adapter_seq', type=str, default='GCAATACGTAACTGAACGAAGT',
-                              help='Adapter sequence for ends of reads')
+                              help='Adapter sequence for read ends')
 
     problem_args = group.add_argument_group('Problems',
                                             description='Ways reads can go wrong')
@@ -127,7 +129,7 @@ def simulate_subparser(subparsers):
     problem_args.add_argument('--chimeras', type=float, default=1,
                               help='Percentage at which separate fragments join together')
     problem_args.add_argument('--glitches', type=str, default='10000,25,25',
-                              help='Read glitch parameters')
+                              help='Read glitch parameters (rate, size and skip, default: DEFAULT)')
     problem_args.add_argument('--small_plasmid_bias', action='store_true',
                               help='If set, then small circular plasmids are lost when the '
                                    'fragment length is too high (default: small plasmids are '
@@ -136,6 +138,8 @@ def simulate_subparser(subparsers):
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
+    other_args.add_argument('--version', action='version', version='Badread v' + __version__,
+                            help="Show program's version number and exit")
 
 
 def error_model_subparser(subparsers):
@@ -162,6 +166,8 @@ def error_model_subparser(subparsers):
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
+    other_args.add_argument('--version', action='version', version='Badread v' + __version__,
+                            help="Show program's version number and exit")
 
 
 def qscore_model_subparser(subparsers):
@@ -194,6 +200,8 @@ def qscore_model_subparser(subparsers):
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
+    other_args.add_argument('--version', action='version', version='Badread v' + __version__,
+                            help="Show program's version number and exit")
 
 
 def plot_subparser(subparsers):
@@ -217,24 +225,25 @@ def plot_subparser(subparsers):
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                             help='Show this help message and exit')
+    other_args.add_argument('--version', action='version', version='Badread v' + __version__,
+                            help="Show program's version number and exit")
 
 
 def check_simulate_args(args):
     if not pathlib.Path(args.reference).is_file():
-        sys.exit('Error: {} is not a file'.format(args.reference))
+        sys.exit(f'Error: {args.reference} is not a file')
 
     error_model = args.error_model.lower()
     if error_model not in ['random', 'nanopore', 'pacbio'] and \
             not pathlib.Path(args.error_model).is_file():
-        sys.exit('Error: {} is not a file\n'
-                 '  --error_model must be "random" or a filename'.format(args.error_model))
+        sys.exit(f'Error: {args.error_model} is not a file\n'
+                 f'  --error_model must be "random" or a filename')
 
     qscore_model = args.qscore_model.lower()
     if qscore_model not in ['random', 'ideal', 'nanopore', 'pacbio'] and \
             not pathlib.Path(args.error_model).is_file():
-        sys.exit('Error: {} is not a file\n'
-                 '  --qscore_model must be "random", "ideal" or a '
-                 'filename'.format(args.error_model))
+        sys.exit(f'Error: {args.error_model} is not a file\n'
+                 f'  --qscore_model must be "random", "ideal" or a filename')
 
     if args.chimeras > 50:
         sys.exit('Error: --chimeras cannot be greater than 50')
@@ -252,8 +261,7 @@ def check_simulate_args(args):
     except (ValueError, IndexError):
         sys.exit('Error: could not parse --length values')
     if args.mean_frag_length <= settings.MIN_MEAN_READ_LENGTH:
-        sys.exit('Error: mean read length must be at '
-                 'least {}'.format(settings.MIN_MEAN_READ_LENGTH))
+        sys.exit(f'Error: mean read length must be at least {settings.MIN_MEAN_READ_LENGTH}')
     if args.frag_length_stdev < 0:
         sys.exit('Error: read length stdev cannot be negative')
 
@@ -269,14 +277,12 @@ def check_simulate_args(args):
     if args.max_identity > 100.0:
         sys.exit('Error: max read identity cannot be more than 100')
     if args.mean_identity <= settings.MIN_MEAN_READ_IDENTITY:
-        sys.exit('Error: mean read identity must be at '
-                 'least {}'.format(settings.MIN_MEAN_READ_IDENTITY))
+        sys.exit(f'Error: mean read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
     if args.max_identity <= settings.MIN_MEAN_READ_IDENTITY:
-        sys.exit('Error: max read identity must be at '
-                 'least {}'.format(settings.MIN_MEAN_READ_IDENTITY))
+        sys.exit(f'Error: max read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
     if args.mean_identity > args.max_identity:
-        sys.exit('Error: mean identity ({}) cannot be larger than max '
-                 'identity ({})'.format(args.mean_identity, args.max_identity))
+        sys.exit(f'Error: mean identity ({args.mean_identity}) cannot be larger than max '
+                 f'identity ({args.max_identity})')
     if args.identity_stdev < 0.0:
         sys.exit('Error: read identity stdev cannot be negative')
 

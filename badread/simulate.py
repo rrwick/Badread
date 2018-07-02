@@ -45,7 +45,7 @@ def simulate(args):
     ref_size = sum(len(x) for x in ref_seqs.values())
     target_size = get_target_size(ref_size, args.quantity)
     print('', file=sys.stderr)
-    print('Target read set size: {:,} bp'.format(target_size), file=sys.stderr)
+    print(f'Target read set size: {target_size:,} bp', file=sys.stderr)
 
     print('', file=sys.stderr)
     count, total_size = 0, 0
@@ -58,13 +58,13 @@ def simulate(args):
         seq, quals, actual_identity, identity_by_qscores = \
             sequence_fragment(fragment, target_identity, error_model, qscore_model)
 
-        info.append('length={}'.format(len(seq)))
-        info.append('error-free_length={}'.format(len(fragment)))
-        info.append('read_identity={:.2f}%'.format(actual_identity * 100.0))
-        info.append('identity_according_to_qscores={:.2f}%'.format(identity_by_qscores * 100.0))
+        info.append(f'length={len(seq)}')
+        info.append(f'error-free_length={len(fragment)}')
+        info.append(f'read_identity={actual_identity * 100.0:.2f}%')
 
         read_name = uuid.uuid4()
-        print('@{} {}'.format(read_name, ' '.join(info)))
+        info = ' '.join(info)
+        print(f'@{read_name} {info}')
         print(seq)
         print('+')
         print(quals)
@@ -201,7 +201,7 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
     start_pos = random.randint(0, len(seq)-1)
     end_pos = start_pos + fragment_length
 
-    info.append('{}-{}'.format(start_pos, end_pos))
+    info.append(f'{start_pos}-{end_pos}')
 
     # For circular contigs, we may have to loop the read around the contig.
     if ref_circular[contig]:
@@ -366,11 +366,11 @@ def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
         print('Reads will have no glitches', file=sys.stderr)
     else:
         print('Read glitches:', file=sys.stderr)
-        print('  rate (mean distance between glitches) = {:>5}'.format(float_to_str(glitch_rate)),
+        print(f'  rate (mean distance between glitches) = {float_to_str(glitch_rate):>5}',
               file=sys.stderr)
-        print('  size (mean length of random sequence) = {:>5}'.format(float_to_str(glitch_size)),
+        print(f'  size (mean length of random sequence) = {float_to_str(glitch_size):>5}',
               file=sys.stderr)
-        print('  skip (mean sequence lost per glitch)  = {:>5}'.format(float_to_str(glitch_skip)),
+        print(f'  skip (mean sequence lost per glitch)  = {float_to_str(glitch_skip):>5}',
               file=sys.stderr)
 
 
@@ -380,17 +380,17 @@ def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amo
     using_end_adapters = (end_seq and end_rate > 0.0 and end_amount > 0.0)
     if using_start_adapters:
         print('Start adapters:', file=sys.stderr)
-        print('  seq: {}'.format(start_seq), file=sys.stderr)
-        print('  rate:   {:.1f}%'.format(start_rate * 100.0), file=sys.stderr)
-        print('  amount: {:.1f}%'.format(start_amount * 100.0), file=sys.stderr)
+        print(f'  seq: {start_seq}', file=sys.stderr)
+        print(f'  rate:   {start_rate * 100.0:.1f}%', file=sys.stderr)
+        print(f'  amount: {start_amount * 100.0:.1f}%', file=sys.stderr)
     else:
         print('Start adapters: none', file=sys.stderr)
     print('', file=sys.stderr)
     if using_end_adapters:
         print('End adapters:', file=sys.stderr)
-        print('  seq: {}'.format(end_seq), file=sys.stderr)
-        print('  rate:   {:.1f}%'.format(end_rate * 100.0), file=sys.stderr)
-        print('  amount: {:.1f}%'.format(end_amount * 100.0), file=sys.stderr)
+        print(f'  seq: {end_seq}', file=sys.stderr)
+        print(f'  rate:   {end_rate * 100.0:.1f}%', file=sys.stderr)
+        print(f'  amount: {end_amount * 100.0:.1f}%', file=sys.stderr)
     else:
         print('End adapters: none', file=sys.stderr)
 
@@ -423,23 +423,21 @@ def print_progress(count, bp, target):
     percent = int(1000.0 * bp / target) / 10
     if percent > 100.0:
         percent = 100.0
-    print('\rSimulating: {:,} read{}  {:,} bp  {:.1f}%'.format(count, plural, bp, percent),
+    print(f'\rSimulating: {count:,} read{plural}  {bp:,} bp  {percent:.1f}%',
           file=sys.stderr, flush=True, end='')
 
 
 def load_reference(reference, output=sys.stderr):
     print('', file=output)
-    print('Loading reference from {}'.format(reference), file=output)
+    print(f'Loading reference from {reference}', file=output)
     ref_seqs, ref_depths, ref_circular = load_fasta(reference)
     plural = '' if len(ref_seqs) == 1 else 's'
-    total_size = sum(len(s) for s in ref_seqs.values())
-    print('  {:,} contig{}:'.format(len(ref_seqs), plural), file=output)
-    longest_contig_name = max(len(x) for x in ref_seqs)
+    print(f'  {len(ref_seqs):,} contig{plural}:', file=output)
     for contig in ref_seqs:
-        contig_name = contig + ','
-        contig_name = contig_name.ljust(longest_contig_name+1)
-        circular_linear = 'circular,' if ref_circular[contig] else 'linear,  '
-        print('    {} {} depth={:.2f}x'.format(contig_name, circular_linear, ref_depths[contig]),
-              file=output)
-    print('  total size: {:,} bp'.format(total_size), file=output)
+        circular_linear = 'circular' if ref_circular[contig] else 'linear'
+        print(f'    {contig}: {len(ref_seqs[contig]):,} bp, {circular_linear}, '
+              f'{ref_depths[contig]:.2}x depth', file=output)
+    if len(ref_seqs) > 1:
+        total_size = sum(len(s) for s in ref_seqs.values())
+        print(f'  total size: {total_size:,} bp', file=output)
     return ref_seqs, ref_depths, ref_circular

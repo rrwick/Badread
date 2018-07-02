@@ -77,9 +77,9 @@ def plot_one_alignment(positions, identities, qualities, window_size, alignment,
     fig, ax1 = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
     ax1.plot(positions, identities, '-', color='#8F0505')
 
-    plt.ylabel('% identity ({} bp windows)'.format(window_size))
-    plt.title('{} ({} bp, {:.1f}% identity)'.format(alignment.read_name, read_length,
-                                                    alignment.percent_identity))
+    plt.ylabel(f'% identity ({window_size} bp windows)')
+    plt.title(f'{alignment.read_name} ({read_length} bp, '
+              f'{alignment.percent_identity:.1f}% identity)')
     ax1.set_xlim([0, 10000])
     ax1.set_ylim([50, 100])
 

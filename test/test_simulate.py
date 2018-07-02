@@ -72,9 +72,9 @@ class TestSequenceFragment(unittest.TestCase):
         mean_delta = self.mean_delta * target_errors
 
         if VERBOSE:
-            print('\nRead length: {}, target identity: {}'.format(read_length, target_identity))
-            print('    allowed error per read:   {:.4f}'.format(read_delta))
-            print('    allowed error in mean:    {:.4f}'.format(mean_delta))
+            print(f'\nRead length: {read_length}, target identity: {target_identity}')
+            print(f'    allowed error per read:   {read_delta:.4f}')
+            print(f'    allowed error in mean:    {mean_delta:.4f}')
             print('    identities: ', end='')
 
         read_identities = []
@@ -87,7 +87,7 @@ class TestSequenceFragment(unittest.TestCase):
             read_identities.append(read_identity)
 
             if VERBOSE:
-                print('{:.4f}'.format(read_identity), flush=True,
+                print('{read_identity:.4f}', flush=True,
                       end='\n                ' if (i+1) % 20 == 0 else ' ')
 
             self.assertAlmostEqual(read_identity, target_identity, delta=read_delta)
@@ -95,7 +95,7 @@ class TestSequenceFragment(unittest.TestCase):
         mean_identity = statistics.mean(read_identities)
         if VERBOSE:
             print('\r' if self.trials % 20 == 0 else '\n', end='')
-            print('    mean:       {:.4f}'.format(mean_identity))
+            print(f'    mean:       {mean_identity:.4f}')
 
         self.assertAlmostEqual(mean_identity, target_identity, delta=mean_delta)
         if VERBOSE:

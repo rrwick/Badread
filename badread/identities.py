@@ -28,19 +28,19 @@ class Identities(object):
 
         if self.mean == self.max_identity:
             self.beta_a, self.beta_b = None, None
-            print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)
+            print(f'Using a constant read identity of {self.mean * 100}%', file=output)
         elif self.stdev == 0.0:
             self.max_identity = self.mean
-            print('Using a constant read identity of {}%'.format(self.mean * 100), file=output)
+            print(f'Using a constant read identity of {self.mean * 100}%', file=output)
         else:  # beta distribution
             print('Generating read identities from a beta distribution:', file=output)
             self.beta_a, self.beta_b = beta_parameters(mean, stdev, max_identity)
-            print_in_two_columns('  mean  = {:>3}%'.format(float_to_str(self.mean * 100)),
-                                 '  max   = {:>3}%'.format(float_to_str(self.max_identity * 100)),
-                                 '  stdev = {:>3}%'.format(float_to_str(self.stdev * 100)),
+            print_in_two_columns(f'  mean  = {float_to_str(self.mean * 100):>3}%',
+                                 f'  max   = {float_to_str(self.max_identity * 100):>3}%',
+                                 f'  stdev = {float_to_str(self.stdev * 100):>3}%',
                                  'shape parameters:',
-                                 '  alpha = {:.4e}'.format(self.beta_a),
-                                 '  beta  = {:.4e}'.format(self.beta_b),
+                                 f'  alpha = {self.beta_a:.4e}',
+                                 f'  beta  = {self.beta_b:.4e}',
                                  output=output)
             quickhist_beta(self.beta_a, self.beta_b, self.max_identity, 8, output=output)
 

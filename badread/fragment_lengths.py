@@ -27,17 +27,17 @@ class FragmentLengths(object):
         print('', file=output)
         if self.stdev == 0:
             self.gamma_k, self.gamma_t = None, None
-            print('Using a constant fragment length of {} bp'.format(mean), file=output)
+            print(f'Using a constant fragment length of {mean} bp', file=output)
         else:  # gamma distribution
             print('Generating fragment lengths from a gamma distribution:', file=output)
             gamma_a, gamma_b, self.gamma_k, self.gamma_t = gamma_parameters(mean, stdev)
             n50 = int(round(find_n_value(gamma_a, gamma_b, 50)))
-            print_in_two_columns('  mean  = {:>6} bp'.format(float_to_str(mean)),
-                                 '  stdev = {:>6} bp'.format(float_to_str(stdev)),
-                                 '  N50   = {:>6} bp'.format(n50),
+            print_in_two_columns(f'  mean  = {float_to_str(mean):>6} bp',
+                                 f'  stdev = {float_to_str(stdev):>6} bp',
+                                 f'  N50   = {n50:>6} bp',
                                  'parameters:',
-                                 '  k (shape)     = {:.4e}'.format(self.gamma_k),
-                                 '  theta (scale) = {:.4e}'.format(self.gamma_t),
+                                 f'  k (shape)     = {self.gamma_k:.4e}',
+                                 f'  theta (scale) = {self.gamma_t:.4e}',
                                  output=output)
             quickhist_gamma(gamma_a, gamma_b, n50, 8, output=output)
 

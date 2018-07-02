@@ -89,11 +89,11 @@ def make_qscore_model(args, output=sys.stderr):
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
         if a.read_name not in reads:
-            sys.exit('\nError: could not find read {}\n'
-                     'are you sure your read file and alignment file match?'.format(a.read_name))
+            sys.exit(f'\nError: could not find read {a.read_name}\n'
+                     f'are you sure your read file and alignment file match?')
         if a.ref_name not in refs:
-            sys.exit('\nError: could not find reference {}\nare you sure '
-                     'your reference file and alignment file match?'.format(a.ref_name))
+            sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
+                     f'reference file and alignment file match?')
 
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
@@ -166,12 +166,12 @@ def print_qscore_fractions(cigar, qscores, min_occur):
     total = sum(qscores.values())
     if total < min_occur:
         return
-    print('{};'.format(cigar), end='')
-    print('{};'.format(total), end='')
+    print(f'{cigar};', end='')
+    print(f'{total};', end='')
     for q in sorted(qscores.keys()):
         frac = qscores[q] / total
         frac_str = float_to_str(frac, decimals=6, trim_zeros=True)
-        print('{}:{},'.format(q, frac_str), end='')
+        print(f'{q}:{frac_str},', end='')
     print()
 
 
@@ -260,9 +260,8 @@ class QScoreModel(object):
                     self.probabilities[cigar] = [float(x[1]) for x in scores_and_probs]
                     count += 1
                 except (IndexError, ValueError):
-                    sys.exit('Error: {} does not seem to be a valid qscore model '
-                             'file'.format(filename))
-            print('\r  done: loaded qscore distributions for {} alignments'.format(count),
+                    sys.exit(f'Error: {filename} does not seem to be a valid qscore model file')
+            print(f'\r  done: loaded qscore distributions for {count} alignments',
                   file=output)
 
     def get_qscore(self, cigar):

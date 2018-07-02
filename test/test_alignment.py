@@ -44,19 +44,19 @@ class TestAlignments(unittest.TestCase):
         self.assertGreater(self.alignments[1].percent_identity, 99)
 
     def test_bad_paf_1(self):
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(SystemExit):
             badread.alignment.Alignment('this_is_not_a_paf_line')
 
     def test_bad_paf_2(self):
         # Missing alignment score
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(SystemExit):
             badread.alignment.Alignment('read_1\t1438\t0\t1438\t+\tref\t10000\t754\t2191\t1436\t'
                                         '1438\t60\tNM:i:2\tms:i:2862\tnn:i:0\ttp:A:P\t'
                                         'cm:i:254\ts1:i:1410\ts2:i:0\tdv:f:0.0016\tcg:Z:798M1I639M')
 
     def test_bad_paf_3(self):
         # Missing CIGAR
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(SystemExit):
             badread.alignment.Alignment('read_1\t1438\t0\t1438\t+\tref\t10000\t754\t2191\t1436\t'
                                         '1438\t60\tNM:i:2\tms:i:2862\tAS:i:2862\tnn:i:0\ttp:A:P\t'
                                         'cm:i:254\ts1:i:1410\ts2:i:0\tdv:f:0.0016')
