@@ -37,7 +37,7 @@ def captured_output():
 class TestCommandLine(unittest.TestCase):
 
     def setUp(self):
-        self.ref = os.path.join(os.path.dirname(__file__), 'test_ref.fasta')
+        self.ref = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
 
     def check_simulate_error(self, args, message, ref=None):
         if ref is None:

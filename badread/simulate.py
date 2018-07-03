@@ -26,15 +26,17 @@ from . import settings
 
 
 def simulate(args):
-    ref_seqs, ref_depths, ref_circular = load_reference(args.reference)
-    rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
-    frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev)
-    identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity)
-    error_model = ErrorModel(args.error_model)
-    qscore_model = QScoreModel(args.qscore_model)
     if args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
+    ref_seqs, ref_depths, ref_circular = load_reference(args.reference, output=sys.stderr)
+    rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
+    frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev,
+                                   output=sys.stderr)
+    identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity,
+                            output=sys.stderr)
+    error_model = ErrorModel(args.error_model, output=sys.stderr)
+    qscore_model = QScoreModel(args.qscore_model, output=sys.stderr)
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
     end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
@@ -62,7 +64,7 @@ def simulate(args):
         info.append(f'error-free_length={len(fragment)}')
         info.append(f'read_identity={actual_identity * 100.0:.2f}%')
 
-        read_name = uuid.uuid4()
+        read_name = uuid.UUID(int=random.getrandbits(128))
         info = ' '.join(info)
         print(f'@{read_name} {info}')
         print(seq)
@@ -238,10 +240,14 @@ def sequence_fragment(fragment, target_identity, error_model, qscore_model):
     new_fragment_bases = [x for x in fragment]
 
     errors = 0.0
-    change_count = 0
-
+    change_count, loop_count = 0, 0
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
     while True:
+        # A precaution to make sure we don't get caught in an infinite loop.
+        loop_count += 1
+        if loop_count > 100 * frag_len:
+            break
+
         # If we have changed almost every base in the fragment, then we can give up (the identity
         # is about as low as we can make it). This is likely to only happen when the target
         # identity is very low (below 60%).
@@ -379,20 +385,20 @@ def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amo
     using_start_adapters = (start_seq and start_rate > 0.0 and start_amount > 0.0)
     using_end_adapters = (end_seq and end_rate > 0.0 and end_amount > 0.0)
     if using_start_adapters:
-        print('Start adapters:', file=sys.stderr)
+        print('Start adapter:', file=sys.stderr)
         print(f'  seq: {start_seq}', file=sys.stderr)
         print(f'  rate:   {start_rate * 100.0:.1f}%', file=sys.stderr)
         print(f'  amount: {start_amount * 100.0:.1f}%', file=sys.stderr)
     else:
-        print('Start adapters: none', file=sys.stderr)
+        print('Start adapter: none', file=sys.stderr)
     print('', file=sys.stderr)
     if using_end_adapters:
-        print('End adapters:', file=sys.stderr)
+        print('End adapter:', file=sys.stderr)
         print(f'  seq: {end_seq}', file=sys.stderr)
         print(f'  rate:   {end_rate * 100.0:.1f}%', file=sys.stderr)
         print(f'  amount: {end_amount * 100.0:.1f}%', file=sys.stderr)
     else:
-        print('End adapters: none', file=sys.stderr)
+        print('End adapter: none', file=sys.stderr)
 
 
 def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
