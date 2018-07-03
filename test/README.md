@@ -7,7 +7,7 @@ To run the tests, execute this command from Porechop's root directory:
 python3 -m unittest
 ```
 
-Or if you have [coverage]() installed, you can run the tests through it to get some code coverage stats:
+Or if you have [Coverage.py](https://coverage.readthedocs.io/en/coverage-4.5.1a/) installed, you can run the tests through it to get some code coverage stats:
 ```
 coverage run --source badread -m unittest && coverage report -m
 ```
