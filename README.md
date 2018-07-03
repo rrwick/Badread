@@ -1,6 +1,6 @@
 <p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
 
-Badread is a long read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
+Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
 
 Badread is pretty good at generating realistic simulated long read sets, but its focus is more on providing users with _control_ over the simulated reads. I made Badread for the purpose of testing long read assemblers. With it, one can increase the rate of different types of read problems, to see how they affect assembly quality.
 
@@ -75,26 +75,27 @@ If you run Badread this way, it's up to you to make sure that all [necessary Pyt
 
 ## Quick usage
 
-Badread's default settings correspond to Oxford Nanopore reads of mediocre-quality:
+Badread's default settings correspond to Oxford Nanopore reads of mediocre quality:
 ```
 badread simulate --reference ref.fasta --quantity 50x \
     | gzip > reads.fastq.gz
 ```
 
-Alternatively, you can use Badread's built-in models to imitate PacBio reads:
+Alternatively, you can use Badread's built-in models to imitate PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio-like:
 ```
-badread simulate --reference ref.fasta --quantity 50x --error_model pacbio --qscore_model pacbio \
+badread simulate --reference ref.fasta --quantity 50x \
+    --error_model pacbio --qscore_model pacbio --identity 85,95,3 --length 7500,7500 \
     | gzip > reads.fastq.gz
 ```
 
-To make very bad reads:
+Very bad reads:
 ```
 badread simulate --reference ref.fasta --quantity 50x --glitches 1000,100,100 \
     --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 \
     | gzip > reads.fastq.gz
 ```
 
-To make very nice reads:
+Very nice reads:
 ```
 badread simulate --reference ref.fasta --quantity 50x --error_model random \
     --qscore_model ideal --glitches 0,0,0 --junk_reads 0 --random_reads 0 \
@@ -125,9 +126,9 @@ Here is an overview of how it makes each read:
 
 6. Choose a percent identity for the read using the [read identity distribution](#read-identities).
 
-7. 'Sequence' the fragment by adding errors to the sequence until it has the target percent identity.
+7. 'Sequence' the fragment by adding errors until it has the target percent identity.
     * Errors are chosen using the [error model](#error-model) and are added at random positions in the read.
-    * This step performs periodic alignments between the original fragment and the error-added sequence, so Badread can be precise about the read's final identity. This is good (if Badread is aiming for a 91.5% identity read, it really will be 91.5% identity) but slow. If you find that Badread is too slow, check out [this wiki page on running it in parallel](https://github.com/rrwick/Badread/wiki/Running-in-parallel).
+    * This step performs periodic alignments between the original fragment and the error-added sequence, so Badread can track the read's actual identity. This allow it to be precise (if Badread is aiming for a 91.5% identity read, it will be very close to 91.5% identity) but slow. If you find that Badread is too slow, check out [this wiki page on running it in parallel](https://github.com/rrwick/Badread/wiki/Running-in-parallel).
 
 8. Generate quality scores for each base using the [qscore model](#error-model).
 
@@ -211,7 +212,7 @@ For a couple of examples, check out [this page on the wiki](https://github.com/r
 
 Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). While a gamma distribution is usually parameterised with shape and scale (_k_ and _θ_) or shape and rate (_α_ and _β_), I don't find these particularly intuitive. So Badread instead defines the fragment lengths using mean and standard deviation.
 
-There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of the amount of bases in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
+There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of bases in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
 
 <table>
     <tr>
@@ -251,7 +252,7 @@ The possible values for the `--error_model` argument are:
 * `nanopore`: a model trained on real Nanopore reads (the default)
 * `pacbio`: a model trained on real PacBio reads
 * `random`: a random error model with 1/3 chance each of insertion, deletion and substitution
-* a filepath for a trained model
+* a file path for a trained model
 
 For more information on how error models work, see [this page on the wiki](https://github.com/rrwick/Badread/wiki/Error-models). For instructions on building your own error model, see [this page](https://github.com/rrwick/Badread/wiki/Generating-error-and-qscore-models).
 
@@ -264,6 +265,7 @@ The possible values for the `--qscore_model` argument are:
 * `pacbio`: a model trained on real PacBio reads
 * `random`: a model where qscores are meaningless and give no indication of read/base quality
 * `ideal`: a model where scores are unrealistically informative about read/base quality
+* a file path for a trained model
 
 For more information on how qscore models work, see [this page on the wiki](https://github.com/rrwick/Badread/wiki/QScore-models). For instructions on building your own qscore model, see [this page](https://github.com/rrwick/Badread/wiki/Generating-error-and-qscore-models).
 
