@@ -209,9 +209,7 @@ For a couple of examples, check out [this page on the wiki](https://github.com/r
 
 ### Fragment lengths
 
-Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). Instead of providing the gamma distributions shape and rate (which are not very intuitive parameters), Badread defines the distribution using the mean and standard deviation.
-
-Note that these parameters control the length of the _fragments_, not the final _reads_. These differ because: adapters are added to fragments, glitches can lengthen/shorten fragments, adding read errors can change the length (especially if the error model is biased towards insertions or deletions) and chimeras are made by concatenating multiple fragments together.
+Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). While a gamma distribution is usually parameterised with shape and scale (_k_ and _θ_) or shape and rate (_α_ and _β_), I don't find these particularly intuitive. So Badread instead defines the fragment lengths using mean and standard deviation.
 
 There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of the amount of bases in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
 
@@ -220,23 +218,25 @@ There are two ways to think about fragment lengths: the distribution of the frag
         <td>
             <img align="right" src="images/default_frag_lengths.png" alt="Default length distribution" width="400">
             Badread's default is <code>--length 15000,13000</code> (mean=15000, stdev=13000) which corresponds to a decent Nanopore run (N50=22.6 kbp). The fragment length distribution is in blue, while the base distribution is in red.<br><br>
-            You can interactively explore different values using <a href="https://www.desmos.com/calculator/xrkqgzt4o5">this Desmos plot</a>.
+            To see the equations and interactively explore how different parameters affect the distributions, check out <a href="https://www.desmos.com/calculator/xrkqgzt4o5">this Desmos plot</a>.
         </td>
     </tr>
 </table>
+
+Note that these parameters control the length of the _fragments_, not the final _reads_. These differ because: adapters are added to fragments, glitches can lengthen/shorten fragments, adding read errors can change the length (especially if the error model is biased towards insertions or deletions) and chimeras are made by concatenating multiple fragments together.
 
 
 
 ### Read identities
 
-Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). There are three parameters: `mean,max,stdev`. Max sets the upper end of the distribution. Stdev controls the shape: smaller values create a tighter distribution around the mean, while larger values make a broader distribution.
+Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). Like with fragment lengths, Badread defines the distribution with mean and standard deviation instead of using the more formal (and less intuitive) shape parameters (_α_ and _β_). In addition, Badread scales the beta distribution down using a maximum value, making a total of three parameters: `mean,max,stdev`.
 
 <table>
     <tr>
         <td>
             <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
             Badread's default is <code>--identity 85,95,5</code> which corresponds to a decent Nanopore sequencing run.<br><br>
-            You can interactively explore different values using <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
+            To see the equations and interactively explore how different parameters affect the distribution, check out <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
         </td>
     </tr>
 </table>
@@ -284,7 +284,7 @@ To turn off adapters entirely, set the sequences to nothing:<br>
 
 ### Junk and random reads
 
-Badread can add two types of completely wrong reads to the output: junk and random. Junk reads are low-complexity sequence and simulate something wrong with the sequencer. A junk fragment might look like `AATAATAATAATAATAATAATAATAAT` and so on. Random reads are made of random sequence and can serve to simulate external contamination. By default, Badread includes 1% of each type, so 2% of the total reads will be junk/random.
+Badread can add two types of completely wrong reads to the output: junk and random. Junk reads are low-complexity sequence and simulate something wrong with the sequencer. A junk fragment might look like `AATAATAATAATAATAATAAT` (and so on). Random reads are made of random sequence (25% chance of each base at each position). By default, Badread includes 1% of each type, so 2% of the total reads will be junk or random.
 
 
 
@@ -292,7 +292,7 @@ Badread can add two types of completely wrong reads to the output: junk and rand
 
 Chimeric reads can occur in real datasets for two possible reasons: 1) fragments of DNA were actually ligated together before sequence (probably more common library preps that use ligase) and 2) more than one read was sequenced in quick succession such that the software didn't recognise them as separate (an in-silico chimera). They can occur on both PacBio and Nanopore sequencing platforms.
 
-The `--chimeras` option controls the rate of fragment-joining in Badread. It takes a percentage, e.g. `--chimeras 5` means that 5% of the time a fragment will join with another. Chimeras of more than two can also happen, e.g. three fragments joined together – this becomes more common with higher chimera rates.
+As an example, imagine you used `--chimeras 2` to set chimeras to 2%. After making a sequence fragment, Badread then has a 2% chance of making another fragment and concatenating on to the first. It then has a 2% chance of concatenating on yet another fragment, and so on. This means that about 2% of the reads will be chimeras of two or more fragments, (2%)<sup>2</sup> will be chimeras of three or more, (2%)<sup>3</sup> will be chimeras of four or more, and so on. If you are using start/end adapters, they will sometimes (but not always) be added between the fragments.
 
 
 
