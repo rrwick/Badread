@@ -107,22 +107,31 @@ badread simulate --reference ref.fasta --quantity 50x --error_model random \
 
 ## Method
 
-Badread simulates reads by roughly following the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences. Here is an overview of all the steps:
+Badread simulates reads by roughly following the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences.
 
-* Choose a length for a sequence fragment using the [fragment length distribution](#fragment-lengths).
-* Choose a type of fragment:
-  * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references.
-  * Depending on the settings, some fragments may also be [junk or random sequence](#junk-and-random-reads).
-* Add adapter sequences to the start and end of the fragment, based on the [adapter settings](#adapters). 
-* As determined by the [chimera rate](#chimeras), there is a chance that Badread will make another fragment and concatenate it onto the current fragment (possibly with adapter sequences in between, possibly not).
-* Add glitches to the fragment, based on the [glitch settings](#glitches).
-* Choose a percent identity for the read using the [read identity distribution](#read-identities).
-* 'Sequence' the fragment by adding errors to the sequence until it has the target percent identity.
-  * Errors are added at random positions, leading to a somewhat variable identity across the span of the read.
-  * Errors are chosen using the [error model](#error-model).
-* Generate quality scores for each base using the [qscore model](#error-model).
-* Output the read and quality in FASTQ format.
-* Repeat until the total volume of reads reaches the target amount.
+Here is an overview of how it makes each read:
+
+1. Use the [fragment length distribution](#fragment-lengths) to choose a length for the read.
+
+2. Choose a type of fragment:
+    * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references.
+    * Depending on the settings, some fragments may also be [junk or random sequence](#junk-and-random-reads).
+
+3. Add adapter sequences to the start and end of the fragment, based on the [adapter settings](#adapters).
+
+4. As determined by the [chimera rate](#chimeras), there is a chance that Badread will make another fragment and concatenate it onto the current fragment (possibly with adapter sequences in between, possibly not).
+
+5. Add glitches to the fragment, based on the [glitch settings](#glitches).
+
+6. Choose a percent identity for the read using the [read identity distribution](#read-identities).
+
+7. 'Sequence' the fragment by adding errors to the sequence until it has the target percent identity.
+    * Errors are chosen using the [error model](#error-model) and are added at random positions in the read.
+    * This step performs periodic alignments between the original fragment and the error-added sequence, so Badread can be precise about the read's final identity. This is good (if Badread is aiming for a 91.5% identity read, it really will be 91.5% identity) but slow. If you find that Badread is too slow, check out [this wiki page on running it in parallel](https://github.com/rrwick/Badread/wiki/Running-in-parallel).
+
+8. Generate quality scores for each base using the [qscore model](#error-model).
+
+9. Output the read and quality in FASTQ format.
 
 
 
