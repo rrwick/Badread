@@ -16,7 +16,7 @@ import pathlib
 import sys
 from .help_formatter import MyParser, MyHelpFormatter
 from .version import __version__
-from .misc import bold
+from .misc import bold, str_is_int, str_is_dna_sequence
 from . import settings
 
 
@@ -295,6 +295,17 @@ def check_simulate_args(args):
         sys.exit('Error: could not parse --glitches values')
     if args.glitch_rate < 0 or args.glitch_size < 0 or args.glitch_skip < 0:
         sys.exit('Error: --glitches must contain non-negative values')
+
+    if args.start_adapter_seq != '':
+        if not str_is_int(args.start_adapter_seq):
+            args.start_adapter_seq = args.start_adapter_seq.upper()
+            if not str_is_dna_sequence(args.start_adapter_seq):
+                sys.exit('Error: --start_adapter_seq must be a DNA sequence or a number')
+    if args.end_adapter_seq != '':
+        if not str_is_int(args.end_adapter_seq):
+            args.end_adapter_seq = args.end_adapter_seq.upper()
+            if not str_is_dna_sequence(args.end_adapter_seq):
+                sys.exit('Error: --end_adapter_seq must be a DNA sequence or a number')
 
 
 if __name__ == '__main__':

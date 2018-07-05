@@ -273,7 +273,7 @@ For more information on how qscore models work, see [this page on the wiki](http
 
 ### Adapters
 
-Adapter sequences are controlled with the `--start_adapter_seq` and `--end_adapter_seq` options. The default adapters are those for the Nanopore ligation adapters. To see what those sequences are and some alternatives, check out the [Adapter sequences page on the wiki](https://github.com/rrwick/Badread/wiki/Adapter-sequences).
+Adapter sequences are controlled with the `--start_adapter_seq` and `--end_adapter_seq` options. The default adapters are those for the Nanopore ligation adapters. To see what those sequences are and some alternatives, check out the [Adapter sequences page on the wiki](https://github.com/rrwick/Badread/wiki/Adapter-sequences). If you supply numbers for the adapter sequences (e.g. `--start_adapter_seq 20`, then Badread will make a random sequence of that length to be the adapter.
 
 How much adapter is added to the start/end of a read is controlled by two parameters: rate and amount. Rate is the percent chance that the adapter will appear at all. E.g. a start-adapter rate of 90 means that 10% of reads will have no adapter at their start and 90% of reads will have some adapter at their start. Think of it like a Bernoulli distribution.
 
@@ -281,6 +281,7 @@ Amount controls how much of the adapter, on average, appears on the read. E.g. a
 
 To turn off adapters entirely, set the sequences to nothing:<br>
 `--start_adapter_seq "" --end_adapter_seq ""`
+
 
 
 

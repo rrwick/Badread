@@ -183,3 +183,15 @@ def print_in_two_columns(l1p1, l2p1, l3p1, l1p2, l2p2, l3p2, output, space_betwe
     print(l1p1 + l1p2, file=output)
     print(l2p1 + l2p2, file=output)
     print(l3p1 + l3p2, file=output)
+
+
+def str_is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def str_is_dna_sequence(s):
+    return set(s) <= {'A', 'C', 'G', 'T'}

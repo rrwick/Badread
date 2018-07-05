@@ -16,6 +16,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
+import badread.badread
 import badread.fragment_lengths
 import badread.misc
 import badread.simulate
@@ -154,3 +155,56 @@ class TestEndAdapters(unittest.TestCase):
         for _ in range(self.trials):
             adapter = badread.simulate.get_end_adapter(rate, amount, '')
             self.assertEqual(adapter, '')
+
+
+class TestRandomAdapters(unittest.TestCase):
+
+    def setUp(self):
+        self.args = badread.badread.parse_args(['simulate',
+                                                '--reference', 'ref.fasta',
+                                                '--quantity', '10x'])
+
+    def test_no_adapters(self):
+        self.args.start_adapter_seq = ''
+        self.args.end_adapter_seq = ''
+        random_start, random_end = badread.simulate.build_random_adapters(self.args)
+        self.assertEqual(self.args.start_adapter_seq, '')
+        self.assertEqual(self.args.end_adapter_seq, '')
+        self.assertEqual(random_start, False)
+        self.assertEqual(random_end, False)
+
+    def test_fixed_adapters(self):
+        self.args.start_adapter_seq = 'ACGACTACGACT'
+        self.args.end_adapter_seq = 'TACGCTACGACT'
+        random_start, random_end = badread.simulate.build_random_adapters(self.args)
+        self.assertEqual(self.args.start_adapter_seq, 'ACGACTACGACT')
+        self.assertEqual(self.args.end_adapter_seq, 'TACGCTACGACT')
+        self.assertEqual(random_start, False)
+        self.assertEqual(random_end, False)
+
+    def test_random_start(self):
+        self.args.start_adapter_seq = '40'
+        self.args.end_adapter_seq = 'TACGCTACGACT'
+        random_start, random_end = badread.simulate.build_random_adapters(self.args)
+        self.assertEqual(len(self.args.start_adapter_seq), 40)
+        self.assertEqual(self.args.end_adapter_seq, 'TACGCTACGACT')
+        self.assertEqual(random_start, True)
+        self.assertEqual(random_end, False)
+
+    def test_random_end(self):
+        self.args.start_adapter_seq = 'A'
+        self.args.end_adapter_seq = '81'
+        random_start, random_end = badread.simulate.build_random_adapters(self.args)
+        self.assertEqual(self.args.start_adapter_seq, 'A')
+        self.assertEqual(len(self.args.end_adapter_seq), 81)
+        self.assertEqual(random_start, False)
+        self.assertEqual(random_end, True)
+
+    def test_both_random(self):
+        self.args.start_adapter_seq = '76'
+        self.args.end_adapter_seq = '143'
+        random_start, random_end = badread.simulate.build_random_adapters(self.args)
+        self.assertEqual(len(self.args.start_adapter_seq), 76)
+        self.assertEqual(len(self.args.end_adapter_seq), 143)
+        self.assertEqual(random_start, True)
+        self.assertEqual(random_end, True)

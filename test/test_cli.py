@@ -40,6 +40,7 @@ class TestCommandLine(unittest.TestCase):
         self.ref = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
 
     def check_simulate_error(self, args, message, ref=None):
+        # Ensures that the args throw an error containing the given message.
         if ref is None:
             ref = self.ref
         args = ['simulate', '--reference', ref, '--quantity', '50x'] + args
@@ -48,6 +49,15 @@ class TestCommandLine(unittest.TestCase):
             badread.badread.check_simulate_args(args)
         self.assertNotEqual(cm.exception.code, 0)
         self.assertTrue(message in str(cm.exception))
+
+    def check_simulate_no_error(self, args):
+        # Ensures that the args throw an error containing the given message.
+        args = ['simulate', '--reference', self.ref, '--quantity', '50x'] + args
+        args = badread.badread.parse_args(args)
+        try:
+            badread.badread.check_simulate_args(args)
+        except SystemExit:
+            self.fail()
 
     def test_no_args(self):
         # When called with no arguments, the program behaves like it's hit an error: the help text
@@ -168,3 +178,21 @@ class TestCommandLine(unittest.TestCase):
 
     def test_bad_simulated_args_22(self):
         self.check_simulate_error([], 'not a file', ref='not_a_file')
+
+    def test_bad_simulated_args_23(self):
+        self.check_simulate_error(['--start_adapter_seq', 'ACGTQ'], 'must be a DNA sequence')
+
+    def test_bad_simulated_args_24(self):
+        self.check_simulate_error(['--end_adapter_seq', '12ACT'], 'must be a DNA sequence')
+
+    def test_good_simulated_args_1(self):
+        self.check_simulate_no_error(['--start_adapter_seq', '12'])
+
+    def test_good_simulated_args_2(self):
+        self.check_simulate_no_error(['--end_adapter_seq', '321'])
+
+    def test_good_simulated_args_3(self):
+        self.check_simulate_no_error(['--start_adapter_seq', 'ACGCTGCATCG'])
+
+    def test_good_simulated_args_4(self):
+        self.check_simulate_no_error(['--end_adapter_seq', 'AAAAAAAAAAAA'])

@@ -17,7 +17,7 @@ import random
 import sys
 import uuid
 from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance, \
-    float_to_str
+    float_to_str, str_is_int
 from .error_model import ErrorModel, identity_from_edlib_cigar
 from .qscore_model import QScoreModel, get_qscores
 from .fragment_lengths import FragmentLengths
@@ -37,12 +37,15 @@ def simulate(args):
                             output=sys.stderr)
     error_model = ErrorModel(args.error_model, output=sys.stderr)
     qscore_model = QScoreModel(args.qscore_model, output=sys.stderr)
-    start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
-    end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
     print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
+
+    start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
+    end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
+    random_start, random_end = build_random_adapters(args)
     print_adapter_summary(start_adapt_rate, start_adapt_amount, args.start_adapter_seq,
-                          end_adapt_rate, end_adapt_amount, args.end_adapter_seq)
+                          end_adapt_rate, end_adapt_amount, args.end_adapter_seq,
+                          random_start, random_end)
 
     ref_size = sum(len(x) for x in ref_seqs.values())
     target_size = get_target_size(ref_size, args.quantity)
@@ -356,16 +359,6 @@ def get_adapter_frag_length(amount, adapter):
     return round(int(len(adapter) * np.random.beta(beta_a, beta_b)))
 
 
-def adapter_parameters(param_str):
-    parts = param_str.split(',')
-    if len(parts) == 2:
-        try:
-            return [float(x) / 100 for x in parts]
-        except ValueError:
-            pass
-    sys.exit('Error: adapter parameters must be two comma-separated values between 0 and 1')
-
-
 def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
     print('', file=sys.stderr)
     if glitch_rate == 0:
@@ -380,21 +373,47 @@ def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
               file=sys.stderr)
 
 
-def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amount, end_seq):
+def adapter_parameters(param_str):
+    parts = param_str.split(',')
+    if len(parts) == 2:
+        try:
+            return [float(x) / 100 for x in parts]
+        except ValueError:
+            pass
+    sys.exit('Error: adapter parameters must be two comma-separated values between 0 and 1')
+
+
+def build_random_adapters(args):
+    random_start, random_end = False, False
+    if str_is_int(args.start_adapter_seq):
+        start_len = int(args.start_adapter_seq)
+        args.start_adapter_seq = get_random_sequence(start_len)
+        random_start = True
+    if str_is_int(args.end_adapter_seq):
+        end_len = int(args.end_adapter_seq)
+        args.end_adapter_seq = get_random_sequence(end_len)
+        random_end = True
+    return random_start, random_end
+
+
+def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amount, end_seq,
+                          random_start, random_end):
     print('', file=sys.stderr)
     using_start_adapters = (start_seq and start_rate > 0.0 and start_amount > 0.0)
     using_end_adapters = (end_seq and end_rate > 0.0 and end_amount > 0.0)
     if using_start_adapters:
+        random_msg = ' (randomly generated)' if random_start else ''
         print('Start adapter:', file=sys.stderr)
-        print(f'  seq: {start_seq}', file=sys.stderr)
+        print(f'  seq: {start_seq}{random_msg}', file=sys.stderr)
         print(f'  rate:   {start_rate * 100.0:.1f}%', file=sys.stderr)
         print(f'  amount: {start_amount * 100.0:.1f}%', file=sys.stderr)
     else:
         print('Start adapter: none', file=sys.stderr)
     print('', file=sys.stderr)
     if using_end_adapters:
+        random_msg = ' (randomly generated)' if random_end else ''
         print('End adapter:', file=sys.stderr)
-        print(f'  seq: {end_seq}', file=sys.stderr)
+        print(f'  seq: {end_seq}{random_msg}', file=sys.stderr)
         print(f'  rate:   {end_rate * 100.0:.1f}%', file=sys.stderr)
         print(f'  amount: {end_amount * 100.0:.1f}%', file=sys.stderr)
     else:
