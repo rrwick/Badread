@@ -22,10 +22,12 @@ from .error_model import ErrorModel, identity_from_edlib_cigar
 from .qscore_model import QScoreModel, get_qscores
 from .fragment_lengths import FragmentLengths
 from .identities import Identities
+from .version import __version__
 from . import settings
 
 
 def simulate(args):
+    print_intro()
     if args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
@@ -475,3 +477,9 @@ def load_reference(reference, output=sys.stderr):
         total_size = sum(len(s) for s in ref_seqs.values())
         print(f'  total size: {total_size:,} bp', file=output)
     return ref_seqs, ref_depths, ref_circular
+
+
+def print_intro():
+    print('', file=sys.stderr)
+    print(f'Badread v{__version__}', file=sys.stderr)
+    print(f'long read simulation', file=sys.stderr)
