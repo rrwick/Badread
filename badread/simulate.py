@@ -47,6 +47,7 @@ def simulate(args):
                           end_adapt_rate, end_adapt_amount, args.end_adapter_seq,
                           random_start, random_end)
 
+    print_other_problem_summary(args)
     ref_size = sum(len(x) for x in ref_seqs.values())
     target_size = get_target_size(ref_size, args.quantity)
     print('', file=sys.stderr)
@@ -371,6 +372,14 @@ def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
               file=sys.stderr)
         print(f'  skip (mean sequence lost per glitch)  = {float_to_str(glitch_skip):>5}',
               file=sys.stderr)
+
+
+def print_other_problem_summary(args):
+    print('', file=sys.stderr)
+    print('Other problems:', file=sys.stderr)
+    print(f'  chimera join rate: {args.chimeras}%', file=sys.stderr)
+    print(f'  junk read rate:    {args.junk_reads}%', file=sys.stderr)
+    print(f'  random read rate:  {args.random_reads}%', file=sys.stderr)
 
 
 def adapter_parameters(param_str):
