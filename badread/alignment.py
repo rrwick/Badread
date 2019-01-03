@@ -72,7 +72,7 @@ class Alignment(object):
                '(' + ('%.3f' % self.percent_identity) + '%)'
 
 
-def load_alignments(filename, max_alignments=None, output=sys.stderr):
+def load_alignments(filename, max_alignments=None, output=sys.stderr, dot_interval=1000):
     i = 0
     print('Loading alignments', end='', file=output, flush=True)
     all_alignments = collections.defaultdict(list)
@@ -81,7 +81,7 @@ def load_alignments(filename, max_alignments=None, output=sys.stderr):
             a = Alignment(line)
             all_alignments[a.read_name].append(a)
             i += 1
-            if i % 1000 == 0:
+            if i % dot_interval == 0:
                 print('.', end='', file=output, flush=True)
             if i == max_alignments:
                 break
@@ -94,7 +94,7 @@ def load_alignments(filename, max_alignments=None, output=sys.stderr):
         if best.num_bases > 1000 and best.percent_identity > 80.0:
             best_alignments.append(best)
             i += 1
-            if i % 1000 == 0:
+            if i % dot_interval == 0:
                 print('.', end='', file=output, flush=True)
     print('', file=output, flush=True)
     return best_alignments
