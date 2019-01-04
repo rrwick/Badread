@@ -148,7 +148,7 @@ class TestSimulate(unittest.TestCase):
 
     def test_plasmid_bias_off(self):
         # Contig H is 1% the size of contig G but 100x the depth, so it should get about the same
-        # number of reads
+        # number of reads.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_5.fasta')
         with captured_output() as (out, err):
             sequence(ref_filename)

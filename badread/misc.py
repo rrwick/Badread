@@ -70,10 +70,10 @@ def reverse_complement(seq):
     return ''.join([complement_base(x) for x in seq][::-1])
 
 
-def load_fastq(filename):
+def load_fastq(filename, output=sys.stderr, dot_interval=1000):
     reads = {}
     i = 0
-    print('Loading reads', end='', file=sys.stderr, flush=True)
+    print('Loading reads', end='', file=output, flush=True)
     with get_open_func(filename)(filename, 'rb') as fastq:
         for line in fastq:
             stripped_line = line.strip()
@@ -87,9 +87,9 @@ def load_fastq(filename):
             qualities = next(fastq).strip()
             reads[name.decode()] = (sequence.decode(), qualities.decode())
             i += 1
-            if i % 1000 == 0:
-                print('.', end='', file=sys.stderr, flush=True)
-    print('', file=sys.stderr, flush=True)
+            if i % dot_interval == 0:
+                print('.', end='', file=output, flush=True)
+    print('', file=output, flush=True)
     return reads
 
 
@@ -113,7 +113,7 @@ def load_fasta(filename):
                 if 'depth=' in name.lower():
                     try:
                         depths[short_name] = float(p.search(name.lower()).group(1))
-                    except ValueError:
+                    except (ValueError, AttributeError):
                         depths[short_name] = 1.0
                 else:
                     depths[short_name] = 1.0
