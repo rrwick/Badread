@@ -5,6 +5,8 @@ install:
   - pip3 install -e .
 before_script:
   - pip3 install coveralls
+  - pip3 install scipy
+  - pip3 install edlib
 script:
   - coverage run -m unittest
 after_success:
