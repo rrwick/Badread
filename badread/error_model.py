@@ -24,10 +24,10 @@ from .misc import load_fasta, load_fastq, reverse_complement, random_chance, get
     get_random_different_base, get_open_func
 
 
-def make_error_model(args, output=sys.stderr):
+def make_error_model(args, output=sys.stderr, dot_interval=1000):
     refs, _, _ = load_fasta(args.reference)
-    reads = load_fastq(args.reads)
-    alignments = load_alignments(args.alignment, args.max_alignments)
+    reads = load_fastq(args.reads, output=output)
+    alignments = load_alignments(args.alignment, args.max_alignments, output=output)
 
     kmer_list = [''.join(x) for x in itertools.product('ACGT', repeat=args.k_size)]
     kmer_alternatives = {x: collections.defaultdict(int) for x in kmer_list}
@@ -35,8 +35,10 @@ def make_error_model(args, output=sys.stderr):
     i = 0
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
+        check_alignment_matches_read_and_refs(a, reads, refs)
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
+
         if a.strand == '-':
             ref_seq = reverse_complement(ref_seq)
         aligned_read_seq, _, aligned_ref_seq, _ = align_sequences(read_seq, read_qual, ref_seq, a)
@@ -57,7 +59,7 @@ def make_error_model(args, output=sys.stderr):
                 start += 1
             end += 1
         i += 1
-        if i % 1000 == 0:
+        if i % dot_interval == 0:
             print('.', end='', file=output, flush=True)
     print('', file=output, flush=True)
 
@@ -72,6 +74,15 @@ def make_error_model(args, output=sys.stderr):
         for k, frac in alt_fracs[:args.max_alt]:
             print(f'{k},{frac:.6f}', end=';')
         print()
+
+
+def check_alignment_matches_read_and_refs(a, reads, refs):
+    if a.read_name not in reads:
+        sys.exit(f'\nError: could not find read {a.read_name}\n'
+                 f'are you sure your read file and alignment file match?')
+    if a.ref_name not in refs:
+        sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
+                 f'reference file and alignment file match?')
 
 
 class ErrorModel(object):
@@ -212,18 +223,3 @@ def align_kmers(kmer, alt):
         result[0] = first_base
         result[1] = inserted_base + result[1]
     return result
-
-
-def identity_from_edlib_cigar(cigar):
-    matches, alignment_length = 0, 0
-    cigar_parts = re.findall(r'\d+[IDX=]', cigar)
-    for c in cigar_parts:
-        cigar_type = c[-1]
-        cigar_size = int(c[:-1])
-        alignment_length += cigar_size
-        if cigar_type == '=':
-            matches += cigar_size
-    try:
-        return matches / alignment_length
-    except ZeroDivisionError:
-        return 0.0

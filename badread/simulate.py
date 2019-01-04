@@ -17,8 +17,8 @@ import random
 import sys
 import uuid
 from .misc import load_fasta, get_random_sequence, reverse_complement, random_chance, \
-    float_to_str, str_is_int
-from .error_model import ErrorModel, identity_from_edlib_cigar
+    float_to_str, str_is_int, identity_from_edlib_cigar
+from .error_model import ErrorModel
 from .qscore_model import QScoreModel, get_qscores
 from .fragment_lengths import FragmentLengths
 from .identities import Identities

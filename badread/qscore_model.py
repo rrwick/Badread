@@ -20,8 +20,9 @@ import re
 import statistics
 import sys
 from .alignment import load_alignments, align_sequences
-from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_open_func
-from .error_model import identity_from_edlib_cigar
+from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_open_func, \
+    identity_from_edlib_cigar
+from .error_model import check_alignment_matches_read_and_refs
 from . import settings
 
 
@@ -88,13 +89,7 @@ def make_qscore_model(args, output=sys.stderr, dot_interval=1000):
     i = 0
     print('Processing alignments', end='', file=output, flush=True)
     for a in alignments:
-        if a.read_name not in reads:
-            sys.exit(f'\nError: could not find read {a.read_name}\n'
-                     f'are you sure your read file and alignment file match?')
-        if a.ref_name not in refs:
-            sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
-                     f'reference file and alignment file match?')
-
+        check_alignment_matches_read_and_refs(a, reads, refs)
         read_seq, read_qual = (x[a.read_start:a.read_end] for x in reads[a.read_name])
         ref_seq = refs[a.ref_name][a.ref_start:a.ref_end]
 

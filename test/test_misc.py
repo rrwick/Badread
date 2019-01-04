@@ -158,6 +158,12 @@ class TestLoadSequences(unittest.TestCase):
         reads = badread.misc.load_fastq(filename, output=self.null, dot_interval=1)
         self.check_fastq(reads)
 
+    def test_load_fastq_wrong_type(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
+        with self.assertRaises(SystemExit) as cm:
+            badread.misc.load_fastq(filename, output=self.null)
+        self.assertTrue('is not FASTQ format' in str(cm.exception))
+
 
 class TestRandomSeqs(unittest.TestCase):
 
@@ -214,3 +220,26 @@ class TestOther(unittest.TestCase):
     def test_str_is_dna_sequence_2(self):
         self.assertFalse(badread.misc.str_is_dna_sequence('abcdefg'))
 
+    def test_identity_from_edlib_cigar_1(self):
+        self.assertEqual(badread.misc.identity_from_edlib_cigar('10='), 1.0)
+
+    def test_identity_from_edlib_cigar_2(self):
+        self.assertEqual(badread.misc.identity_from_edlib_cigar('10D'), 0.0)
+
+    def test_identity_from_edlib_cigar_3(self):
+        self.assertEqual(badread.misc.identity_from_edlib_cigar('5=5X'), 0.5)
+
+    def test_identity_from_edlib_cigar_4(self):
+        self.assertEqual(badread.misc.identity_from_edlib_cigar(''), 0.0)
+
+    def test_random_chance_0(self):
+        successes = sum(1 if badread.misc.random_chance(0.0) else 0 for _ in range(1000))
+        self.assertEqual(successes, 0)
+
+    def test_random_chance_100(self):
+        successes = sum(1 if badread.misc.random_chance(1.0) else 0 for _ in range(1000))
+        self.assertEqual(successes, 1000)
+
+    def test_random_chance_50(self):
+        successes = sum(1 if badread.misc.random_chance(0.5) else 0 for _ in range(1000))
+        self.assertTrue(200 < successes < 800)

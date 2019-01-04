@@ -83,7 +83,7 @@ class TestSequenceFragment(unittest.TestCase):
             seq, qual, _, _ = badread.simulate.sequence_fragment(frag, target_identity,
                                                                  error_model, qscore_model)
             cigar = edlib.align(frag, seq, task='path')['cigar']
-            read_identity = badread.error_model.identity_from_edlib_cigar(cigar)
+            read_identity = badread.misc.identity_from_edlib_cigar(cigar)
             read_identities.append(read_identity)
 
             if VERBOSE:

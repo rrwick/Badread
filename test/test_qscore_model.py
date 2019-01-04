@@ -425,7 +425,8 @@ class TestMakeQScoreModel(unittest.TestCase):
                                                'test_alignment_reads_bad_names.fastq')
         self.paf_filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
         self.Args = collections.namedtuple('Args', ['reference', 'reads', 'alignment', 'k_size',
-                                           'max_alignments', 'max_del', 'min_occur', 'max_output'])
+                                                    'max_alignments', 'max_del', 'min_occur',
+                                                    'max_output'])
 
     def tearDown(self):
         self.null.close()

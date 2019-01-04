@@ -14,10 +14,25 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+import collections
+import contextlib
+import io
 import itertools
 import os
+import sys
 import unittest
 import badread.error_model
+
+
+@contextlib.contextmanager
+def captured_output():
+    new_out, new_err = io.StringIO(), io.StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestKmerAlignment(unittest.TestCase):
@@ -379,3 +394,56 @@ class TestRandomErrorModel(unittest.TestCase):
             new_kmer = self.model.add_errors_to_kmer('ACGT')
             new_kmers.add('_'.join(new_kmer))
         self.assertEqual(len(new_kmers), 44)
+
+
+class TestMakeErrorModel(unittest.TestCase):
+
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.ref_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_ref.fasta')
+        self.ref_filename_bad = os.path.join(os.path.dirname(__file__),
+                                             'test_alignment_ref_bad_names.fasta')
+        self.reads_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_reads.fastq')
+        self.reads_filename_bad = os.path.join(os.path.dirname(__file__),
+                                               'test_alignment_reads_bad_names.fastq')
+        self.paf_filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
+        self.Args = collections.namedtuple('Args', ['reference', 'reads', 'alignment', 'k_size',
+                                                    'max_alignments', 'max_alt'])
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_make_model_defaults(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=7, max_alignments=None, max_alt=25)
+        with captured_output() as (out, err):
+            badread.error_model.make_error_model(args, output=self.null, dot_interval=1)
+        out = out.getvalue()
+        out_lines = out.splitlines()
+        self.assertEqual(len(out_lines), 2361)  # the number of 7-mers in the reads
+
+    def test_make_model_k_size(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=3, max_alignments=None, max_alt=25)
+        with captured_output() as (out, err):
+            badread.error_model.make_error_model(args, output=self.null, dot_interval=1)
+        out = out.getvalue()
+        out_lines = out.splitlines()
+        self.assertEqual(len(out_lines), 64)  # the number of 3-mers in the reads (all possible)
+
+
+    def test_make_model_bad_read_names(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename_bad,
+                         alignment=self.paf_filename, k_size=7, max_alignments=None, max_alt=25)
+        with captured_output() as _:
+            with self.assertRaises(SystemExit) as cm:
+                badread.error_model.make_error_model(args, output=self.null, dot_interval=1)
+        self.assertTrue('are you sure your read file and alignment file' in str(cm.exception))
+
+    def test_make_model_bad_ref_names(self):
+        args = self.Args(reference=self.ref_filename_bad, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=7, max_alignments=None, max_alt=25)
+        with captured_output() as _:
+            with self.assertRaises(SystemExit) as cm:
+                badread.error_model.make_error_model(args, output=self.null, dot_interval=1)
+        self.assertTrue('are you sure your reference file and alignment file' in str(cm.exception))

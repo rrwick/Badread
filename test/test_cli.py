@@ -14,8 +14,8 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-from contextlib import contextmanager
-from io import StringIO
+import contextlib
+import io
 import os
 import sys
 import unittest
@@ -23,9 +23,9 @@ import unittest
 import badread.badread
 
 
-@contextmanager
+@contextlib.contextmanager
 def captured_output():
-    new_out, new_err = StringIO(), StringIO()
+    new_out, new_err = io.StringIO(), io.StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = new_out, new_err
