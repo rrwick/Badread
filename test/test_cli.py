@@ -14,24 +14,92 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-import contextlib
-import io
 import os
-import sys
 import unittest
+import unittest.mock
+import sys
 
 import badread.badread
+import badread.misc
 
 
-@contextlib.contextmanager
-def captured_output():
-    new_out, new_err = io.StringIO(), io.StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
+class TestWholeCommands(unittest.TestCase):
+
+    def setUp(self):
+        self.ref_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_ref.fasta')
+        self.reads_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_reads.fastq')
+        self.paf_filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
+
+    def test_simulate(self):
+        test_args = ['badread', 'simulate', '--reference', self.ref_filename, '--quantity', '1x',
+                     '--error_model', 'random', '--qscore_model', 'random']
+        with unittest.mock.patch.object(sys, 'argv', test_args):
+            with badread.misc.captured_output() as (out, err):
+                badread.badread.main()
+        out, err = out.getvalue(), err.getvalue()
+        self.assertTrue(out.startswith('@'))
+
+    def test_error_model(self):
+        test_args = ['badread', 'error_model', '--reference', self.ref_filename,
+                     '--reads', self.reads_filename, '--alignment', self.paf_filename]
+        with unittest.mock.patch.object(sys, 'argv', test_args):
+            with badread.misc.captured_output() as (out, err):
+                badread.badread.main()
+        out, err = out.getvalue(), err.getvalue()
+        self.assertTrue('AAAAAAT' in out)
+
+    def test_qscore_model(self):
+        test_args = ['badread', 'qscore_model', '--reference', self.ref_filename,
+                     '--reads', self.reads_filename, '--alignment', self.paf_filename]
+        with unittest.mock.patch.object(sys, 'argv', test_args):
+            with badread.misc.captured_output() as (out, err):
+                badread.badread.main()
+        out, err = out.getvalue(), err.getvalue()
+        self.assertTrue('overall;' in out)
+
+    def test_plot(self):
+        test_args = ['badread', 'plot', '--reference', self.ref_filename,
+                     '--reads', self.reads_filename, '--alignment', self.paf_filename, '--no_plot']
+        with unittest.mock.patch.object(sys, 'argv', test_args):
+            with badread.misc.captured_output() as (out, err):
+                badread.badread.main()
+        out, err = out.getvalue(), err.getvalue()
+        self.assertTrue('read_1:' in out)
+
+
+class TestPythonVersion(unittest.TestCase):
+
+    def test_good_version_1(self):
+        with unittest.mock.patch.object(sys, 'version_info') as v_info:
+            v_info.major, v_info.minor = 3, 6
+            try:
+                badread.badread.check_python_version()
+            except SystemExit:
+                self.fail('check_python_version() failed when it should not have')
+
+    def test_good_version_2(self):
+        with unittest.mock.patch.object(sys, 'version_info') as v_info:
+            v_info.major, v_info.minor = 3, 7
+            try:
+                badread.badread.check_python_version()
+            except SystemExit:
+                self.fail('check_python_version() failed when it should not have')
+
+    def test_bad_version_1(self):
+        with unittest.mock.patch.object(sys, 'version_info') as v_info:
+            v_info.major, v_info.minor = 3, 5
+            with self.assertRaises(SystemExit) as cm:
+                badread.badread.check_python_version()
+            self.assertNotEqual(cm.exception.code, 0)
+            self.assertTrue('Badread requires Python' in str(cm.exception))
+
+    def test_bad_version_2(self):
+        with unittest.mock.patch.object(sys, 'version_info') as v_info:
+            v_info.major, v_info.minor = 2, 7
+            with self.assertRaises(SystemExit) as cm:
+                badread.badread.check_python_version()
+            self.assertNotEqual(cm.exception.code, 0)
+            self.assertTrue('Badread requires Python' in str(cm.exception))
 
 
 class TestCommandLine(unittest.TestCase):
@@ -62,7 +130,7 @@ class TestCommandLine(unittest.TestCase):
     def test_no_args(self):
         # When called with no arguments, the program behaves like it's hit an error: the help text
         # goes to stderr and it returns a non-zero exit code.
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
                 badread.badread.parse_args([])
         self.assertNotEqual(cm.exception.code, 0)
@@ -71,7 +139,7 @@ class TestCommandLine(unittest.TestCase):
     def test_help_1(self):
         # When called with -h or --help, the program doesn't behaves like it's hit an error: the
         # help text goes to stdout and it returns a exit code of zero.
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
                 badread.badread.parse_args(['-h'])
         self.assertEqual(cm.exception.code, 0)
@@ -81,7 +149,7 @@ class TestCommandLine(unittest.TestCase):
     def test_help_2(self):
         # When called with -h or --help, the program doesn't behave like it's hit an error: the
         # help text goes to stdout and it returns a exit code of zero.
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
                 badread.badread.parse_args(['--help'])
         self.assertEqual(cm.exception.code, 0)
@@ -105,7 +173,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(args.glitch_skip, 34)
 
     def test_simulate_help(self):
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
                 badread.badread.parse_args(['simulate'])
         self.assertNotEqual(cm.exception.code, 0)

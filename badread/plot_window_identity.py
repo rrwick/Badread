@@ -13,15 +13,17 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import matplotlib
 import matplotlib.pyplot as plt
+import sys
+
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement
 from .qscore_model import qscore_char_to_val
 
 
-def plot_window_identity(args):
-    reads = load_fastq(args.reads)
+def plot_window_identity(args, output=sys.stdout):
+    reads = load_fastq(args.reads, output=output)
     refs, _, _ = load_fasta(args.reference)
-    alignments = load_alignments(args.alignment)
+    alignments = load_alignments(args.alignment, output=output)
 
     for a in alignments:
         print(a)
@@ -41,7 +43,7 @@ def plot_window_identity(args):
             qualities = None
 
         plot_one_alignment(positions, identities, qualities, args.window, a,
-                           len(reads[a.read_name][0]))
+                               len(reads[a.read_name][0]), args.no_plot)
 
 
 def get_window_means(errors_per_read_pos, window_size, read_start, convert_to_identity=True):
@@ -73,7 +75,8 @@ class MyAxes(matplotlib.axes.Axes):
 matplotlib.projections.register_projection(MyAxes)
 
 
-def plot_one_alignment(positions, identities, qualities, window_size, alignment, read_length):
+def plot_one_alignment(positions, identities, qualities, window_size, alignment, read_length,
+                       no_plot):
     fig, ax1 = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
     ax1.plot(positions, identities, '-', color='#8F0505')
 
@@ -89,4 +92,5 @@ def plot_one_alignment(positions, identities, qualities, window_size, alignment,
         ax2.set_ylim([5, 25])
 
     fig.canvas.manager.toolbar.pan()
-    plt.show()
+    if not no_plot:
+        plt.show()

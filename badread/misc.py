@@ -15,7 +15,9 @@ If not, see <http://www.gnu.org/licenses/>.
 """
 
 import collections
+import contextlib
 import gzip
+import io
 import os
 import random
 import re
@@ -236,3 +238,14 @@ def identity_from_edlib_cigar(cigar):
         return matches / alignment_length
     except ZeroDivisionError:
         return 0.0
+
+
+@contextlib.contextmanager
+def captured_output():
+    new_out, new_err = io.StringIO(), io.StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err

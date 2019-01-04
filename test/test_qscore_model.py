@@ -14,29 +14,16 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 import collections
-import contextlib
-import io
 import math
 import os
 import random
 import statistics
-import sys
 import unittest
+
+import badread.misc
 import badread.qscore_model
 import badread.settings
-
-
-@contextlib.contextmanager
-def captured_output():
-    new_out, new_err = io.StringIO(), io.StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestAlignSequences(unittest.TestCase):
@@ -435,7 +422,7 @@ class TestMakeQScoreModel(unittest.TestCase):
         args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
                          alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
                          min_occur=100, max_output=10000)
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
         out = out.getvalue()
         out_lines = out.splitlines()
@@ -447,7 +434,7 @@ class TestMakeQScoreModel(unittest.TestCase):
         args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
                          alignment=self.paf_filename, k_size=5, max_alignments=None, max_del=6,
                          min_occur=100, max_output=10000)
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
         out = out.getvalue()
         out_lines = out.splitlines()
@@ -459,7 +446,7 @@ class TestMakeQScoreModel(unittest.TestCase):
         args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
                          alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
                          min_occur=100, max_output=2)
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
         out = out.getvalue()
         out_lines = out.splitlines()
@@ -472,7 +459,7 @@ class TestMakeQScoreModel(unittest.TestCase):
         args = self.Args(reference=self.ref_filename, reads=self.reads_filename_bad,
                          alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
                          min_occur=100, max_output=2)
-        with captured_output() as _:
+        with badread.misc.captured_output() as _:
             with self.assertRaises(SystemExit) as cm:
                 badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
         self.assertTrue('are you sure your read file and alignment file' in str(cm.exception))
@@ -481,7 +468,7 @@ class TestMakeQScoreModel(unittest.TestCase):
         args = self.Args(reference=self.ref_filename_bad, reads=self.reads_filename,
                          alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
                          min_occur=100, max_output=2)
-        with captured_output() as _:
+        with badread.misc.captured_output() as _:
             with self.assertRaises(SystemExit) as cm:
                 badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
         self.assertTrue('are you sure your reference file and alignment file' in str(cm.exception))

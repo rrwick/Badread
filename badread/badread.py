@@ -21,9 +21,7 @@ from . import settings
 
 
 def main():
-    if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-        sys.exit('Error: Badread requires Python 3.6 or later')
-
+    check_python_version()
     args = parse_args(sys.argv[1:])
 
     if args.subparser_name == 'simulate':
@@ -221,6 +219,8 @@ def plot_subparser(subparsers):
                                help='Window size in bp')
     optional_args.add_argument('--qual', action='store_true',
                                help='Include qscores in plot (default: only show identity)')
+    optional_args.add_argument('--no_plot', action='store_true',
+                               help='Do not display plots (for testing purposes)')
 
     other_args = group.add_argument_group('Other')
     other_args.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
@@ -306,6 +306,11 @@ def check_simulate_args(args):
             args.end_adapter_seq = args.end_adapter_seq.upper()
             if not str_is_dna_sequence(args.end_adapter_seq):
                 sys.exit('Error: --end_adapter_seq must be a DNA sequence or a number')
+
+
+def check_python_version():
+    if sys.version_info.major < 3 or sys.version_info.minor < 6:
+        sys.exit('Error: Badread requires Python 3.6 or later')
 
 
 if __name__ == '__main__':
