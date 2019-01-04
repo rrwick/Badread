@@ -16,6 +16,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import collections
 import gzip
+import os
 import random
 import re
 import sys
@@ -70,7 +71,32 @@ def reverse_complement(seq):
     return ''.join([complement_base(x) for x in seq][::-1])
 
 
+def get_sequence_file_type(filename):
+    """
+    Determines whether a file is FASTA or FASTQ.
+    """
+    if not os.path.isfile(filename):
+        sys.exit('Error: could not find {}'.format(filename))
+    if get_compression_type(filename) == 'gz':
+        open_func = gzip.open
+    else:  # plain text
+        open_func = open
+    with open_func(filename, 'rt') as seq_file:
+        try:
+            first_char = seq_file.read(1)
+        except UnicodeDecodeError:
+            first_char = ''
+    if first_char == '>':
+        return 'FASTA'
+    elif first_char == '@':
+        return 'FASTQ'
+    else:
+        raise ValueError('File is neither FASTA or FASTQ')
+
+
 def load_fastq(filename, output=sys.stderr, dot_interval=1000):
+    if get_sequence_file_type(filename) != 'FASTQ':
+        sys.exit('Error: {} is not FASTQ format'.format(filename))
     reads = {}
     i = 0
     print('Loading reads', end='', file=output, flush=True)

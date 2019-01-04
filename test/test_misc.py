@@ -55,6 +55,31 @@ class TestCompressionType(unittest.TestCase):
         self.assertEqual(open_func, gzip.open)
 
 
+class TestSequenceFileType(unittest.TestCase):
+
+    def test_fastq(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_reads_1.fastq')
+        self.assertEqual(badread.misc.get_sequence_file_type(filename), 'FASTQ')
+
+    def test_fasta(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
+        self.assertEqual(badread.misc.get_sequence_file_type(filename), 'FASTA')
+
+    def test_fasta_gz(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta.gz')
+        self.assertEqual(badread.misc.get_sequence_file_type(filename), 'FASTA')
+
+    def test_neither(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
+        with self.assertRaises(ValueError):
+            badread.misc.get_sequence_file_type(filename)
+
+    def test_not_a_file(self):
+        filename = os.path.join(os.path.dirname(__file__), 'sdjkhfksdjhfksjd')
+        with self.assertRaises(SystemExit):
+            badread.misc.get_sequence_file_type(filename)
+
+
 class TestReverseComplement(unittest.TestCase):
 
     def test_comp_base_1(self):

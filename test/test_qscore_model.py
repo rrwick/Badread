@@ -14,14 +14,29 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 import collections
+import contextlib
+import io
 import math
 import os
 import random
 import statistics
+import sys
 import unittest
 import badread.qscore_model
 import badread.settings
+
+
+@contextlib.contextmanager
+def captured_output():
+    new_out, new_err = io.StringIO(), io.StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestAlignSequences(unittest.TestCase):
@@ -209,25 +224,37 @@ class TestLoadQScoreModel(unittest.TestCase):
     Loads a simple qscore error model from a file and makes sure it looks okay.
     """
     def setUp(self):
-        null = open(os.devnull, 'w')
-        model_filename = os.path.join(os.path.dirname(__file__), 'simple_qscore_model')
-        self.model = badread.qscore_model.QScoreModel(model_filename, output=null)
-        null.close()
+        self.null = open(os.devnull, 'w')
+
+    def tearDown(self):
+        self.null.close()
 
     def test_k_size(self):
-        self.assertEqual(self.model.kmer_size, 3)
+        model_filename = os.path.join(os.path.dirname(__file__), 'simple_qscore_model')
+        model = badread.qscore_model.QScoreModel(model_filename, output=self.null)
+        self.assertEqual(model.kmer_size, 3)
 
     def test_scores_and_probs_cigars(self):
-        self.assertEqual(sorted(self.model.scores.keys()),
-                         sorted(self.model.probabilities.keys()))
-        self.assertEqual(sorted(self.model.scores.keys()),
+        model_filename = os.path.join(os.path.dirname(__file__), 'simple_qscore_model')
+        model = badread.qscore_model.QScoreModel(model_filename, output=self.null)
+        self.assertEqual(sorted(model.scores.keys()),
+                         sorted(model.probabilities.keys()))
+        self.assertEqual(sorted(model.scores.keys()),
                          sorted(['=', 'I', 'X', '===', '=D==', '==D=', 'I==', '==I', '=I=',
                                  '==X', 'X==', '=X=', 'III', '=II', 'II=', '=DD==', '==DD=',
                                  'XX=', '=XX', 'X=X', '=D=D=', 'I=I', '=DDD==', '==DDD=', 'I=X',
                                  'X=I', 'X=D=', '=D=X', '=XI', 'IX=', 'XI=', '=IX']))
 
     def test_type(self):
-        self.assertEqual(self.model.type, 'model')
+        model_filename = os.path.join(os.path.dirname(__file__), 'simple_qscore_model')
+        model = badread.qscore_model.QScoreModel(model_filename, output=self.null)
+        self.assertEqual(model.type, 'model')
+
+    def test_bad_format(self):
+        model_filename = os.path.join(os.path.dirname(__file__), 'simple_qscore_model_bad_format')
+        with self.assertRaises(SystemExit) as cm:
+            badread.qscore_model.QScoreModel(model_filename, output=self.null)
+        self.assertTrue('does not seem to be a valid qscore model file' in str(cm.exception))
 
 
 class TestLoadBuiltInModels(unittest.TestCase):
@@ -384,6 +411,79 @@ class TestGetQScoresLoadedModel(unittest.TestCase):
     def test_get_qscores_2(self):
         self.check_min_positions('ACGACTCACGTCAGACT',
                                  'ACGACTACGTCAGACT', 6)
+
+
+class TestMakeQScoreModel(unittest.TestCase):
+
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.ref_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_ref.fasta')
+        self.ref_filename_bad = os.path.join(os.path.dirname(__file__),
+                                             'test_alignment_ref_bad_names.fasta')
+        self.reads_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_reads.fastq')
+        self.reads_filename_bad = os.path.join(os.path.dirname(__file__),
+                                               'test_alignment_reads_bad_names.fastq')
+        self.paf_filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
+        self.Args = collections.namedtuple('Args', ['reference', 'reads', 'alignment', 'k_size',
+                                           'max_alignments', 'max_del', 'min_occur', 'max_output'])
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_make_model_defaults(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
+                         min_occur=100, max_output=10000)
+        with captured_output() as (out, err):
+            badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
+        out = out.getvalue()
+        out_lines = out.splitlines()
+        self.assertEqual(len(out_lines), 6)
+        self.assertTrue(out_lines[0].startswith('overall;'))
+        self.assertTrue(out_lines[-1].startswith('=========;'))
+
+    def test_make_model_k_size(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=5, max_alignments=None, max_del=6,
+                         min_occur=100, max_output=10000)
+        with captured_output() as (out, err):
+            badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
+        out = out.getvalue()
+        out_lines = out.splitlines()
+        self.assertEqual(len(out_lines), 4)
+        self.assertTrue(out_lines[0].startswith('overall;'))
+        self.assertTrue(out_lines[-1].startswith('=====;'))
+
+    def test_make_model_max_output(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
+                         min_occur=100, max_output=2)
+        with captured_output() as (out, err):
+            badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
+        out = out.getvalue()
+        out_lines = out.splitlines()
+        self.assertEqual(len(out_lines), 3)
+        self.assertTrue(out_lines[0].startswith('overall;'))
+        self.assertTrue(out_lines[1].startswith('=;'))
+        self.assertTrue(out_lines[2].startswith('===;'))
+
+    def test_make_model_bad_read_names(self):
+        args = self.Args(reference=self.ref_filename, reads=self.reads_filename_bad,
+                         alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
+                         min_occur=100, max_output=2)
+        with captured_output() as _:
+            with self.assertRaises(SystemExit) as cm:
+                badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
+        self.assertTrue('are you sure your read file and alignment file' in str(cm.exception))
+
+    def test_make_model_bad_ref_names(self):
+        args = self.Args(reference=self.ref_filename_bad, reads=self.reads_filename,
+                         alignment=self.paf_filename, k_size=9, max_alignments=None, max_del=6,
+                         min_occur=100, max_output=2)
+        with captured_output() as _:
+            with self.assertRaises(SystemExit) as cm:
+                badread.qscore_model.make_qscore_model(args, output=self.null, dot_interval=1)
+        self.assertTrue('are you sure your reference file and alignment file' in str(cm.exception))
 
 
 class TestBugs(unittest.TestCase):

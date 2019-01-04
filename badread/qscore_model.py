@@ -71,10 +71,10 @@ def get_qscores(seq, frag, qscore_model):
     return ''.join(qscores), actual_identity, identity_by_qscores
 
 
-def make_qscore_model(args, output=sys.stderr):
+def make_qscore_model(args, output=sys.stderr, dot_interval=1000):
     refs, _, _ = load_fasta(args.reference)
-    reads = load_fastq(args.reads)
-    alignments = load_alignments(args.alignment, args.max_alignments)
+    reads = load_fastq(args.reads, output=output)
+    alignments = load_alignments(args.alignment, args.max_alignments, output=output)
 
     # The k-mer size has to be odd, so there is a middle base from which we can get the qscore.
     assert args.k_size % 2 == 1
@@ -145,7 +145,7 @@ def make_qscore_model(args, output=sys.stderr):
                 while aligned_read_seq[start] == ' ':
                     start += 1
                 end += 1
-        if i % 1000 == 0:
+        if i % dot_interval == 0:
             i += 1
         print('.', end='', file=output, flush=True)
     print('', file=output, flush=True)

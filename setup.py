@@ -20,7 +20,7 @@ exec(open('badread/version.py').read())
 
 class BadreadInstall(install):
     """
-    The install process copies the C++ shared library to the install location.
+    The install process copies necessary files (like pre-built models) to the install location.
     """
     if __name__ == '__main__':
         def run(self):
