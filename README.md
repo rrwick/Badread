@@ -1,11 +1,10 @@
 <p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
 
-[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master)](https://coveralls.io/github/rrwick/Badread?branch=master)
-
 Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
 
 Badread does not try to be best at imitating real long reads (though it's not too bad, see [this comparison between Badread and other long-read simulators](comparison)). Rather, it was intended to give users _control_ over the quality of its simulated reads. I made Badread for the purpose of testing tools which take long reads as input. With it, one can increase the rate of different types of read problems, to see what effect it has.
 
+[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 
 
@@ -16,6 +15,7 @@ Badread does not try to be best at imitating real long reads (though it's not to
   * [Quick usage](#quick-usage)
   * [Method](#method)
   * [Detailed usage](#detailed-usage)
+     * [Command line](#command-line)
      * [Reference FASTA](#reference-fasta)
      * [Fragment lengths](#fragment-lengths)
      * [Read identities](#read-identities)
@@ -44,21 +44,18 @@ Badread depends on a few Python packages ([Edlib](https://github.com/Martinsos/e
 
 ### Install from source
 
-Running the `setup.py` script will install a `badread` executable:
-
+You can install Badread using pip, either from a local copy:
 ```bash
 git clone https://github.com/rrwick/Badread.git
-cd Badread
-python3 setup.py install
-badread -h
+pip3 install ./Badread
+deepbinner --help
 ```
 
-* If the `python3 setup.py install` command complains about permissions, you may need to run it with `sudo`.
-* Install just for your user: `python3 setup.py install --user`
-    * If you get a strange 'can't combine user with prefix' error, read [this](http://stackoverflow.com/questions/4495120).
-* Install to a specific location: `python3 setup.py install --prefix=$HOME/.local`
-* Install with pip (local copy): `pip3 install path/to/Badread`
-* Install with pip (from GitHub): `pip3 install git+https://github.com/rrwick/Badread.git`
+Or directly from GitHub:
+```bash
+pip3 install git+https://github.com/rrwick/Badread.git
+deepbinner --help
+```
 
 
 ### Run without installation
@@ -110,7 +107,7 @@ badread simulate --reference ref.fasta --quantity 50x --error_model random \
 
 ## Method
 
-Badread simulates reads by roughly following the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences.
+Badread simulates reads by mimicking the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences.
 
 Here is an overview of how it makes each read:
 
@@ -140,6 +137,8 @@ Here is an overview of how it makes each read:
 
 
 ## Detailed usage
+
+### Command line
 
 ```
 usage: badread simulate --reference REFERENCE --quantity QUANTITY [--length LENGTH]
@@ -275,11 +274,11 @@ For more information on how qscore models work, see [this page on the wiki](http
 
 ### Adapters
 
-Adapter sequences are controlled with the `--start_adapter_seq` and `--end_adapter_seq` options. The default adapters are those for the Nanopore ligation adapters. To see what those sequences are and some alternatives, check out the [Adapter sequences page on the wiki](https://github.com/rrwick/Badread/wiki/Adapter-sequences). If you supply numbers for the adapter sequences (e.g. `--start_adapter_seq 20`, then Badread will make a random sequence of that length to be the adapter.
+Adapter sequences are controlled with the `--start_adapter_seq` and `--end_adapter_seq` options. The default adapters are those for the Nanopore ligation adapters. To see what those sequences are and some alternatives, check out the [adapter sequences page on the wiki](https://github.com/rrwick/Badread/wiki/Adapter-sequences). If you supply numbers for the adapter sequences (e.g. `--start_adapter_seq 20`, then Badread will make a random sequence of that length to be the adapter.
 
-How much adapter is added to the start/end of a read is controlled by two parameters: rate and amount. Rate is the percent chance that the adapter will appear at all. E.g. a start-adapter rate of 90 means that 10% of reads will have no adapter at their start and 90% of reads will have some adapter at their start. Think of it like a Bernoulli distribution.
+How much adapter is added to the start/end of a read is controlled by two parameters: rate and amount. These are set using the `--start_adapter` and `--end_adapter` options, with each taking two comma-delimited numbers (rate first and amount second). Rate is the percent chance that the adapter will appear at all. E.g. a start-adapter rate of 90 means that 10% of reads will have no adapter at their start and 90% of reads will have some adapter at their start. Think of it like a Bernoulli distribution.
 
-Amount controls how much of the adapter, on average, appears on the read. E.g. a start-adapter rate of 60 means that when an adapter is on the start of the read, it has an expected length of 60% its full length. Start-adapters are truncated at the start and end-adapters are truncated at the end. The actual distribution of amount is controlled by a beta distribution, and you can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/qzza86553k).
+Amount controls how much of the adapter, on average, appears on the read. E.g. a start-adapter amount of 60 means that when an adapter is on the start of the read, it has an expected length of 60% its full length. Start-adapters are truncated at the start and end-adapters are truncated at the end. The amount of adapter for each read is controlled by a beta distribution, and you can interactively explore different values using [this Desmos plot](https://www.desmos.com/calculator/qzza86553k).
 
 To turn off adapters entirely, set the sequences to nothing:<br>
 `--start_adapter_seq "" --end_adapter_seq ""`
@@ -295,9 +294,9 @@ Badread can add two types of completely wrong reads to the output: junk and rand
 
 ### Chimeras
 
-Chimeric reads can occur in real datasets for two possible reasons: 1) fragments of DNA were actually ligated together before sequence (probably more common library preps that use ligase) and 2) more than one read was sequenced in quick succession such that the software didn't recognise them as separate (an in-silico chimera). They can occur on both PacBio and Nanopore sequencing platforms.
+Chimeric reads can occur in real datasets for two possible reasons: 1) fragments of DNA were actually ligated together before sequencing (probably more common library preps that use ligase), and 2) two or more reads were sequenced in quick succession such that the sequencing software didn't recognise them as separate (an in-silico chimera). Chimeras can occur on both PacBio and Nanopore sequencing platforms.
 
-As an example, imagine you used `--chimeras 2` to set chimeras to 2%. After making a sequence fragment, Badread then has a 2% chance of making another fragment and concatenating on to the first. It then has a 2% chance of concatenating on yet another fragment, and so on. This means that about 2% of the reads will be chimeras of two or more fragments, (2%)<sup>2</sup> will be chimeras of three or more, (2%)<sup>3</sup> will be chimeras of four or more, and so on. If you are using start/end adapters, they will sometimes (but not always) be added between the fragments.
+As an example, imagine you used `--chimeras 2` to set chimeras to 2%. After making a sequence fragment, Badread then has a 2% chance of making another fragment and concatenating on to the first. It then has a 2% chance of concatenating on yet another fragment, and so on. This means that about 2% of the reads will be chimeras of two or more fragments, (2%)<sup>2</sup> will be chimeras of three or more, (2%)<sup>3</sup> will be chimeras of four or more, and so on. If you are using start/end adapters, they will sometimes (but not always) be added in between the fragments.
 
 
 
@@ -319,7 +318,6 @@ Glitches are points in the read where the sequence is briefly messed up. They ar
 These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off entirely with `--glitches 0,0,0`.
 
 Take a look at the [glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
-
 
 
 
