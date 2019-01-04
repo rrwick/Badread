@@ -42,8 +42,9 @@ def plot_window_identity(args, output=sys.stdout):
         else:
             qualities = None
 
-        plot_one_alignment(positions, identities, qualities, args.window, a,
-                               len(reads[a.read_name][0]), args.no_plot)
+        if not args.no_plot:
+            plot_one_alignment(positions, identities, qualities, args.window, a,
+                               len(reads[a.read_name][0]))
 
 
 def get_window_means(errors_per_read_pos, window_size, read_start, convert_to_identity=True):
@@ -75,8 +76,7 @@ class MyAxes(matplotlib.axes.Axes):
 matplotlib.projections.register_projection(MyAxes)
 
 
-def plot_one_alignment(positions, identities, qualities, window_size, alignment, read_length,
-                       no_plot):
+def plot_one_alignment(positions, identities, qualities, window_size, alignment, read_length):
     fig, ax1 = plt.subplots(1, 1, figsize=(12, 3), subplot_kw={'projection': 'MyAxes'})
     ax1.plot(positions, identities, '-', color='#8F0505')
 
@@ -92,5 +92,4 @@ def plot_one_alignment(positions, identities, qualities, window_size, alignment,
         ax2.set_ylim([5, 25])
 
     fig.canvas.manager.toolbar.pan()
-    if not no_plot:
-        plt.show()
+    plt.show()
