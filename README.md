@@ -1,5 +1,7 @@
 <p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
 
+[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master)](https://coveralls.io/github/rrwick/Badread?branch=master)
+
 Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
 
 Badread does not try to be best at imitating real long reads (though it's not too bad, see [this comparison between Badread and other long-read simulators](comparison)). Rather, it was intended to give users _control_ over the quality of its simulated reads. I made Badread for the purpose of testing tools which take long reads as input. With it, one can increase the rate of different types of read problems, to see what effect it has.
