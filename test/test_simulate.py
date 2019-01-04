@@ -57,8 +57,8 @@ class TestSequenceFragment(unittest.TestCase):
     def setUp(self):
         self.null = open(os.devnull, 'w')
         self.trials = 20
-        self.identities_to_test = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65]
-        self.read_lengths_to_test = [10000, 3000, 1000]
+        self.identities_to_test = [1.0, 0.9, 0.8, 0.7]
+        self.read_lengths_to_test = [3000, 1000]
         self.read_delta = 0.5
         self.mean_delta = 0.05
         self.repo_dir = pathlib.Path(__file__).parent.parent
@@ -87,7 +87,7 @@ class TestSequenceFragment(unittest.TestCase):
             read_identities.append(read_identity)
 
             if VERBOSE:
-                print('{read_identity:.4f}', flush=True,
+                print('{:.4f}'.format(read_identity), flush=True,
                       end='\n                ' if (i+1) % 20 == 0 else ' ')
 
             self.assertAlmostEqual(read_identity, target_identity, delta=read_delta)
