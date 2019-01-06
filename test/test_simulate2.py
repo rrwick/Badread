@@ -14,11 +14,9 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-from contextlib import contextmanager
 from io import StringIO
 import collections
 import os
-import sys
 import unittest
 
 import badread.simulate
@@ -26,17 +24,6 @@ import badread.identities
 import badread.error_model
 import badread.qscore_model
 import badread.misc
-
-
-@contextmanager
-def captured_output():
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
 
 
 def sequence(reference_filename, read_count=5000, mean_frag_length=100, small_plasmid_bias=False,
@@ -99,7 +86,7 @@ class TestSimulate(unittest.TestCase):
     def test_strand_count(self):
         # Should get reads from both strands.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_2.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         forward_count, reverse_count = count_strands(out)
@@ -111,7 +98,7 @@ class TestSimulate(unittest.TestCase):
         # Contigs A and B have the same length, but B is double the depth so should get 2/3 of
         # the reads.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_2.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         counts = count_ref_contigs(out)
@@ -124,7 +111,7 @@ class TestSimulate(unittest.TestCase):
         # Contigs C and D have the same depth, but C is double the length so should get 2/3 of
         # the reads.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_3.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         counts = count_ref_contigs(out)
@@ -137,7 +124,7 @@ class TestSimulate(unittest.TestCase):
         # Contig E is half the length but 4x the depth of contig F, so it should get 2/3 of the
         # reads.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_4.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         counts = count_ref_contigs(out)
@@ -150,7 +137,7 @@ class TestSimulate(unittest.TestCase):
         # Contig H is 1% the size of contig G but 100x the depth, so it should get about the same
         # number of reads.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_5.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         counts = count_ref_contigs(out)
@@ -163,7 +150,7 @@ class TestSimulate(unittest.TestCase):
         # When --small_plasmid_bias is on, contig H gets few to no reads, because its length
         # (50 bp) is much less than the mean fragment length (100 bp).
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_5.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename, small_plasmid_bias=True)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         counts = count_ref_contigs(out)
@@ -174,10 +161,10 @@ class TestSimulate(unittest.TestCase):
     def test_no_seed(self):
         # Without a seed, repeated runs should give different results.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_2.fasta')
-        with captured_output() as (out1, err1):
+        with badread.misc.captured_output() as (out1, err1):
             sequence(ref_filename, read_count=10, seed=None)
         out1, err1 = out1.getvalue().strip(), err1.getvalue().strip()
-        with captured_output() as (out2, err2):
+        with badread.misc.captured_output() as (out2, err2):
             sequence(ref_filename, read_count=10, seed=None)
         out2, err2 = out2.getvalue().strip(), err2.getvalue().strip()
         self.assertNotEqual(out1, out2)
@@ -185,16 +172,16 @@ class TestSimulate(unittest.TestCase):
     def test_with_seed(self):
         # With a seed, repeated runs should give the same results.
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_2.fasta')
-        with captured_output() as (out1, err1):
+        with badread.misc.captured_output() as (out1, err1):
             sequence(ref_filename, read_count=10, seed=1)
         out1, err1 = out1.getvalue().strip(), err1.getvalue().strip()
-        with captured_output() as (out2, err2):
+        with badread.misc.captured_output() as (out2, err2):
             sequence(ref_filename, read_count=10, seed=1)
         out2, err2 = out2.getvalue().strip(), err2.getvalue().strip()
-        with captured_output() as (out3, err3):
+        with badread.misc.captured_output() as (out3, err3):
             sequence(ref_filename, read_count=10, seed=2)
         out3, err3 = out3.getvalue().strip(), err3.getvalue().strip()
-        with captured_output() as (out4, err4):
+        with badread.misc.captured_output() as (out4, err4):
             sequence(ref_filename, read_count=10, seed=2)
         out4, err4 = out4.getvalue().strip(), err4.getvalue().strip()
         self.assertEqual(out1, out2)
@@ -205,7 +192,7 @@ class TestSimulate(unittest.TestCase):
         # If we ask for reads with extremely low id, Badread should do the best it can (not get
         # caught in an infinite loop).
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_2.fasta')
-        with captured_output() as (out, err):
+        with badread.misc.captured_output() as (out, err):
             sequence(ref_filename, mean_identity=30, read_count=100)
         out, err = out.getvalue().strip(), err.getvalue().strip()
         line_count = len(out.splitlines())
