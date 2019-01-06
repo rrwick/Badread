@@ -21,7 +21,7 @@ import re
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, random_chance, get_random_base, \
-    get_random_different_base, get_open_func
+    get_random_different_base, get_open_func, check_alignment_matches_read_and_refs
 
 
 def make_error_model(args, output=sys.stderr, dot_interval=1000):
@@ -75,14 +75,6 @@ def make_error_model(args, output=sys.stderr, dot_interval=1000):
             print(f'{k},{frac:.6f}', end=';')
         print()
 
-
-def check_alignment_matches_read_and_refs(a, reads, refs):
-    if a.read_name not in reads:
-        sys.exit(f'\nError: could not find read {a.read_name}\n'
-                 f'are you sure your read file and alignment file match?')
-    if a.ref_name not in refs:
-        sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
-                 f'reference file and alignment file match?')
 
 
 class ErrorModel(object):

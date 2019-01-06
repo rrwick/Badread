@@ -21,8 +21,7 @@ import statistics
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_open_func, \
-    identity_from_edlib_cigar
-from .error_model import check_alignment_matches_read_and_refs
+    identity_from_edlib_cigar, check_alignment_matches_read_and_refs
 from . import settings
 
 

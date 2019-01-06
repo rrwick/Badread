@@ -249,3 +249,12 @@ def captured_output():
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
+
+
+def check_alignment_matches_read_and_refs(a, reads, refs):
+    if a.read_name not in reads:
+        sys.exit(f'\nError: could not find read {a.read_name}\n'
+                 f'are you sure your read file and alignment file match?')
+    if a.ref_name not in refs:
+        sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
+                 f'reference file and alignment file match?')
