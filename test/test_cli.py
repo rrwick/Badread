@@ -123,7 +123,6 @@ class TestCommandLine(unittest.TestCase):
         self.assertTrue(message in str(cm.exception))
 
     def check_simulate_no_error(self, args):
-        # Ensures that the args throw an error containing the given message.
         args = ['simulate', '--reference', self.ref, '--quantity', '50x'] + args
         args = badread.badread.parse_args(args)
         try:
@@ -151,14 +150,31 @@ class TestCommandLine(unittest.TestCase):
         self.assertTrue('Badread' in out.getvalue().strip())
 
     def test_help_2(self):
-        # When called with -h or --help, the program doesn't behave like it's hit an error: the
-        # help text goes to stdout and it returns a exit code of zero.
+        # Same as above, but with --help.
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
                 badread.badread.parse_args(['--help'])
         self.assertEqual(cm.exception.code, 0)
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('Badread' in out.getvalue().strip())
+
+    def test_help_no_colours(self):
+        with unittest.mock.patch('subprocess.check_output') as check_output_mock:
+            check_output_mock.side_effect = ValueError()
+            with badread.misc.captured_output() as (out, err):
+                with self.assertRaises(SystemExit) as cm:
+                    badread.badread.parse_args(['--help'])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertEqual(err.getvalue().strip(), '')
+        self.assertTrue('Badread' in out.getvalue().strip())
+
+    def test_simulate_help(self):
+        with badread.misc.captured_output() as (out, err):
+            with self.assertRaises(SystemExit) as cm:
+                badread.badread.parse_args(['simulate', '-h'])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertEqual(err.getvalue().strip(), '')
+        self.assertTrue('simulate' in out.getvalue().strip())
 
     def test_simulate_args(self):
         args = badread.badread.parse_args(['simulate', '--reference', self.ref,

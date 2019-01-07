@@ -47,10 +47,7 @@ class MyHelpFormatter(argparse.HelpFormatter):
         terminal_width = shutil.get_terminal_size().columns
         os.environ['COLUMNS'] = str(terminal_width)
         max_help_position = min(max(24, terminal_width // 3), 40)
-        try:
-            self.colours = int(subprocess.check_output(['tput', 'colors']).decode().strip())
-        except (ValueError, subprocess.CalledProcessError, FileNotFoundError, AttributeError):
-            self.colours = 1
+        self.colours = get_colours_from_tput()
         super().__init__(prog, max_help_position=max_help_position)
 
     def _get_help_string(self, action):
@@ -78,10 +75,9 @@ class MyHelpFormatter(argparse.HelpFormatter):
     def _split_lines(self, text, width):
         """
         Override this method to add special behaviour for help texts that start with:
-          'B|' - loop text to the column of the equals sign
           'R|' - loop text one option per line
         """
-        if text.startswith('B|') or text.startswith('R|'):
+        if text.startswith('R|'):
             text_lines = text[2:].splitlines()
             wrapped_text_lines = []
             for line in text_lines:
@@ -89,15 +85,9 @@ class MyHelpFormatter(argparse.HelpFormatter):
                     wrapped_text_lines.append(line)
                 else:
                     wrap_column = 2
-                    if text.startswith('B|'):
-                        line_parts = line.split()
-                        wrap_column += line.find('=')
-                        join = ''
-                        current_line = '  ' + line_parts[0]
-                    else:  # text.startswith('R|')
-                        line_parts = line.split(', ')
-                        join = ','
-                        current_line = line_parts[0]
+                    line_parts = line.split(', ')
+                    join = ','
+                    current_line = line_parts[0]
                     for part in line_parts[1:]:
                         if len(current_line) + len(join) + 1 + len(part) <= width:
                             current_line += join + ' ' + part
@@ -170,3 +160,10 @@ class MyHelpFormatter(argparse.HelpFormatter):
 
         # return a single string
         return self._join_parts(parts)
+
+
+def get_colours_from_tput():
+    try:
+        return int(subprocess.check_output(['tput', 'colors']).decode().strip())
+    except (ValueError, subprocess.CalledProcessError, FileNotFoundError, AttributeError):
+        return 1
