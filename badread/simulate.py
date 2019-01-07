@@ -26,38 +26,36 @@ from .version import __version__
 from . import settings
 
 
-def simulate(args):
-    print_intro()
+def simulate(args, output=sys.stderr):
+    print_intro(output)
     if args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
-    ref_seqs, ref_depths, ref_circular = load_reference(args.reference, output=sys.stderr)
+    ref_seqs, ref_depths, ref_circular = load_reference(args.reference, output)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
-    frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev,
-                                   output=sys.stderr)
-    identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity,
-                            output=sys.stderr)
-    error_model = ErrorModel(args.error_model, output=sys.stderr)
-    qscore_model = QScoreModel(args.qscore_model, output=sys.stderr)
+    frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev, output)
+    identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity, output)
+    error_model = ErrorModel(args.error_model, output)
+    qscore_model = QScoreModel(args.qscore_model, output)
     ref_contigs, ref_contig_weights = get_ref_contig_weights(ref_seqs, ref_depths)
-    print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip)
+    print_glitch_summary(args.glitch_rate, args.glitch_size, args.glitch_skip, output)
 
     start_adapt_rate, start_adapt_amount = adapter_parameters(args.start_adapter)
     end_adapt_rate, end_adapt_amount = adapter_parameters(args.end_adapter)
     random_start, random_end = build_random_adapters(args)
     print_adapter_summary(start_adapt_rate, start_adapt_amount, args.start_adapter_seq,
                           end_adapt_rate, end_adapt_amount, args.end_adapter_seq,
-                          random_start, random_end)
+                          random_start, random_end, output)
 
-    print_other_problem_summary(args)
+    print_other_problem_summary(args, output)
     ref_size = sum(len(x) for x in ref_seqs.values())
     target_size = get_target_size(ref_size, args.quantity)
-    print('', file=sys.stderr)
-    print(f'Target read set size: {target_size:,} bp', file=sys.stderr)
+    print('', file=output)
+    print(f'Target read set size: {target_size:,} bp', file=output)
 
-    print('', file=sys.stderr)
+    print('', file=output)
     count, total_size = 0, 0
-    print_progress(count, total_size, target_size)
+    print_progress(count, total_size, target_size, output)
     while total_size < target_size:
         fragment, info = build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs,
                                         ref_contig_weights, ref_circular, args, start_adapt_rate,
@@ -79,9 +77,9 @@ def simulate(args):
 
         total_size += len(seq)
         count += 1
-        print_progress(count, total_size, target_size)
+        print_progress(count, total_size, target_size, output)
 
-    print('\n', file=sys.stderr)
+    print('\n', file=output)
 
 
 def build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_contig_weights,
@@ -362,26 +360,26 @@ def get_adapter_frag_length(amount, adapter):
     return round(int(len(adapter) * np.random.beta(beta_a, beta_b)))
 
 
-def print_glitch_summary(glitch_rate, glitch_size, glitch_skip):
-    print('', file=sys.stderr)
+def print_glitch_summary(glitch_rate, glitch_size, glitch_skip, output):
+    print('', file=output)
     if glitch_rate == 0:
-        print('Reads will have no glitches', file=sys.stderr)
+        print('Reads will have no glitches', file=output)
     else:
-        print('Read glitches:', file=sys.stderr)
+        print('Read glitches:', file=output)
         print(f'  rate (mean distance between glitches) = {float_to_str(glitch_rate):>5}',
-              file=sys.stderr)
+              file=output)
         print(f'  size (mean length of random sequence) = {float_to_str(glitch_size):>5}',
-              file=sys.stderr)
+              file=output)
         print(f'  skip (mean sequence lost per glitch)  = {float_to_str(glitch_skip):>5}',
-              file=sys.stderr)
+              file=output)
 
 
-def print_other_problem_summary(args):
-    print('', file=sys.stderr)
-    print('Other problems:', file=sys.stderr)
-    print(f'  chimera join rate: {args.chimeras}%', file=sys.stderr)
-    print(f'  junk read rate:    {args.junk_reads}%', file=sys.stderr)
-    print(f'  random read rate:  {args.random_reads}%', file=sys.stderr)
+def print_other_problem_summary(args, output):
+    print('', file=output)
+    print('Other problems:', file=output)
+    print(f'  chimera join rate: {args.chimeras}%', file=output)
+    print(f'  junk read rate:    {args.junk_reads}%', file=output)
+    print(f'  random read rate:  {args.random_reads}%', file=output)
 
 
 def adapter_parameters(param_str):
@@ -408,27 +406,27 @@ def build_random_adapters(args):
 
 
 def print_adapter_summary(start_rate, start_amount, start_seq, end_rate, end_amount, end_seq,
-                          random_start, random_end):
-    print('', file=sys.stderr)
+                          random_start, random_end, output):
+    print('', file=output)
     using_start_adapters = (start_seq and start_rate > 0.0 and start_amount > 0.0)
     using_end_adapters = (end_seq and end_rate > 0.0 and end_amount > 0.0)
     if using_start_adapters:
         random_msg = ' (randomly generated)' if random_start else ''
-        print('Start adapter:', file=sys.stderr)
-        print(f'  seq: {start_seq}{random_msg}', file=sys.stderr)
-        print(f'  rate:   {start_rate * 100.0:.1f}%', file=sys.stderr)
-        print(f'  amount: {start_amount * 100.0:.1f}%', file=sys.stderr)
+        print('Start adapter:', file=output)
+        print(f'  seq: {start_seq}{random_msg}', file=output)
+        print(f'  rate:   {start_rate * 100.0:.1f}%', file=output)
+        print(f'  amount: {start_amount * 100.0:.1f}%', file=output)
     else:
-        print('Start adapter: none', file=sys.stderr)
-    print('', file=sys.stderr)
+        print('Start adapter: none', file=output)
+    print('', file=output)
     if using_end_adapters:
         random_msg = ' (randomly generated)' if random_end else ''
-        print('End adapter:', file=sys.stderr)
-        print(f'  seq: {end_seq}{random_msg}', file=sys.stderr)
-        print(f'  rate:   {end_rate * 100.0:.1f}%', file=sys.stderr)
-        print(f'  amount: {end_amount * 100.0:.1f}%', file=sys.stderr)
+        print('End adapter:', file=output)
+        print(f'  seq: {end_seq}{random_msg}', file=output)
+        print(f'  rate:   {end_rate * 100.0:.1f}%', file=output)
+        print(f'  amount: {end_amount * 100.0:.1f}%', file=output)
     else:
-        print('End adapter: none', file=sys.stderr)
+        print('End adapter: none', file=output)
 
 
 def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
@@ -454,16 +452,16 @@ def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
     return ''.join(new_fragment)
 
 
-def print_progress(count, bp, target):
+def print_progress(count, bp, target, output):
     plural = ' ' if count == 1 else 's'
     percent = int(1000.0 * bp / target) / 10
     if percent > 100.0:
         percent = 100.0
     print(f'\rSimulating: {count:,} read{plural}  {bp:,} bp  {percent:.1f}%',
-          file=sys.stderr, flush=True, end='')
+          file=output, flush=True, end='')
 
 
-def load_reference(reference, output=sys.stderr):
+def load_reference(reference, output):
     print('', file=output)
     print(f'Loading reference from {reference}', file=output)
     ref_seqs, ref_depths, ref_circular = load_fasta(reference)
@@ -479,7 +477,7 @@ def load_reference(reference, output=sys.stderr):
     return ref_seqs, ref_depths, ref_circular
 
 
-def print_intro():
-    print('', file=sys.stderr)
-    print(f'Badread v{__version__}', file=sys.stderr)
-    print(f'long read simulation', file=sys.stderr)
+def print_intro(output):
+    print('', file=output)
+    print(f'Badread v{__version__}', file=output)
+    print(f'long read simulation', file=output)

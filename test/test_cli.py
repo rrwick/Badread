@@ -29,13 +29,17 @@ class TestWholeCommands(unittest.TestCase):
         self.ref_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_ref.fasta')
         self.reads_filename = os.path.join(os.path.dirname(__file__), 'test_alignment_reads.fastq')
         self.paf_filename = os.path.join(os.path.dirname(__file__), 'test_alignment.paf')
+        self.null = open(os.devnull, 'w')
+
+    def tearDown(self):
+        self.null.close()
 
     def test_simulate(self):
         test_args = ['badread', 'simulate', '--reference', self.ref_filename, '--quantity', '1x',
                      '--error_model', 'random', '--qscore_model', 'random']
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main()
+                badread.badread.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue(out.startswith('@'))
 
@@ -44,7 +48,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--reads', self.reads_filename, '--alignment', self.paf_filename]
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main()
+                badread.badread.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue('AAAAAAT' in out)
 
@@ -53,7 +57,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--reads', self.reads_filename, '--alignment', self.paf_filename]
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main()
+                badread.badread.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue('overall;' in out)
 

@@ -48,7 +48,8 @@ def sequence(reference_filename, read_count=5000, mean_frag_length=100, small_pl
                 glitch_rate=0, glitch_size=0, glitch_skip=0,
                 small_plasmid_bias=small_plasmid_bias)
 
-    badread.simulate.simulate(args)
+    with open(os.devnull, 'w') as null:
+        badread.simulate.simulate(args, output=null)
 
 
 def count_strands(reads):

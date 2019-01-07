@@ -20,22 +20,22 @@ from .misc import bold, str_is_int, str_is_dna_sequence
 from . import settings
 
 
-def main():
+def main(output=sys.stderr):
     check_python_version()
     args = parse_args(sys.argv[1:])
 
     if args.subparser_name == 'simulate':
         check_simulate_args(args)
         from .simulate import simulate
-        simulate(args)
+        simulate(args, output=output)
 
     elif args.subparser_name == 'error_model':
         from .error_model import make_error_model
-        make_error_model(args)
+        make_error_model(args, output=output)
 
     elif args.subparser_name == 'qscore_model':
         from .qscore_model import make_qscore_model
-        make_qscore_model(args)
+        make_qscore_model(args, output=output)
 
     elif args.subparser_name == 'plot':
         from .plot_window_identity import plot_window_identity
