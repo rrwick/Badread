@@ -48,13 +48,13 @@ You can install Badread using pip, either from a local copy:
 ```bash
 git clone https://github.com/rrwick/Badread.git
 pip3 install ./Badread
-deepbinner --help
+badread --help
 ```
 
 Or directly from GitHub:
 ```bash
 pip3 install git+https://github.com/rrwick/Badread.git
-deepbinner --help
+badread --help
 ```
 
 
