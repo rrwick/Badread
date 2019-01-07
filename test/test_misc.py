@@ -80,6 +80,16 @@ class TestSequenceFileType(unittest.TestCase):
         with self.assertRaises(SystemExit):
             badread.misc.get_sequence_file_type(filename)
 
+    def test_empty_file(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_empty_file')
+        with self.assertRaises(ValueError):
+            badread.misc.get_sequence_file_type(filename)
+
+    def test_bad_file(self):
+        filename = os.path.join(os.path.dirname(__file__), 'test_bad_file')
+        with self.assertRaises(ValueError):
+            badread.misc.get_sequence_file_type(filename)
+
 
 class TestReverseComplement(unittest.TestCase):
 

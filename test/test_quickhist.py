@@ -14,24 +14,15 @@ details. You should have received a copy of the GNU General Public License along
 If not, see <http://www.gnu.org/licenses/>.
 """
 
-
+import collections
 import io
 import unittest
+import unittest.mock
 
 import badread.quickhist
 
 
-class TestHistograms(unittest.TestCase):
-
-    def setUp(self):
-        self.captured_output = io.StringIO()
-
-    def tearDown(self):
-        self.captured_output.close()
-
-    def reset_output(self):
-        self.tearDown()
-        self.setUp()
+class TestHistogramFunctions(unittest.TestCase):
 
     def test_get_terminal_size(self):
         terminal_size = badread.quickhist.get_terminal_size_stderr()
@@ -42,23 +33,93 @@ class TestHistograms(unittest.TestCase):
     def test_get_max_width(self):
         self.assertTrue(80 <= badread.quickhist.get_max_width() <= 160)
 
+
+FakeTerminalSize = collections.namedtuple('FakeTerminalSize', 'columns')
+
+
+class TestGamma(unittest.TestCase):
+
+    def setUp(self):
+        self.captured_output = io.StringIO()
+        self.a = 1.33136094675
+        self.b = 0.0000887573964497
+        self.n50 = 22200
+
+    def tearDown(self):
+        self.captured_output.close()
+
+    def reset_output(self):
+        self.tearDown()
+        self.setUp()
+
     def test_quickhist_gamma(self):
-        a = 1.33136094675
-        b = 0.0000887573964497
-        n50 = 22200
         for height in [5, 10, 20]:
-            badread.quickhist.quickhist_gamma(a, b, n50, height, output=self.captured_output)
-            # The number of lines in the output should be twice the height (because there are two histograms) plus 3
-            # (2 for each x axis and 1 for the labels).
+            badread.quickhist.quickhist_gamma(self.a, self.b, self.n50, height,
+                                              output=self.captured_output)
+            # The number of lines in the output should be twice the height (because there are two
+            # histograms) plus 3 (2 for each x axis and 1 for the labels).
             self.assertEqual(self.captured_output.getvalue().count('\n'), 2 * height + 3)
             self.reset_output()
 
+    def test_quickhist_gamma_small_terminal(self):
+        with unittest.mock.patch('badread.quickhist.get_terminal_size_stderr',
+                                 return_value=FakeTerminalSize(columns=100)):
+            badread.quickhist.quickhist_gamma(self.a, self.b, self.n50, 10,
+                                              output=self.captured_output)
+        longest_line = max(len(x) for x in self.captured_output.getvalue().splitlines())
+        self.assertLess(longest_line, 80)
+
+    def test_quickhist_beta_gamma_terminal(self):
+        with unittest.mock.patch('badread.quickhist.get_terminal_size_stderr',
+                                 return_value=FakeTerminalSize(columns=140)):
+            badread.quickhist.quickhist_gamma(self.a, self.b, self.n50, 10,
+                                              output=self.captured_output)
+        longest_line = max(len(x) for x in self.captured_output.getvalue().splitlines())
+        self.assertGreater(longest_line, 80)
+
+
+class TestBeta(unittest.TestCase):
+
+    def setUp(self):
+        self.captured_output = io.StringIO()
+        self.a = 42.5
+        self.b = 7.5
+        self.max_identity = 100.0
+
+    def tearDown(self):
+        self.captured_output.close()
+
+    def reset_output(self):
+        self.tearDown()
+        self.setUp()
+
     def test_quickhist_beta(self):
-        a = 42.5
-        b = 7.5
-        max_identity = 100.0
         for height in [5, 10, 20]:
-            badread.quickhist.quickhist_beta(a, b, max_identity, height, output=self.captured_output)
-            # The number of lines in the output should be the height plus 2 (1 for the x axis and 1 for the labels).
+            badread.quickhist.quickhist_beta(self.a, self.b, self.max_identity, height,
+                                             output=self.captured_output)
+            # The number of lines in the output should be the height plus 2 (1 for the x axis and 1
+            # for the labels).
             self.assertEqual(self.captured_output.getvalue().count('\n'), height + 2)
             self.reset_output()
+
+    def test_quickhist_beta_small_terminal(self):
+        with unittest.mock.patch('badread.quickhist.get_terminal_size_stderr',
+                                 return_value=FakeTerminalSize(columns=60)):
+            badread.quickhist.quickhist_beta(self.a, self.b, self.max_identity, 10,
+                                             output=self.captured_output)
+        longest_line = max(len(x) for x in self.captured_output.getvalue().splitlines())
+        self.assertLess(longest_line, 80)
+
+    def test_quickhist_beta_big_terminal(self):
+        with unittest.mock.patch('badread.quickhist.get_terminal_size_stderr',
+                                 return_value=FakeTerminalSize(columns=180)):
+            badread.quickhist.quickhist_beta(self.a, self.b, self.max_identity, 10,
+                                             output=self.captured_output)
+        longest_line = max(len(x) for x in self.captured_output.getvalue().splitlines())
+        self.assertGreater(longest_line, 80)
+
+    def test_quickhist_beta_exception(self):
+        with unittest.mock.patch('os.get_terminal_size') as term_size_mock:
+            term_size_mock.side_effect = AttributeError()
+            badread.quickhist.quickhist_beta(self.a, self.b, self.max_identity, 10,
+                                             output=self.captured_output)
