@@ -63,6 +63,8 @@ def simulate(args, output=sys.stderr):
         target_identity = identities.get_identity()
         seq, quals, actual_identity, identity_by_qscores = \
             sequence_fragment(fragment, target_identity, error_model, qscore_model)
+        if len(seq) == 0:
+            continue
 
         info.append(f'length={len(seq)}')
         info.append(f'error-free_length={len(fragment)}')
