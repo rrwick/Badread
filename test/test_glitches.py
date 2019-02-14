@@ -89,3 +89,20 @@ class TestGlitches(unittest.TestCase):
                 glitch_count += 1
         self.assertGreater(glitch_count, 0)
         self.assertGreater(no_glitch_count, 0)
+
+    def test_less_than_one_1(self):
+        # Giving a glitch rate/size/skip that's between 0 and 1 used to cause a crash until I fixed
+        # the bug.
+        for i in range(self.trials):
+            frag = badread.misc.get_random_sequence(self.frag_length)
+            _ = badread.simulate.add_glitches(frag, 0.5, 10, 10)
+
+    def test_less_than_one_2(self):
+        for i in range(self.trials):
+            frag = badread.misc.get_random_sequence(self.frag_length)
+            _ = badread.simulate.add_glitches(frag, 1000, 0.5, 10)
+
+    def test_less_than_one_3(self):
+        for i in range(self.trials):
+            frag = badread.misc.get_random_sequence(self.frag_length)
+            _ = badread.simulate.add_glitches(frag, 1000, 10, 0.5)

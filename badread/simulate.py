@@ -437,7 +437,8 @@ def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
     i = 0
     new_fragment = []
     while True:
-        dist_to_glitch = np.random.geometric(p=1/glitch_rate)
+        p = 1 / glitch_rate if glitch_rate > 1 else 1
+        dist_to_glitch = np.random.geometric(p=p)
         new_fragment.append(fragment[i:i + dist_to_glitch])
         i += dist_to_glitch
         if i >= len(fragment):
@@ -445,9 +446,11 @@ def add_glitches(fragment, glitch_rate, glitch_size, glitch_skip):
 
         # Add a glitch!
         if glitch_size > 0:
-            new_fragment.append(get_random_sequence(np.random.geometric(p=1/glitch_size)))
+            p = 1 / glitch_size if glitch_size > 1 else 1
+            new_fragment.append(get_random_sequence(np.random.geometric(p=p)))
         if glitch_skip > 0:
-            i += np.random.geometric(p=1/glitch_skip)
+            p = 1 / glitch_skip if glitch_skip > 1 else 1
+            i += np.random.geometric(p=p)
         if i >= len(fragment):
             break
 
