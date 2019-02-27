@@ -1,4 +1,6 @@
 """
+This module contains some subclasses for customising Badread's help text formatting.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

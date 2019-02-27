@@ -1,4 +1,8 @@
 """
+This module contains code for Badread's error_model subcommand, which is used to generate an error
+model using a reference, reads and read-to-reference alignments. This is only needed if users want
+to make their own error model instead of using one of the pre-built ones that come with Badread.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

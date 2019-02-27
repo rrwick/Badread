@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+This script allows a user to run Badread without a pip/setuptools installation. Assuming all
+dependencies are installed, they can simply clone the repo and run this script.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

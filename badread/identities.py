@@ -1,4 +1,7 @@
 """
+This module contains a class for describing read identity distributions (described by the beta
+distribution) and related functions.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

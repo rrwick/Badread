@@ -1,9 +1,8 @@
 """
+This module contains miscellaneous functions that are used in various components of Badread.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
-
-The version is stored here in a separate file so it can exist in only one place.
-http://stackoverflow.com/questions/458550
 
 This file is part of Badread. Badread is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation,

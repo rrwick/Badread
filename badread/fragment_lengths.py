@@ -1,4 +1,7 @@
 """
+This module contains a class for describing fragment length distributions (described by the gamma
+distribution) and related functions.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

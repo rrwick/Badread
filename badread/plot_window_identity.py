@@ -1,4 +1,8 @@
 """
+This module contains code for Badread's plot subcommand, which is used to visualise read identities
+over a sliding window. This functionality is mainly for debugging purposes - most users probably
+won't use it.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

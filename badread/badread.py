@@ -1,4 +1,8 @@
 """
+This module contains the entry point into Badread. It's run either with the badread command (if it
+has been installed) or via the badread-runner.py script (does not require installation). It parses
+the arguments and executes the subcommands (which are coded in separate files).
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

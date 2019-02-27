@@ -1,4 +1,7 @@
 """
+This module contains code for Badread's simulate subcommand, which is used to generate fake reads.
+This is the most important subcommand in Badread, and for many users the only one they'll ever use.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
 

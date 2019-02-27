@@ -1,9 +1,10 @@
 """
+This module contains some hard-coded settings used in various parts of Badread. These are probably
+too low-level to expose to the user (via command-line arguments) but developers may want to tweak
+them.
+
 Copyright 2018 Ryan Wick (rrwick@gmail.com)
 https://github.com/rrwick/Badread
-
-The version is stored here in a separate file so it can exist in only one place.
-http://stackoverflow.com/questions/458550
 
 This file is part of Badread. Badread is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -13,7 +14,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 details. You should have received a copy of the GNU General Public License along with Badread.
 If not, see <http://www.gnu.org/licenses/>.
 """
-
 
 # When adding errors to a sequence (sequence_fragment function in simulate.py), it is necessary to
 # keep a running estimate of the sequence identity. This estimate can be greatly improved by
