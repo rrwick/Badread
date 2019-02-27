@@ -176,6 +176,14 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('simulate' in out.getvalue().strip())
 
+    def test_simulate_help_2(self):
+        with badread.misc.captured_output() as (out, err):
+            with self.assertRaises(SystemExit) as cm:
+                badread.badread.parse_args(['simulate'])
+        self.assertNotEqual(cm.exception.code, 0)
+        self.assertEqual(out.getvalue().strip(), '')
+        self.assertTrue('simulate' in err.getvalue().strip())
+
     def test_simulate_args(self):
         args = badread.badread.parse_args(['simulate', '--reference', self.ref,
                                            '--quantity', '50x', '--length', '5432,123',
@@ -191,14 +199,6 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(args.glitch_rate, 9876)
         self.assertEqual(args.glitch_size, 12)
         self.assertEqual(args.glitch_skip, 34)
-
-    def test_simulate_help(self):
-        with badread.misc.captured_output() as (out, err):
-            with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args(['simulate'])
-        self.assertNotEqual(cm.exception.code, 0)
-        self.assertEqual(out.getvalue().strip(), '')
-        self.assertTrue('simulate' in err.getvalue().strip())
 
     def test_bad_simulated_args_1(self):
         self.check_simulate_error(['--chimera', '101'], 'cannot be greater than')

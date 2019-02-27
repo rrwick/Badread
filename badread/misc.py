@@ -123,7 +123,7 @@ def load_fastq(filename, output=sys.stderr, dot_interval=1000):
 def load_fasta(filename):
     fasta_seqs = collections.OrderedDict()
     depths, circular = {}, {}
-    p = re.compile('depth=([\d.]+)')
+    p = re.compile(r'depth=([\d.]+)')
     with get_open_func(filename)(filename, 'rt') as fasta_file:
         name = ''
         sequence = []

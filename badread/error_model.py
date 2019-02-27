@@ -80,7 +80,6 @@ def make_error_model(args, output=sys.stderr, dot_interval=1000):
         print()
 
 
-
 class ErrorModel(object):
 
     def __init__(self, model_type_or_filename, output=sys.stderr):

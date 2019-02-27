@@ -90,10 +90,11 @@ class TestAlignSequences(unittest.TestCase):
         unaligned_read = 'ACTACGCACTACG'
         unaligned_qual = '1253176253763'
         unaligned_ref = 'ACTACGACTACG'
-        alignment = badread.alignment.Alignment('read_1\t13\t0\t13\t+\tref\t12\t0\t12\t12\t13\t255\tAS:i:2862\t'
-                                                'cg:Z:6M1I6M')
+        alignment = badread.alignment.Alignment('read_1\t13\t0\t13\t+\tref\t12\t0\t12\t12\t13\t255'
+                                                '\tAS:i:2862\tcg:Z:6M1I6M')
         aligned_read_seq, aligned_read_qual, aligned_ref_seq, errors_per_read_pos = \
-            badread.alignment.align_sequences(unaligned_read, unaligned_qual, unaligned_ref, alignment)
+            badread.alignment.align_sequences(unaligned_read, unaligned_qual, unaligned_ref,
+                                              alignment)
         self.assertEqual(aligned_read_seq, 'ACTACGCACTACG')
         self.assertEqual(aligned_read_qual, '1253176253763')
         self.assertEqual(aligned_ref_seq, 'ACTACG-ACTACG')
@@ -103,10 +104,11 @@ class TestAlignSequences(unittest.TestCase):
         unaligned_read = 'ACTACGACAACG'
         unaligned_qual = '125317253763'
         unaligned_ref = 'ACTACGCACTACG'
-        alignment = badread.alignment.Alignment('read_1\t12\t0\t12\t+\tref\t13\t0\t13\t11\t13\t255\tAS:i:2862\t'
-                                                'cg:Z:6M1D6M')
+        alignment = badread.alignment.Alignment('read_1\t12\t0\t12\t+\tref\t13\t0\t13\t11\t13\t255'
+                                                '\tAS:i:2862\tcg:Z:6M1D6M')
         aligned_read_seq, aligned_read_qual, aligned_ref_seq, errors_per_read_pos = \
-            badread.alignment.align_sequences(unaligned_read, unaligned_qual, unaligned_ref, alignment, gap_char=' ')
+            badread.alignment.align_sequences(unaligned_read, unaligned_qual, unaligned_ref,
+                                              alignment, gap_char=' ')
         self.assertEqual(aligned_read_seq, 'ACTACG ACAACG')
         self.assertEqual(aligned_read_qual, '125317 253763')
         self.assertEqual(aligned_ref_seq, 'ACTACGCACTACG')

@@ -86,7 +86,7 @@ def simulate_subparser(subparsers):
 
     required_args = group.add_argument_group('Required arguments')
     required_args.add_argument('--reference', type=str, required=True,
-                               help='Reference FASTA file')
+                               help='Reference FASTA file (can be gzipped)')
     required_args.add_argument('--quantity', type=str, required=True,
                                help='Either an absolute value (e.g. 250M) or a relative depth '
                                     '(e.g. 25x)')
