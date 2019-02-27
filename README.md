@@ -1,8 +1,8 @@
 <p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
 
-Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.
+Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real long-read sets: chimeras, low-quality regions, systematic basecalling errors and more.
 
-Badread does not try to be best at imitating real long reads (though it's not too bad, see [this comparison between Badread and other long-read simulators](comparison)). Rather, it was intended to give users _control_ over the quality of its simulated reads. I made Badread for the purpose of testing tools which take long reads as input. With it, one can increase the rate of different types of read problems, to see what effect it has.
+Badread does not try to be best at imitating real reads (though it's not too bad, see [this comparison between Badread and other long-read simulators](comparison)). Rather, it was intended to give users _control_ over the quality of its simulated reads. I made Badread for the purpose of testing tools which take long reads as input. With it, one can increase the rate of different types of read problems, to see what effect it has.
 
 [![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master&service=github)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
@@ -33,9 +33,9 @@ Badread does not try to be best at imitating real long reads (though it's not to
 
 ## Requirements
 
-Badread runs on MacOS and Linux (and maybe Windows too, I haven't tried). It requires Python 3.6 or later.
+Badread runs on MacOS and Linux (and maybe Windows too, I haven't tried). It requires [Python](https://www.python.org/) 3.6 or later.
 
-Badread depends on a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
+You'll need [pip](https://pypi.org/project/pip/) to install Badread. It also uses a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
 
 
 
@@ -60,7 +60,7 @@ badread --help
 
 ### Run without installation
 
-Badread can be run directly from its repository by using the `badread-runner.py` script, no installation required:
+Badread can also be run directly from its repository by using the `badread-runner.py` script, no installation required:
 
 ```bash
 git clone https://github.com/rrwick/Badread.git
@@ -73,6 +73,8 @@ If you run Badread this way, it's up to you to make sure that all [necessary Pyt
 
 
 ## Quick usage
+
+If you need a reference genome to try out Badread, you can download [this file](https://bit.ly/2Ejwr6V) which is an assembly of the [_Klebsiella pneumoniae_ SGH10](https://www.ncbi.nlm.nih.gov/biosample/?term=SAMN06112188) genome – a nasty hypervirulent strain ([read more about it here](https://www.nature.com/articles/s41467-018-05114-7)).
 
 Badread's default settings correspond to Oxford Nanopore reads of mediocre quality:
 ```
@@ -107,14 +109,14 @@ badread simulate --reference ref.fasta --quantity 50x --error_model random \
 
 ## Method
 
-Badread simulates reads by mimicking the process of sequencing real DNA: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences.
+Badread simulates reads by mimicking the process of real sequencing: breaking the DNA into fragments, adding adapters and then reading the fragments into nucleotide sequences.
 
-Here is an overview of how it makes each read:
+Here is an overview of how Badread makes each of its reads:
 
 1. Use the [fragment length distribution](#fragment-lengths) to choose a length for the read.
 
 2. Choose a type of fragment:
-    * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references.
+    * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references. If there are multiple reference sequences with different depths, then the likelihood of the fragment coming from each sequence is proportional to that sequence's depth.
     * Depending on the settings, some fragments may also be [junk or random sequence](#junk-and-random-reads).
 
 3. Add adapter sequences to the start and end of the fragment, based on the [adapter settings](#adapters).
@@ -127,7 +129,7 @@ Here is an overview of how it makes each read:
 
 7. 'Sequence' the fragment by adding errors until it has the target percent identity.
     * Errors are chosen using the [error model](#error-model) and are added at random positions in the read.
-    * This step performs periodic alignments between the original fragment and the error-added sequence, so Badread can track the read's actual identity. This allow it to be precise (if Badread is aiming for a 91.5% identity read, it will be very close to 91.5% identity) but slow. If you find that Badread is too slow, check out [this wiki page on running it in parallel](https://github.com/rrwick/Badread/wiki/Running-in-parallel).
+    * This step performs periodic alignments between the original fragment and the error-added sequence, so Badread can track the read's actual identity. This allow it to be precise (if Badread is aiming for a 91.5% identity read, it will be very close to 91.5% identity) but slow. If you find that Badread is too slow, check out [the wiki page on running it in parallel](https://github.com/rrwick/Badread/wiki/Running-in-parallel).
 
 8. Generate quality scores for each base using the [qscore model](#error-model).
 
@@ -152,7 +154,7 @@ usage: badread simulate --reference REFERENCE --quantity QUANTITY [--length LENG
 Generate fake long reads
 
 Required arguments:
-  --reference REFERENCE           Reference FASTA file
+  --reference REFERENCE           Reference FASTA file (can be gzipped)
   --quantity QUANTITY             Either an absolute value (e.g. 250M) or a relative depth (e.g. 25x)
 
 Simulation parameters:
@@ -199,13 +201,13 @@ Other:
 
 ### Reference FASTA
 
-The reference genome must be given in FASTA format using the `--reference` argument.
+The reference genome must be given as a FASTA file (either gzipped or not) using the `--reference` argument.
 
-Each sequence's depth can be specified in the FASTA header using `depth=1.1` or `depth=15`, etc. Badread will use this to determine the relative abundance of each sequence. This can be useful for both bacterial genomes (where plasmids may be higher depth than the chromosome) and eukaryote genomes (where chloroplast/mitochondrial genomes may be higher depth than the rest of the genome).
+Each sequence's depth can be specified in the FASTA header, e.g. using `depth=1.1` or `depth=15`. Badread will use this to determine the relative abundance of each sequence. This can be useful for both bacterial genomes (where plasmids may be higher depth than the chromosome) and eukaryote genomes (where chloroplast/mitochondrial genomes may be higher depth than the rest of the genome).
 
 Circular sequences are indicated by including `circular=true` in the FASTA header. This allows reads to loop past the end and back to the start of the sequence.
 
-For a couple of examples, check out [this page on the wiki](https://github.com/rrwick/Badread/wiki/Example-reference-FASTAs).
+For a couple of examples, check out [the reference FASTA page on the wiki](https://github.com/rrwick/Badread/wiki/Example-reference-FASTAs).
 
 
 
@@ -213,7 +215,7 @@ For a couple of examples, check out [this page on the wiki](https://github.com/r
 
 Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). While a gamma distribution is usually parameterised with shape and scale (_k_ and _θ_) or shape and rate (_α_ and _β_), I don't find these particularly intuitive. So Badread instead defines the fragment lengths using mean and standard deviation.
 
-There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of bases in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in reads longer.
+There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of _bases_ in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in longer reads.
 
 <table>
     <tr>
@@ -231,13 +233,13 @@ Note that these parameters control the length of the _fragments_, not the final 
 
 ### Read identities
 
-Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). Like with fragment lengths, Badread defines the distribution with mean and standard deviation instead of using the more formal (and less intuitive) shape parameters (_α_ and _β_). In addition, Badread scales the beta distribution down using a maximum value, making a total of three parameters: `mean,max,stdev`.
+Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). Like with fragment lengths, Badread defines the distribution with mean and standard deviation instead of using the more formal (and less intuitive) shape parameters (_α_ and _β_). In addition, Badread scales the distribution down using a maximum value, for a total of three parameters: `mean,max,stdev`.
 
 <table>
     <tr>
         <td>
             <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
-            Badread's default is <code>--identity 85,95,5</code> which corresponds to a decent Nanopore sequencing run.<br><br>
+            Badread's default is <code>--identity 85,95,5</code> which correspond to an okay (but not great) Nanopore sequencing run.<br><br>
             To see the equations and interactively explore how different parameters affect the distribution, check out <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
         </td>
     </tr>
@@ -294,17 +296,17 @@ Badread can add two types of completely wrong reads to the output: junk and rand
 
 ### Chimeras
 
-Chimeric reads can occur in real datasets for two possible reasons: 1) fragments of DNA were actually ligated together before sequencing (probably more common library preps that use ligase), and 2) two or more reads were sequenced in quick succession such that the sequencing software didn't recognise them as separate (an in-silico chimera). Chimeras can occur on both PacBio and Nanopore sequencing platforms.
+Chimeric reads can occur in real datasets for two possible reasons: 1) fragments of DNA were actually ligated together before sequencing (probably more common in library preps that use ligase), and 2) two or more reads were sequenced in quick succession such that the sequencing software didn't recognise them as separate (an _in silico_ chimera). Chimeras can occur on both PacBio and Nanopore sequencing platforms.
 
-As an example, imagine you used `--chimeras 2` to set chimeras to 2%. After making a sequence fragment, Badread then has a 2% chance of making another fragment and concatenating on to the first. It then has a 2% chance of concatenating on yet another fragment, and so on. This means that about 2% of the reads will be chimeras of two or more fragments, (2%)<sup>2</sup> will be chimeras of three or more, (2%)<sup>3</sup> will be chimeras of four or more, and so on. If you are using start/end adapters, they will sometimes (but not always) be added in between the fragments.
+As an example, imagine you used `--chimeras 2` to set chimeras to 2%. After making a sequence fragment, Badread then has a 2% chance of making another fragment and concatenating on to the first. It then has a 2% chance of concatenating on yet another fragment, and so on. This means that about 2% of the reads will be chimeras of two or more fragments, (2%)<sup>2</sup> will be chimeras of three or more, (2%)<sup>3</sup> will be chimeras of four or more, and so on. If you are using start/end adapters, they will sometimes (but not always) be added between the fragments.
 
 
 
 ### Small plasmid bias
 
-Small circular plasmids can be underrepresented in long read sequencing (a topic addressed in [Completing bacterial genome assemblies with multiplex MinION sequencing](http://mgen.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000132)).
+Small circular plasmids can be underrepresented in long read sequencing – a topic addressed in [Completing bacterial genome assemblies with multiplex MinION sequencing](http://mgen.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000132). In short, it is necessary to avoid excessive DNA shearing in order to achieve long read lengths. But (at least for ligation-based preps) an unsheared circular plasmid can't be sequenced because it has no blunt ends for adapter ligation. So plasmids on the low end of the read-length distribution will be sequenced at lower-than-expected depth.
 
-Badread simulates this effect if you use the `--small_plasmid_bias` option. When turned on, Badread tosses out any fragment that lands in a circular reference which is smaller than the fragment size. The degree of bias is therefore strongly dependent on the fragment length distribution (specifically how much of the distribution is less than the plasmid's size). Note that this only affects _circular_ sequences – linear sequences are unaffected.
+Badread simulates this effect if you use the `--small_plasmid_bias` option. When turned on, Badread tosses out fragments that land in a circular reference which is smaller than the fragment size. The degree of bias is therefore strongly dependent on the fragment length distribution (specifically how much of the distribution is less than the plasmid's size). Note that this only affects _circular_ sequences – linear sequences are unaffected.
 
 
 
@@ -315,7 +317,7 @@ Glitches are points in the read where the sequence is briefly messed up. They ar
 * size: how much random sequence is added to the read
 * skip: how much read sequence is lost
 
-These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off entirely with `--glitches 0,0,0`.
+These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches evenly occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off entirely with `--glitches 0,0,0`.
 
 Take a look at the [glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
 
