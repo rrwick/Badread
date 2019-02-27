@@ -16,7 +16,7 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
-import badread.badread
+import badread.__main__
 import badread.fragment_lengths
 import badread.misc
 import badread.simulate
@@ -160,9 +160,9 @@ class TestEndAdapters(unittest.TestCase):
 class TestRandomAdapters(unittest.TestCase):
 
     def setUp(self):
-        self.args = badread.badread.parse_args(['simulate',
-                                                '--reference', 'ref.fasta',
-                                                '--quantity', '10x'])
+        self.args = badread.__main__.parse_args(['simulate',
+                                                 '--reference', 'ref.fasta',
+                                                 '--quantity', '10x'])
 
     def test_no_adapters(self):
         self.args.start_adapter_seq = ''

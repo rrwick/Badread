@@ -19,7 +19,7 @@ import unittest
 import unittest.mock
 import sys
 
-import badread.badread
+import badread.__main__
 import badread.misc
 
 
@@ -39,7 +39,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--error_model', 'random', '--qscore_model', 'random']
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main(output=self.null)
+                badread.__main__.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue(out.startswith('@'))
 
@@ -48,7 +48,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--reads', self.reads_filename, '--alignment', self.paf_filename]
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main(output=self.null)
+                badread.__main__.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue('AAAAAAT' in out)
 
@@ -57,7 +57,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--reads', self.reads_filename, '--alignment', self.paf_filename]
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main(output=self.null)
+                badread.__main__.main(output=self.null)
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue('overall;' in out)
 
@@ -66,7 +66,7 @@ class TestWholeCommands(unittest.TestCase):
                      '--reads', self.reads_filename, '--alignment', self.paf_filename, '--no_plot']
         with unittest.mock.patch.object(sys, 'argv', test_args):
             with badread.misc.captured_output() as (out, err):
-                badread.badread.main()
+                badread.__main__.main()
         out, err = out.getvalue(), err.getvalue()
         self.assertTrue('read_1:' in out)
 
@@ -77,7 +77,7 @@ class TestPythonVersion(unittest.TestCase):
         with unittest.mock.patch.object(sys, 'version_info') as v_info:
             v_info.major, v_info.minor = 3, 6
             try:
-                badread.badread.check_python_version()
+                badread.__main__.check_python_version()
             except SystemExit:
                 self.fail('check_python_version() failed when it should not have')
 
@@ -85,7 +85,7 @@ class TestPythonVersion(unittest.TestCase):
         with unittest.mock.patch.object(sys, 'version_info') as v_info:
             v_info.major, v_info.minor = 3, 7
             try:
-                badread.badread.check_python_version()
+                badread.__main__.check_python_version()
             except SystemExit:
                 self.fail('check_python_version() failed when it should not have')
 
@@ -93,7 +93,7 @@ class TestPythonVersion(unittest.TestCase):
         with unittest.mock.patch.object(sys, 'version_info') as v_info:
             v_info.major, v_info.minor = 3, 5
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.check_python_version()
+                badread.__main__.check_python_version()
             self.assertNotEqual(cm.exception.code, 0)
             self.assertTrue('Badread requires Python' in str(cm.exception))
 
@@ -101,7 +101,7 @@ class TestPythonVersion(unittest.TestCase):
         with unittest.mock.patch.object(sys, 'version_info') as v_info:
             v_info.major, v_info.minor = 2, 7
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.check_python_version()
+                badread.__main__.check_python_version()
             self.assertNotEqual(cm.exception.code, 0)
             self.assertTrue('Badread requires Python' in str(cm.exception))
 
@@ -116,17 +116,17 @@ class TestCommandLine(unittest.TestCase):
         if ref is None:
             ref = self.ref
         args = ['simulate', '--reference', ref, '--quantity', '50x'] + args
-        args = badread.badread.parse_args(args)
+        args = badread.__main__.parse_args(args)
         with self.assertRaises(SystemExit) as cm:
-            badread.badread.check_simulate_args(args)
+            badread.__main__.check_simulate_args(args)
         self.assertNotEqual(cm.exception.code, 0)
         self.assertTrue(message in str(cm.exception))
 
     def check_simulate_no_error(self, args):
         args = ['simulate', '--reference', self.ref, '--quantity', '50x'] + args
-        args = badread.badread.parse_args(args)
+        args = badread.__main__.parse_args(args)
         try:
-            badread.badread.check_simulate_args(args)
+            badread.__main__.check_simulate_args(args)
         except SystemExit:
             self.fail()
 
@@ -135,7 +135,7 @@ class TestCommandLine(unittest.TestCase):
         # goes to stderr and it returns a non-zero exit code.
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args([])
+                badread.__main__.parse_args([])
         self.assertNotEqual(cm.exception.code, 0)
         self.assertTrue('Badread' in err.getvalue().strip())
 
@@ -144,7 +144,7 @@ class TestCommandLine(unittest.TestCase):
         # help text goes to stdout and it returns a exit code of zero.
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args(['-h'])
+                badread.__main__.parse_args(['-h'])
         self.assertEqual(cm.exception.code, 0)
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('Badread' in out.getvalue().strip())
@@ -153,7 +153,7 @@ class TestCommandLine(unittest.TestCase):
         # Same as above, but with --help.
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args(['--help'])
+                badread.__main__.parse_args(['--help'])
         self.assertEqual(cm.exception.code, 0)
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('Badread' in out.getvalue().strip())
@@ -163,7 +163,7 @@ class TestCommandLine(unittest.TestCase):
             check_output_mock.side_effect = ValueError()
             with badread.misc.captured_output() as (out, err):
                 with self.assertRaises(SystemExit) as cm:
-                    badread.badread.parse_args(['--help'])
+                    badread.__main__.parse_args(['--help'])
         self.assertEqual(cm.exception.code, 0)
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('Badread' in out.getvalue().strip())
@@ -171,7 +171,7 @@ class TestCommandLine(unittest.TestCase):
     def test_simulate_help(self):
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args(['simulate', '-h'])
+                badread.__main__.parse_args(['simulate', '-h'])
         self.assertEqual(cm.exception.code, 0)
         self.assertEqual(err.getvalue().strip(), '')
         self.assertTrue('simulate' in out.getvalue().strip())
@@ -179,18 +179,18 @@ class TestCommandLine(unittest.TestCase):
     def test_simulate_help_2(self):
         with badread.misc.captured_output() as (out, err):
             with self.assertRaises(SystemExit) as cm:
-                badread.badread.parse_args(['simulate'])
+                badread.__main__.parse_args(['simulate'])
         self.assertNotEqual(cm.exception.code, 0)
         self.assertEqual(out.getvalue().strip(), '')
         self.assertTrue('simulate' in err.getvalue().strip())
 
     def test_simulate_args(self):
-        args = badread.badread.parse_args(['simulate', '--reference', self.ref,
+        args = badread.__main__.parse_args(['simulate', '--reference', self.ref,
                                            '--quantity', '50x', '--length', '5432,123',
                                            '--identity', '78,89,4', '--glitches', '9876,12,34'])
         self.assertEqual(args.reference, self.ref)
         self.assertEqual(args.quantity, '50x')
-        badread.badread.check_simulate_args(args)
+        badread.__main__.check_simulate_args(args)
         self.assertEqual(args.mean_frag_length, 5432)
         self.assertEqual(args.frag_length_stdev, 123)
         self.assertEqual(args.mean_identity, 78)
