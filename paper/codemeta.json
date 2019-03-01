@@ -1,0 +1,23 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "0000-0001-8349-0778",
+      "@type": "Person",
+      "email": "rrwick@gmail.com",
+      "name": "Ryan Wick",
+      "affiliation": "Department of Infectious Diseases, Central Clinical School, Monash University, Melbourne, Victoria 3004, Australia"
+    }
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/rrwick/Badread",
+  "datePublished": "2019-03-01",
+  "dateModified": "2019-03-01",
+  "dateCreated": "2019-03-01",
+  "description": "Badread is a long-read simulator tool that can imitate many kinds of problems one might encounter in real read sets: chimeric reads, low-quality regions, systematic basecalling errors and more.",
+  "keywords": "long-read sequencing, oxford nanopore, pacbio, read simulation",
+  "license": "GPL v3.0",
+  "title": "Badread",
+  "version": "v0.1.3"
+}
