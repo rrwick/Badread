@@ -26,6 +26,7 @@ Badread does not try to be best at imitating real reads (though it's not too bad
      * [Chimeras](#chimeras)
      * [Small plasmid bias](#small-plasmid-bias)
      * [Glitches](#glitches)
+  * [Contributing](#contributing)
   * [License](#license)
 
 
@@ -320,6 +321,12 @@ Glitches are points in the read where the sequence is briefly messed up. They ar
 These are specified with the `--glitches` option by giving all three parameters in a comma-delimited list (no spaces). E.g. `--glitches 5000,100,100`. Each of these parameters is a mean for a [geometric random variable](https://en.wikipedia.org/wiki/Geometric_distribution). E.g. a glitch rate of 1000 doesn't mean glitches evenly occur at 1000 bp intervals, it means glitches are _on average_ 1000 bp apart. Turn glitches off entirely with `--glitches 0,0,0`.
 
 Take a look at the [glitches page on the wiki](https://github.com/rrwick/Badread/wiki/Glitches) to see some dotplots which illustrate the concept.
+
+
+
+## Contributing
+
+If you are interested in contributing to Badread, please take a look at the [contribution guidelines](CONTRIBUTING.md).
 
 
 
