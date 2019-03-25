@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
@@ -10,21 +10,14 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behaviour:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**To reproduce**
+The full command run which produces the error. If possible, attach an input files so I can try reproduce the problem on my end.
 
-**Expected behaviour**
-A clear and concise description of what you expected to happen.
+**Error message**
+If applicable, include the full Python error message which indicates where the crash occurred.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
+**System info**
+ - OS: [e.g. Ubuntu 16.04]
  - Python version [e.g. 3.6.7]
 
 **Additional context**
