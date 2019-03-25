@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **To reproduce**
-The full command run which produces the error. If possible, attach an input files so I can try reproduce the problem on my end.
+The full command you ran which produced the error. If possible, attach any input files so I can try to reproduce the problem on my end (you may have to zip/gzip them so GitHub allows them as attachements).
 
 **Error message**
 If applicable, include the full Python error message which indicates where the crash occurred.
