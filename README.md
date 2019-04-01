@@ -36,7 +36,7 @@ Badread does not try to be best at imitating real reads (though it's not too bad
 
 Badread runs on MacOS and Linux (and maybe Windows too, I haven't tried). It requires [Python](https://www.python.org/) 3.6 or later.
 
-You'll need [pip](https://pypi.org/project/pip/) to install Badread. It also uses a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
+To install Badread you'll need [pip](https://pypi.org/project/pip/) and [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). It also uses a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
 
 
 
@@ -57,6 +57,8 @@ Or directly from GitHub:
 pip3 install git+https://github.com/rrwick/Badread.git
 badread --help
 ```
+
+If these installation commands aren't working for you (e.g. an error message like `Command 'pip3' not found` or `command 'gcc' failed with exit status 1`) then check out the [installation issues page on the wiki](https://github.com/rrwick/Badread/wiki/Installation-issues).
 
 
 ### Run without installation
