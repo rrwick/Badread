@@ -34,7 +34,7 @@ Badread does not try to be best at imitating real reads (though it's not too bad
 
 ## Requirements
 
-Badread runs on MacOS and Linux (and maybe Windows too, I haven't tried). It requires [Python](https://www.python.org/) 3.6 or later.
+Badread runs on MacOS and Linux. It may not work natively on Windows (I haven't tried) but can be run using the [Windows subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10). It requires [Python](https://www.python.org/) 3.6 or later.
 
 To install Badread you'll need [pip](https://pypi.org/project/pip/) and [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). It also uses a few Python packages ([Edlib](https://github.com/Martinsos/edlib/tree/master/bindings/python), [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/)) but these should be taken care of by the installation process.
 
