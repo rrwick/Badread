@@ -4,7 +4,7 @@ Badread is a long-read simulator tool that makes – you guessed it – bad read
 
 Badread does not try to be best at imitating real reads (though it's not too bad, see [this comparison between Badread and other long-read simulators](comparison)). Rather, it was intended to give users _control_ over the quality of its simulated reads. I made Badread for the purpose of testing tools which take long reads as input. With it, one can increase the rate of different types of read problems, to see what effect it has.
 
-[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master&service=github)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master&service=github)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html) [![status](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1/status.svg)](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1)
 
 
 
