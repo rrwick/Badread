@@ -134,19 +134,6 @@ class TestSimulate(unittest.TestCase):
         self.assertGreater(ratio, 1.6)
         self.assertLess(ratio, 2.4)
 
-    def test_plasmid_bias_off(self):
-        # Contig H is 1% the size of contig G but 100x the depth, so it should get about the same
-        # number of reads.
-        ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_5.fasta')
-        with badread.misc.captured_output() as (out, err):
-            sequence(ref_filename)
-        out, err = out.getvalue().strip(), err.getvalue().strip()
-        counts = count_ref_contigs(out)
-        g_count, h_count = counts['G'], counts['H']
-        ratio = h_count / g_count
-        self.assertGreater(ratio, 0.6)
-        self.assertLess(ratio, 1.4)
-
     def test_plasmid_bias_on(self):
         # When --small_plasmid_bias is on, contig H gets few to no reads, because its length
         # (50 bp) is much less than the mean fragment length (100 bp).

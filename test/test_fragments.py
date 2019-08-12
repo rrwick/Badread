@@ -322,28 +322,6 @@ class TestSmallPlasmidBias(unittest.TestCase):
     def tearDown(self):
         self.null.close()
 
-    def test_bias_off(self):
-        # When bias is off, the fragments end up at the reference length (even though the frag
-        # length distribution wants them bigger).
-        start_adapt_rate, start_adapt_amount = 0.0, 0.0
-        end_adapt_rate, end_adapt_amount = 0.0, 0.0
-        Args = collections.namedtuple('Args', ['start_adapter_seq', 'end_adapter_seq',
-                                               'junk_reads', 'random_reads', 'chimeras',
-                                               'glitch_rate', 'glitch_size', 'glitch_skip',
-                                               'small_plasmid_bias'])
-        args = Args(start_adapter_seq='', end_adapter_seq='',
-                    junk_reads=0, random_reads=0, chimeras=0,
-                    glitch_rate=0, glitch_size=0, glitch_skip=0,
-                    small_plasmid_bias=False)
-        for _ in range(self.trials):
-            fragment, info = \
-                badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
-                                                self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
-                                                end_adapt_amount)
-            self.assertEqual(len(fragment), 1000)
-
     def test_bias_on(self):
         # When bias is on, the program quits with an error, because it can't make any fragments.
         start_adapt_rate, start_adapt_amount = 0.0, 0.0

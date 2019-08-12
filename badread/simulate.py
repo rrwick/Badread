@@ -37,6 +37,7 @@ def simulate(args, output=sys.stderr):
     ref_seqs, ref_depths, ref_circular = load_reference(args.reference, output)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
     frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev, output)
+    adjust_depths(ref_seqs, ref_depths, ref_circular, frag_lengths, args)
     identities = Identities(args.mean_identity, args.identity_stdev, args.max_identity, output)
     error_model = ErrorModel(args.error_model, output)
     qscore_model = QScoreModel(args.qscore_model, output)
@@ -157,7 +158,7 @@ def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_con
     # repeatedly until we get a result.
     for _ in range(100):
         seq, info = get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
-                                      ref_contig_weights, ref_circular, args)
+                                      ref_contig_weights, ref_circular)
         if seq != '':
             return seq, info
     sys.exit('Error: failed to generate any sequence fragments - are your read lengths '
@@ -180,7 +181,7 @@ def get_fragment_type(args):
 
 
 def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
-                      ref_contig_weights, ref_circular, args):
+                      ref_contig_weights, ref_circular):
 
     if len(ref_contigs) == 1:
         contig = ref_contigs[0]
@@ -200,14 +201,10 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
         info.append('0-' + str(len(seq)))
         return seq, info
 
-    # If the reference contig is circular and the fragment length is too long, then we either
-    # fail to get the read (if --small_plasmid_bias was used) or bring the fragment size back
-    # down to the contig size.
+    # If the reference contig is circular and the fragment length is too long, then we fail to get
+    # the read.
     if fragment_length > len(seq) and ref_circular[contig]:
-        if args.small_plasmid_bias:
-            return '', ''
-        else:
-            fragment_length = len(seq)
+        return '', ''
 
     start_pos = random.randint(0, len(seq)-1)
     end_pos = start_pos + fragment_length
@@ -489,3 +486,26 @@ def print_intro(output):
     print('', file=output)
     print(f'Badread v{__version__}', file=output)
     print(f'long read simulation', file=output)
+
+
+def adjust_depths(ref_seqs, ref_depths, ref_circular, frag_lengths, args):
+    sampled_lengths = [frag_lengths.get_fragment_length() for x in range(100000)]
+    total = sum(sampled_lengths)
+    for ref_name, ref_seq in ref_seqs.items():
+        ref_len = len(ref_seq)
+        ref_circ = ref_circular[ref_name]
+
+        # Circular plasmids may have to have their depth increased due compensate for misses.
+        if not args.small_plasmid_bias and ref_circ:
+            passing_total = sum(length for length in sampled_lengths if length <= ref_len)
+            if passing_total == 0:
+                sys.exit('Error: fragment length distribution incompatible with reference lengths '
+                         '- try running with --small_plasmid_bias to avoid this error')
+            adjustment = total / passing_total
+            ref_depths[ref_name] *= adjustment
+
+        # Linear plasmids may have to have their depth increased due compensate for truncations.
+        if not ref_circ:
+            passing_total = sum(min(ref_len, length) for length in sampled_lengths)
+            adjustment = total / passing_total
+            ref_depths[ref_name] *= adjustment
