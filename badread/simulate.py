@@ -475,7 +475,7 @@ def load_reference(reference, output):
     for contig in ref_seqs:
         circular_linear = 'circular' if ref_circular[contig] else 'linear'
         print(f'    {contig}: {len(ref_seqs[contig]):,} bp, {circular_linear}, '
-              f'{ref_depths[contig]:.2}x depth', file=output)
+              f'{ref_depths[contig]:.2f}x depth', file=output)
     if len(ref_seqs) > 1:
         total_size = sum(len(s) for s in ref_seqs.values())
         print(f'  total size: {total_size:,} bp', file=output)
