@@ -58,4 +58,7 @@ def beta_parameters(beta_mean, beta_stdev, beta_max):
     u, s, m = beta_mean, beta_stdev, beta_max
     beta_a = (((1-(u/m)) / ((s/m)**2)) - (m/u)) * ((u/m)**2)
     beta_b = beta_a * ((m/u) - 1)
+    if beta_a < 0.0 or beta_b < 0.0:
+        sys.exit('Error: invalid beta parameters for identity distribution - trying increasing '
+                 'the maximum identity or reducing the standard deviation')
     return beta_a, beta_b

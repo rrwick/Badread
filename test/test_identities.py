@@ -83,3 +83,9 @@ class TestBetaIdentity(unittest.TestCase):
         identities = badread.identities.Identities(90, 8, 100, output=self.null)
         mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
         self.assertAlmostEqual(mean, 0.9, delta=0.01)
+
+    def test_bad_identity(self):
+        with self.assertRaises(SystemExit) as cm:
+            identities = badread.identities.Identities(81.9, 5.5, 82.1, output=self.null)
+            identities.get_identity()
+        self.assertTrue('invalid beta parameters' in str(cm.exception))
