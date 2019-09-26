@@ -46,7 +46,7 @@ class FragmentLengths(object):
 
     def get_fragment_length(self):
         if self.stdev == 0:
-            return self.mean
+            return int(self.mean)
         else:  # gamma distribution
             fragment_length = int(round(np.random.gamma(self.gamma_k, self.gamma_t)))
             return max(fragment_length, 1)
