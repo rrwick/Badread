@@ -143,9 +143,9 @@ def make_qscore_model(args, output=sys.stderr, dot_interval=1000):
                 while aligned_read_seq[start] == ' ':
                     start += 1
                 end += 1
+        i += 1
         if i % dot_interval == 0:
-            i += 1
-        print('.', end='', file=output, flush=True)
+            print('.', end='', file=output, flush=True)
     print('', file=output, flush=True)
 
     print_qscore_fractions('overall', overall_qscores, 0)
