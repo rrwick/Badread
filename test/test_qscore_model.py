@@ -254,14 +254,20 @@ class TestLoadBuiltInModels(unittest.TestCase):
     def tearDown(self):
         self.null.close()
 
-    def test_nanopore(self):
-        model = badread.qscore_model.QScoreModel('nanopore', output=self.null)
+    def test_nanopore2018(self):
+        model = badread.qscore_model.QScoreModel('nanopore2018', output=self.null)
         self.assertGreater(len(model.scores), 1000)
         self.assertEqual(model.kmer_size, 9)
         self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
 
-    def test_pacbio(self):
-        model = badread.qscore_model.QScoreModel('pacbio', output=self.null)
+    def test_nanopore2020(self):
+        model = badread.qscore_model.QScoreModel('nanopore2020', output=self.null)
+        self.assertGreater(len(model.scores), 1000)
+        self.assertEqual(model.kmer_size, 9)
+        self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
+
+    def test_pacbio2016(self):
+        model = badread.qscore_model.QScoreModel('pacbio2016', output=self.null)
         self.assertGreater(len(model.scores), 1000)
         self.assertEqual(model.kmer_size, 9)
         self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
@@ -480,7 +486,7 @@ class TestBugs(unittest.TestCase):
     """
     def setUp(self):
         null = open(os.devnull, 'w')
-        self.model = badread.qscore_model.QScoreModel('nanopore', output=null)
+        self.model = badread.qscore_model.QScoreModel('nanopore2018', output=null)
         null.close()
 
     def test_bug_1(self):

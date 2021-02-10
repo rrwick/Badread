@@ -185,10 +185,12 @@ class QScoreModel(object):
             self.set_up_random_model(output)
         elif model_type_or_filename == 'ideal':
             self.set_up_ideal_model(output)
-        elif model_type_or_filename == 'nanopore':
-            self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore.gz'), output)
-        elif model_type_or_filename == 'pacbio':
-            self.load_from_file(str(this_script_dir / 'qscore_models' / 'pacbio.gz'), output)
+        elif model_type_or_filename == 'nanopore2018':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore2018.gz'), output)
+        elif model_type_or_filename == 'nanopore2020':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore2020.gz'), output)
+        elif model_type_or_filename == 'pacbio2016':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'pacbio2016.gz'), output)
         else:
             self.load_from_file(model_type_or_filename, output)
 

@@ -96,13 +96,15 @@ def simulate_subparser(subparsers):
     sim_args.add_argument('--length', type=str, default='15000,13000',
                           help='Fragment length distribution (mean and stdev, '
                                'default: DEFAULT)')
-    sim_args.add_argument('--identity', type=str, default='85,95,5',
+    sim_args.add_argument('--identity', type=str, default='87.5,97.5,5',
                           help='Sequencing identity distribution (mean, max and stdev, '
                                'default: DEFAULT)')
-    sim_args.add_argument('--error_model', type=str, default='nanopore',
-                          help='Can be "nanopore", "pacbio", "random" or a model filename')
-    sim_args.add_argument('--qscore_model', type=str, default='nanopore',
-                          help='Can be "nanopore", "pacbio", "random", "ideal" or a model filename')
+    sim_args.add_argument('--error_model', type=str, default='nanopore2020',
+                          help='Can be "nanopore2018", "nanopore2020", "pacbio2016", "random" or '
+                               'a model filename')
+    sim_args.add_argument('--qscore_model', type=str, default='nanopore2020',
+                          help='Can be "nanopore2018", "nanopore2020", "pacbio2016", "random", '
+                               '"ideal" or a model filename')
     sim_args.add_argument('--seed', type=int,
                           help='Random number generator seed for deterministic output (default: '
                                'different output each time)')
@@ -238,13 +240,13 @@ def check_simulate_args(args):
         sys.exit(f'Error: {args.reference} is not a file')
 
     error_model = args.error_model.lower()
-    if error_model not in ['random', 'nanopore', 'pacbio'] and \
+    if error_model not in ['random', 'nanopore2018', 'nanopore2020', 'pacbio2016'] and \
             not pathlib.Path(args.error_model).is_file():
         sys.exit(f'Error: {args.error_model} is not a file\n'
                  f'  --error_model must be "random" or a filename')
 
     qscore_model = args.qscore_model.lower()
-    if qscore_model not in ['random', 'ideal', 'nanopore', 'pacbio'] and \
+    if qscore_model not in ['random', 'ideal', 'nanopore2018', 'nanopore2020', 'pacbio2016'] and \
             not pathlib.Path(args.error_model).is_file():
         sys.exit(f'Error: {args.error_model} is not a file\n'
                  f'  --qscore_model must be "random", "ideal" or a filename')

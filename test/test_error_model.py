@@ -199,13 +199,18 @@ class TestLoadBuiltInModels(unittest.TestCase):
     def tearDown(self):
         self.null.close()
 
-    def test_nanopore(self):
-        model = badread.error_model.ErrorModel('nanopore', output=self.null)
+    def test_nanopore2018(self):
+        model = badread.error_model.ErrorModel('nanopore2018', output=self.null)
         self.assertEqual(model.kmer_size, 7)
         self.assertEqual(len(model.alternatives), 16384)
 
-    def test_pacbio(self):
-        model = badread.error_model.ErrorModel('pacbio', output=self.null)
+    def test_nanopore2020(self):
+        model = badread.error_model.ErrorModel('nanopore2020', output=self.null)
+        self.assertEqual(model.kmer_size, 7)
+        self.assertEqual(len(model.alternatives), 16384)
+
+    def test_pacbio2016(self):
+        model = badread.error_model.ErrorModel('pacbio2016', output=self.null)
         self.assertEqual(model.kmer_size, 7)
         self.assertEqual(len(model.alternatives), 16384)
 
