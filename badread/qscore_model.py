@@ -115,8 +115,8 @@ def make_qscore_model(args, output=sys.stderr, dot_interval=1000):
                 ref_kmer = aligned_ref_seq[start:end]
 
                 cigar = []
-                for i, read_base in enumerate(read_kmer):
-                    ref_base = ref_kmer[i]
+                for j, read_base in enumerate(read_kmer):
+                    ref_base = ref_kmer[j]
                     assert read_base != ' ' or ref_base != ' '
                     if read_base == ref_base:
                         cigar.append('=')
