@@ -244,7 +244,7 @@ Badread generates read identities from a [beta distribution](https://en.wikipedi
     <tr>
         <td>
             <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
-            Badread's default is <code>--identity 87.5,97.5,5</code> which correspond to an okay (but not great) Nanopore sequencing run.<br><br>
+            Badread's default is <code>--identity 87.5,97.5,5</code> which corresponds to an okay (but not great) Nanopore sequencing run.<br><br>
             To see the equations and interactively explore how different parameters affect the distribution, check out <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
         </td>
     </tr>
