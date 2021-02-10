@@ -68,7 +68,7 @@ class BadreadInstall(install):
                 os.makedirs(qscore_models_dest_dir)
             shutil.copyfile(os.path.join(qscore_models_source_dir, 'nanopore2018.gz'),
                             os.path.join(qscore_models_dest_dir, 'nanopore2018.gz'))
-            shutil.copyfile(os.path.join(qscore_models_dest_dir, 'nanopore2020.gz'),
+            shutil.copyfile(os.path.join(qscore_models_source_dir, 'nanopore2020.gz'),
                             os.path.join(qscore_models_dest_dir, 'nanopore2020.gz'))
             shutil.copyfile(os.path.join(qscore_models_source_dir, 'pacbio2016.gz'),
                             os.path.join(qscore_models_dest_dir, 'pacbio2016.gz'))
