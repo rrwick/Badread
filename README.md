@@ -87,7 +87,7 @@ badread simulate --reference ref.fasta --quantity 50x \
     | gzip > reads.fastq.gz
 ```
 
-Alternatively, you can use Badread's built-in models to imitate older PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio-like:
+Alternatively, you can use Badread's built-in models to imitate older PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio2016-like:
 ```
 badread simulate --reference ref.fasta --quantity 50x \
     --error_model pacbio2016 --qscore_model pacbio2016 --identity 85,95,3 --length 7500,7500 \
@@ -244,7 +244,7 @@ Badread generates read identities from a [beta distribution](https://en.wikipedi
     <tr>
         <td>
             <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
-            Badread's default is <code>--identity 85,95,5</code> which correspond to an okay (but not great) Nanopore sequencing run.<br><br>
+            Badread's default is <code>--identity 87.5,97.5,5</code> which correspond to an okay (but not great) Nanopore sequencing run.<br><br>
             To see the equations and interactively explore how different parameters affect the distribution, check out <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
         </td>
     </tr>
