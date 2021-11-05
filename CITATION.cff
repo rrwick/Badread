@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Wick"
+  given-names: "Ryan R"
+  orcid: "https://orcid.org/0000-0001-8349-0778"
+title: "Badread"
+url: "https://github.com/rrwick/Badread"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Wick"
+    given-names: "Ryan R"
+    orcid: "https://orcid.org/0000-0001-8349-0778"
+  doi: "10.21105/joss.01316"
+  journal: "Journal of Open Source Software"
+  month: 4
+  title: "Badread: simulation of error-prone long reads"
+  volume: 4
+  number: 36
+  year: 2019
