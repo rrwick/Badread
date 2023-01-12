@@ -17,6 +17,9 @@ If not, see <http://www.gnu.org/licenses/>.
 
 import collections
 import edlib
+import functools
+import itertools
+import numpy as np
 import os
 import pathlib
 import random
@@ -28,6 +31,7 @@ from .misc import load_fasta, load_fastq, reverse_complement, float_to_str, get_
     identity_from_edlib_cigar, check_alignment_matches_read_and_refs
 from . import settings
 
+RANDOM_GENERATOR = np.random.default_rng()
 
 def get_qscores(seq, frag, qscore_model):
     assert len(seq) > 0
@@ -172,11 +176,52 @@ def print_qscore_fractions(cigar, qscores, min_occur):
         print(f'{q}:{frac_str},', end='')
     print()
 
+class CIGARQProbDist(object):
+
+    def __init__(self, scores, probs, buffersize=1e3, maxbuffersize=1e7):
+        self.scores = np.array(scores)
+        probs = np.array(probs)
+        # sometime it does not sum exactly to 1, which is an issue
+        # so we need to readjust it
+        self.probabilities = probs / probs.sum()
+        self.buffersize = int(buffersize)
+        self.maxbuffersize = maxbuffersize
+        self.values = None
+
+    def generate(self):
+
+        if self.buffersize == self.maxbuffersize:
+            self.values = itertools.cycle(RANDOM_GENERATOR.choice(
+                    self.scores,
+                    size = self.buffersize,
+                    p = self.probabilities
+                ))
+
+        else:
+            self.values = iter(RANDOM_GENERATOR.choice(
+                    self.scores,
+                    size = self.buffersize,
+                    p = self.probabilities
+                ))
+
+            # we resize the buffer with a larger size to adjust to overrepresented
+            # cigar values
+            self.buffersize = self.buffersize * 10
+
+    def next(self):
+        if self.values is None:
+            self.generate()
+
+        try:
+            return next(self.values)
+        except StopIteration:
+            self.generate()
+            return next(self.values)
 
 class QScoreModel(object):
 
     def __init__(self, model_type_or_filename, output=sys.stderr):
-        self.scores, self.probabilities = {}, {}
+        self.pdists = {}
         self.kmer_size = 1
         self.type = None
         this_script_dir = pathlib.Path(os.path.dirname(os.path.realpath(__file__)))
@@ -196,18 +241,19 @@ class QScoreModel(object):
 
         # These three cigars must be in the model, as they are the simplest 1-mer cigars and
         # without them the get_qscore method can fail.
-        assert '=' in self.scores
-        assert 'X' in self.scores
-        assert 'I' in self.scores
+        assert '=' in self.pdists
+        assert 'X' in self.pdists
+        assert 'I' in self.pdists
 
     def set_up_random_model(self, output):
         print('\nUsing a random qscore model', file=output)
         self.type = 'random'
         self.kmer_size = 1
         for c in ['=', 'X', 'I']:
-            self.scores[c], self.probabilities[c] = \
-                uniform_dist_scores_and_probs(settings.RANDOM_QSCORE_MIN,
-                                              settings.RANDOM_QSCORE_MAX)
+            self.pdists[c] = CIGARQProbDist(
+                * uniform_dist_scores_and_probs(settings.RANDOM_QSCORE_MIN,
+                                                settings.RANDOM_QSCORE_MAX)
+            )
 
     def set_up_ideal_model(self, output):
         print('\nUsing an ideal qscore model', file=output)
@@ -216,26 +262,32 @@ class QScoreModel(object):
 
         # Lowest quality: mismatches and insertions.
         for c in ['X', 'I']:
-            self.scores[c], self.probabilities[c] = \
-                uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_1_MIN,
-                                              settings.IDEAL_QSCORE_RANK_1_MAX)
+            self.pdists[c] = CIGARQProbDist(
+                * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_1_MIN,
+                                                settings.IDEAL_QSCORE_RANK_1_MAX)
+            )
 
         # Increasing quality with length of match run
-        self.scores['='], self.probabilities['='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_2_MIN,
-                                          settings.IDEAL_QSCORE_RANK_2_MAX)
-        self.scores['==='], self.probabilities['==='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_3_MIN,
-                                          settings.IDEAL_QSCORE_RANK_3_MAX)
-        self.scores['====='], self.probabilities['====='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_4_MIN,
-                                          settings.IDEAL_QSCORE_RANK_4_MAX)
-        self.scores['======='], self.probabilities['======='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_5_MIN,
-                                          settings.IDEAL_QSCORE_RANK_5_MAX)
-        self.scores['========='], self.probabilities['========='] = \
-            uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_6_MIN,
-                                          settings.IDEAL_QSCORE_RANK_6_MAX)
+        self.pdists['='] = CIGARQProbDist(
+            * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_2_MIN,
+                                            settings.IDEAL_QSCORE_RANK_2_MAX)
+        )
+        self.pdists['==='] = CIGARQProbDist(
+            * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_3_MIN,
+                                            settings.IDEAL_QSCORE_RANK_3_MAX)
+        )
+        self.pdists['====='] = CIGARQProbDist(
+            * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_4_MIN,
+                                            settings.IDEAL_QSCORE_RANK_4_MAX)
+        )
+        self.pdists['======='] = CIGARQProbDist(
+            * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_5_MIN,
+                                            settings.IDEAL_QSCORE_RANK_5_MAX)
+        )
+        self.pdists['========='] = CIGARQProbDist(
+            * uniform_dist_scores_and_probs(settings.IDEAL_QSCORE_RANK_6_MIN,
+                                            settings.IDEAL_QSCORE_RANK_6_MAX)
+        )
 
     def load_from_file(self, filename, output):
         print('\nLoading qscore model from {}'.format(filename), file=output)
@@ -256,30 +308,36 @@ class QScoreModel(object):
                           file=output, end='')
                     last_cigar_len = len(cigar)
                     scores_and_probs = [x.split(':') for x in parts[2].split(',') if x]
-                    self.scores[cigar] = [int(x[0]) for x in scores_and_probs]
-                    self.probabilities[cigar] = [float(x[1]) for x in scores_and_probs]
+                    scores = [int(x[0]) for x in scores_and_probs]
+                    probabilities = [float(x[1]) for x in scores_and_probs]
+                    self.pdists[cigar] = CIGARQProbDist(scores, probabilities)
                     count += 1
                 except (IndexError, ValueError):
                     sys.exit(f'Error: {filename} does not seem to be a valid qscore model file')
+            
             print(f'\r  done: loaded qscore distributions for {count} alignments',
                   file=output)
+
+    @functools.lru_cache(maxsize=1000)
+    def get_trimmed_cigar(self, cigar):
+        while True:
+            assert len(cigar.replace('D', '')) % 2 == 1
+            if cigar in self.pdists:
+                return cigar
+            else:
+                cigar = cigar[1:-1].strip('D')
 
     def get_qscore(self, cigar):
         """
         If the cigar is in the model, then we use it to choose a qscore. If not, then we trim the
         cigar down by 2 (1 off each end) and try again with the simpler cigar.
         """
-        while True:
-            assert len(cigar.replace('D', '')) % 2 == 1
-            if cigar in self.scores:
-                scores = self.scores[cigar]
-                probs = self.probabilities[cigar]
-                qscore = random.choices(scores, weights=probs)[0]
-                break
-            else:
-                cigar = cigar[1:-1].strip('D')
-        return qscore_val_to_char(qscore)
+        cigar = self.get_trimmed_cigar(cigar)
+        return qscore_val_to_char(self.pdists[cigar].next())
 
+        scores = self.pdists[cigar].scores
+        probabilities = self.pdists[cigar].probabilities
+        return int(random.choices(scores, weights=probabilities)[0])
 
 def align_sequences_from_edlib_cigar(seq, frag, cigar, gap_char='-'):
     aligned_seq, aligned_frag, full_cigar = [], [], []
