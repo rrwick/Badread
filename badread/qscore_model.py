@@ -335,10 +335,6 @@ class QScoreModel(object):
         cigar = self.get_trimmed_cigar(cigar)
         return qscore_val_to_char(self.pdists[cigar].next())
 
-        scores = self.pdists[cigar].scores
-        probabilities = self.pdists[cigar].probabilities
-        return int(random.choices(scores, weights=probabilities)[0])
-
 def align_sequences_from_edlib_cigar(seq, frag, cigar, gap_char='-'):
     aligned_seq, aligned_frag, full_cigar = [], [], []
     seq_pos, frag_pos = 0, 0
