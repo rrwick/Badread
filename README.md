@@ -1,4 +1,4 @@
-<p align="center"><img src="images/logo.png" alt="Badread" width="75%"></p>
+<p align="center"><picture><source srcset="images/logo-dark.png" media="(prefers-color-scheme: dark)"><img src="images/logo.png" alt="Badread" width="75%"></picture></p>
 
 Badread is a long-read simulator tool that makes – you guessed it – bad reads! It can imitate many kinds of problems one might encounter in real long-read sets: chimeras, low-quality regions, systematic basecalling errors and more.
 
