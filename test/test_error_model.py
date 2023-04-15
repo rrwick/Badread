@@ -209,6 +209,11 @@ class TestLoadBuiltInModels(unittest.TestCase):
         self.assertEqual(model.kmer_size, 7)
         self.assertEqual(len(model.alternatives), 16384)
 
+    def test_nanopore2023(self):
+        model = badread.error_model.ErrorModel('nanopore2023', output=self.null)
+        self.assertEqual(model.kmer_size, 7)
+        self.assertEqual(len(model.alternatives), 16384)
+
     def test_pacbio2016(self):
         model = badread.error_model.ErrorModel('pacbio2016', output=self.null)
         self.assertEqual(model.kmer_size, 7)

@@ -130,6 +130,16 @@ class TestSequenceFragment(unittest.TestCase):
             for read_length in self.read_lengths_to_test:
                 self.identity_test(identity, read_length, error_model, qscore_model)
 
+    def test_nanopore2023_identity(self):
+        if VERBOSE:
+            print('\n\nNANOPORE ERROR MODEL\n--------------------')
+        model_file = self.repo_dir / 'badread' / 'error_models' / 'nanopore2023.gz'
+        error_model = badread.error_model.ErrorModel(model_file, output=self.null)
+        qscore_model = badread.qscore_model.QScoreModel('random', output=self.null)
+        for identity in self.identities_to_test:
+            for read_length in self.read_lengths_to_test:
+                self.identity_test(identity, read_length, error_model, qscore_model)
+
     def test_pacbio2016_identity(self):
         if VERBOSE:
             print('\n\nPACBIO ERROR MODEL\n------------------')

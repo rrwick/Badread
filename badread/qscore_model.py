@@ -189,6 +189,8 @@ class QScoreModel(object):
             self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore2018.gz'), output)
         elif model_type_or_filename == 'nanopore2020':
             self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore2020.gz'), output)
+        elif model_type_or_filename == 'nanopore2023':
+            self.load_from_file(str(this_script_dir / 'qscore_models' / 'nanopore2023.gz'), output)
         elif model_type_or_filename == 'pacbio2016':
             self.load_from_file(str(this_script_dir / 'qscore_models' / 'pacbio2016.gz'), output)
         else:

@@ -266,6 +266,12 @@ class TestLoadBuiltInModels(unittest.TestCase):
         self.assertEqual(model.kmer_size, 9)
         self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
 
+    def test_nanopore2023(self):
+        model = badread.qscore_model.QScoreModel('nanopore2023', output=self.null)
+        self.assertGreater(len(model.scores), 1000)
+        self.assertEqual(model.kmer_size, 9)
+        self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
+
     def test_pacbio2016(self):
         model = badread.qscore_model.QScoreModel('pacbio2016', output=self.null)
         self.assertGreater(len(model.scores), 1000)
