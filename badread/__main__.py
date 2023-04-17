@@ -96,7 +96,7 @@ def simulate_subparser(subparsers):
     sim_args.add_argument('--length', type=str, default='15000,13000',
                           help='Fragment length distribution (mean and stdev, '
                                'default: DEFAULT)')
-    sim_args.add_argument('--identity', type=str, default='87.5,97.5,5',
+    sim_args.add_argument('--identity', type=str, default='95,99,2.5',
                           help='Sequencing identity distribution (mean, max and stdev, '
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='nanopore2023',

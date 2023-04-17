@@ -81,31 +81,38 @@ If you run Badread this way, it's up to you to make sure that all [necessary Pyt
 
 If you need a reference genome to try out Badread, you can download [this file](https://bit.ly/2Ejwr6V) which is an assembly of the [_Klebsiella pneumoniae_ SGH10](https://www.ncbi.nlm.nih.gov/biosample/?term=SAMN06112188) genome – a nasty hypervirulent strain ([read more about it here](https://www.nature.com/articles/s41467-018-05114-7)).
 
-Badread's default settings correspond to Oxford Nanopore reads of mediocre quality:
-```
+Badread's default settings correspond to Oxford Nanopore R10.4.1 reads of mediocre quality:
+```bash
 badread simulate --reference ref.fasta --quantity 50x \
     | gzip > reads.fastq.gz
 ```
 
-Alternatively, you can use Badread's built-in models to imitate older PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio2016-like:
+To simulate older Oxford Nanopore reads (R9.4.1, worse basecalling):
+```bash
+badread simulate --reference ref.fasta --quantity 50x \
+--error_model pacbio2016 --qscore_model nanopore2020 --identity 90,98,5 \
+    | gzip > reads.fastq.gz
 ```
+
+Alternatively, you can use Badread's built-in models to imitate older PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio-2016-like:
+```bash
 badread simulate --reference ref.fasta --quantity 50x \
     --error_model pacbio2016 --qscore_model pacbio2016 --identity 85,95,3 --length 7500,7500 \
     | gzip > reads.fastq.gz
 ```
 
 Very bad reads:
-```
+```bash
 badread simulate --reference ref.fasta --quantity 50x --glitches 1000,100,100 \
     --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 \
     | gzip > reads.fastq.gz
 ```
 
 Very nice reads:
-```
+```bash
 badread simulate --reference ref.fasta --quantity 50x --error_model random \
     --qscore_model ideal --glitches 0,0,0 --junk_reads 0 --random_reads 0 \
-    --chimeras 0 --identity 95,100,4 --start_adapter_seq "" --end_adapter_seq "" \
+    --chimeras 0 --identity 99,100,2 --start_adapter_seq "" --end_adapter_seq "" \
     | gzip > reads.fastq.gz
 ```
 
@@ -167,7 +174,7 @@ Simulation parameters:
 
   --length LENGTH                 Fragment length distribution (mean and stdev, default: 15000,13000)
   --identity IDENTITY             Sequencing identity distribution (mean, max and stdev, default:
-                                  87.5,97.5,5)
+                                  95,99,2.5)
   --error_model ERROR_MODEL       Can be "nanopore2018", "nanopore2020", "nanopore2023", "pacbio2016",
                                   "random" or a model filename (default: nanopore2023)
   --qscore_model QSCORE_MODEL     Can be "nanopore2018", "nanopore2020", "nanopore2023", "pacbio2016",
@@ -257,9 +264,9 @@ For detail on how Badread defines identity, check out [this page on the wiki](ht
 ### Error model
 
 The possible values for the `--error_model` argument are:
-* `nanopore2018`: a model trained on real Nanopore reads from 2018
-* `nanopore2020`: a model trained on real Nanopore reads from 2020
 * `nanopore2023`: a model trained on real Nanopore reads from 2023 (the default)
+* `nanopore2020`: a model trained on real Nanopore reads from 2020
+* `nanopore2018`: a model trained on real Nanopore reads from 2018
 * `pacbio2016`: a model trained on real PacBio reads
 * `random`: a random error model with 1/3 chance each of insertion, deletion and substitution
 * a file path for a trained model
@@ -271,9 +278,9 @@ For more information on how error models work, see [this page on the wiki](https
 ### QScore model
 
 The possible values for the `--qscore_model` argument are:
-* `nanopore2018`: a model trained on real Nanopore reads from 2018
-* `nanopore2020`: a model trained on real Nanopore reads from 2020
 * `nanopore2023`: a model trained on real Nanopore reads from 2023 (the default)
+* `nanopore2020`: a model trained on real Nanopore reads from 2020
+* `nanopore2018`: a model trained on real Nanopore reads from 2018
 * `pacbio2016`: a model trained on real PacBio reads
 * `random`: a model where qscores are meaningless and give no indication of read/base quality
 * `ideal`: a model where scores are unrealistically informative about read/base quality
