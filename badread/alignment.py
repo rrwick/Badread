@@ -91,7 +91,7 @@ def load_alignments(filename, max_alignments=None, output=sys.stderr, dot_interv
     best_alignments = []
     for read_name, alignments in all_alignments.items():
         best = sorted(alignments, key=lambda x: x.alignment_score)[-1]
-        if best.num_bases > 1000 and best.percent_identity > 80.0:
+        if best.num_bases > 100 and best.percent_identity > 80.0:
             best_alignments.append(best)
             i += 1
             if i % dot_interval == 0:
