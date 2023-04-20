@@ -239,16 +239,18 @@ def check_simulate_args(args):
     if not pathlib.Path(args.reference).is_file():
         sys.exit(f'Error: {args.reference} is not a file')
 
-    model_names = ['random', 'nanopore2018', 'nanopore2020', 'nanopore2023', 'pacbio2016']
+    error_model_names = ['random', 'nanopore2018', 'nanopore2020', 'nanopore2023', 'pacbio2016']
     error_model = args.error_model.lower()
-    if error_model not in model_names and not pathlib.Path(args.error_model).is_file():
+    if error_model not in error_model_names and not pathlib.Path(args.error_model).is_file():
         sys.exit(f'Error: {args.error_model} is not a file\n'
-                 f'  --error_model must be "random" or a filename')
+                 f'  --error_model must be from {error_model_names} or a filename')
 
+    qscore_model_names = ['random', 'ideal', 'nanopore2018', 'nanopore2020', 'nanopore2023',
+                          'pacbio2016']
     qscore_model = args.qscore_model.lower()
-    if qscore_model not in model_names and not pathlib.Path(args.error_model).is_file():
-        sys.exit(f'Error: {args.error_model} is not a file\n'
-                 f'  --qscore_model must be "random", "ideal" or a filename')
+    if qscore_model not in qscore_model_names and not pathlib.Path(args.qscore_model).is_file():
+        sys.exit(f'Error: {args.qscore_model} is not a file\n'
+                 f'  --qscore_model must be from {qscore_model_names} or a filename')
 
     if args.chimeras > 50:
         sys.exit('Error: --chimeras cannot be greater than 50')
