@@ -32,6 +32,8 @@ def make_error_model(args, output=sys.stderr, dot_interval=1000):
     refs, _, _ = load_fasta(args.reference)
     reads = load_fastq(args.reads, output=output)
     alignments = load_alignments(args.alignment, args.max_alignments, output=output)
+    if len(alignments) == 0:
+        sys.exit('Error: no usable alignments')
 
     kmer_list = [''.join(x) for x in itertools.product('ACGT', repeat=args.k_size)]
     kmer_alternatives = {x: collections.defaultdict(int) for x in kmer_list}
