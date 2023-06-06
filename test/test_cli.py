@@ -184,7 +184,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(out.getvalue().strip(), '')
         self.assertTrue('simulate' in err.getvalue().strip())
 
-    def test_simulate_args(self):
+    def test_simulate_args_1(self):
         args = badread.__main__.parse_args(['simulate', '--reference', self.ref,
                                            '--quantity', '50x', '--length', '5432,123',
                                            '--identity', '78,89,4', '--glitches', '9876,12,34'])
@@ -199,6 +199,22 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(args.glitch_rate, 9876)
         self.assertEqual(args.glitch_size, 12)
         self.assertEqual(args.glitch_skip, 34)
+
+    def test_simulate_args_2(self):
+        args = badread.__main__.parse_args(['simulate', '--reference', self.ref,
+                                           '--quantity', '250M', '--length', '2345,321',
+                                           '--identity', '20,2', '--glitches', '6789,21,43'])
+        self.assertEqual(args.reference, self.ref)
+        self.assertEqual(args.quantity, '250M')
+        badread.__main__.check_simulate_args(args)
+        self.assertEqual(args.mean_frag_length, 2345)
+        self.assertEqual(args.frag_length_stdev, 321)
+        self.assertEqual(args.mean_identity, 20)
+        self.assertEqual(args.max_identity, None)
+        self.assertEqual(args.identity_stdev, 2)
+        self.assertEqual(args.glitch_rate, 6789)
+        self.assertEqual(args.glitch_size, 21)
+        self.assertEqual(args.glitch_skip, 43)
 
     def test_bad_simulated_args_1(self):
         self.check_simulate_error(['--chimera', '101'], 'cannot be greater than')
@@ -232,45 +248,51 @@ class TestCommandLine(unittest.TestCase):
         self.check_simulate_error(['--identity', '85,A,5'], 'could not parse')
 
     def test_bad_simulated_args_11(self):
-        self.check_simulate_error(['--identity', '85,101,5'], 'cannot be more than')
+        self.check_simulate_error(['--identity', '20,19,18,17'], 'could not parse')
 
     def test_bad_simulated_args_12(self):
-        self.check_simulate_error(['--identity', '101,102,5'], 'cannot be more than')
+        self.check_simulate_error(['--identity', '85,101,5'], 'cannot be more than')
 
     def test_bad_simulated_args_13(self):
-        self.check_simulate_error(['--identity', '85,80,5'], 'cannot be larger than max')
+        self.check_simulate_error(['--identity', '101,102,5'], 'cannot be more than')
 
     def test_bad_simulated_args_14(self):
-        self.check_simulate_error(['--identity', '85,90,-3'], 'cannot be negative')
+        self.check_simulate_error(['--identity', '85,80,5'], 'cannot be larger than max')
 
     def test_bad_simulated_args_15(self):
-        self.check_simulate_error(['--identity', '30,90,5'], 'must be at least')
+        self.check_simulate_error(['--identity', '85,90,-3'], 'cannot be negative')
 
     def test_bad_simulated_args_16(self):
-        self.check_simulate_error(['--identity', '90,30,5'], 'must be at least')
+        self.check_simulate_error(['--identity', '30,90,5'], 'must be at least')
 
     def test_bad_simulated_args_17(self):
-        self.check_simulate_error(['--glitches', 'abc'], 'could not parse')
+        self.check_simulate_error(['--identity', '90,30,5'], 'must be at least')
 
     def test_bad_simulated_args_18(self):
-        self.check_simulate_error(['--glitches', '500,Z,10'], 'could not parse')
+        self.check_simulate_error(['--identity', '1,1'], 'must be at least')
 
     def test_bad_simulated_args_19(self):
-        self.check_simulate_error(['--glitches', '500,-10,10'], 'must contain non-negative')
+        self.check_simulate_error(['--glitches', 'abc'], 'could not parse')
 
     def test_bad_simulated_args_20(self):
-        self.check_simulate_error(['--error_model', 'not_a_file'], 'or a filename')
+        self.check_simulate_error(['--glitches', '500,Z,10'], 'could not parse')
 
     def test_bad_simulated_args_21(self):
-        self.check_simulate_error(['--qscore_model', 'not_a_file'], 'or a filename')
+        self.check_simulate_error(['--glitches', '500,-10,10'], 'must contain non-negative')
 
     def test_bad_simulated_args_22(self):
-        self.check_simulate_error([], 'not a file', ref='not_a_file')
+        self.check_simulate_error(['--error_model', 'not_a_file'], 'or a filename')
 
     def test_bad_simulated_args_23(self):
-        self.check_simulate_error(['--start_adapter_seq', 'ACGTQ'], 'must be a DNA sequence')
+        self.check_simulate_error(['--qscore_model', 'not_a_file'], 'or a filename')
 
     def test_bad_simulated_args_24(self):
+        self.check_simulate_error([], 'not a file', ref='not_a_file')
+
+    def test_bad_simulated_args_25(self):
+        self.check_simulate_error(['--start_adapter_seq', 'ACGTQ'], 'must be a DNA sequence')
+
+    def test_bad_simulated_args_26(self):
         self.check_simulate_error(['--end_adapter_seq', '12ACT'], 'must be a DNA sequence')
 
     def test_good_simulated_args_1(self):

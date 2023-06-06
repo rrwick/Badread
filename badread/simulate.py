@@ -72,7 +72,7 @@ def simulate(args, output=sys.stderr):
 
         info.append(f'length={len(seq)}')
         info.append(f'error-free_length={len(fragment)}')
-        info.append(f'read_identity={actual_identity * 100.0:.2f}%')
+        info.append(f'read_identity={actual_identity * 100.0:.3f}%')
 
         read_name = uuid.UUID(int=random.getrandbits(128))
         info = ' '.join(info)

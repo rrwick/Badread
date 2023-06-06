@@ -89,3 +89,33 @@ class TestBetaIdentity(unittest.TestCase):
             identities = badread.identities.Identities(81.9, 5.5, 82.1, output=self.null)
             identities.get_identity()
         self.assertTrue('invalid beta parameters' in str(cm.exception))
+
+
+class TestNormalIdentity(unittest.TestCase):
+
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.trials = 100000
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_normal_identity_1(self):
+        identities = badread.identities.Identities(20, 2, None, output=self.null)
+        mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
+        self.assertAlmostEqual(mean, 0.98888, delta=0.01)
+
+    def test_normal_identity_2(self):
+        identities = badread.identities.Identities(10, 0, None, output=self.null)
+        mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
+        self.assertAlmostEqual(mean, 0.9, delta=0.01)
+
+    def test_normal_identity_3(self):
+        identities = badread.identities.Identities(20, 0, None, output=self.null)
+        mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
+        self.assertAlmostEqual(mean, 0.99, delta=0.01)
+
+    def test_normal_identity_4(self):
+        identities = badread.identities.Identities(30, 0, None, output=self.null)
+        mean = sum(identities.get_identity() for _ in range(self.trials)) / self.trials
+        self.assertAlmostEqual(mean, 0.999, delta=0.01)

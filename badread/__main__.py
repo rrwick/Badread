@@ -97,7 +97,8 @@ def simulate_subparser(subparsers):
                           help='Fragment length distribution (mean and stdev, '
                                'default: DEFAULT)')
     sim_args.add_argument('--identity', type=str, default='95,99,2.5',
-                          help='Sequencing identity distribution (mean, max and stdev, '
+                          help='Sequencing identity distribution (mean, max and stdev for beta '
+                               'distribution, or mean and stdev for normal qscore distribution , '
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='nanopore2023',
                           help='Can be "nanopore2018", "nanopore2020", "nanopore2023", '
@@ -274,24 +275,20 @@ def check_simulate_args(args):
 
     try:
         identity_parameters = [float(x) for x in args.identity.split(',')]
-        args.mean_identity = identity_parameters[0]
-        args.max_identity = identity_parameters[1]
-        args.identity_stdev = identity_parameters[2]
+        if len(identity_parameters) == 2:
+            args.mean_identity = identity_parameters[0]
+            args.max_identity = None
+            args.identity_stdev = identity_parameters[1]
+            check_qscore_identities(args)
+        elif len(identity_parameters) == 3:
+            args.mean_identity = identity_parameters[0]
+            args.max_identity = identity_parameters[1]
+            args.identity_stdev = identity_parameters[2]
+            check_beta_identities(args)
+        else:
+            sys.exit('Error: could not parse --identity values')
     except (ValueError, IndexError):
         sys.exit('Error: could not parse --identity values')
-    if args.mean_identity > 100.0:
-        sys.exit('Error: mean read identity cannot be more than 100')
-    if args.max_identity > 100.0:
-        sys.exit('Error: max read identity cannot be more than 100')
-    if args.mean_identity <= settings.MIN_MEAN_READ_IDENTITY:
-        sys.exit(f'Error: mean read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
-    if args.max_identity <= settings.MIN_MEAN_READ_IDENTITY:
-        sys.exit(f'Error: max read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
-    if args.mean_identity > args.max_identity:
-        sys.exit(f'Error: mean identity ({args.mean_identity}) cannot be larger than max '
-                 f'identity ({args.max_identity})')
-    if args.identity_stdev < 0.0:
-        sys.exit('Error: read identity stdev cannot be negative')
 
     try:
         glitch_parameters = [float(x) for x in args.glitches.split(',')]
@@ -313,6 +310,29 @@ def check_simulate_args(args):
             args.end_adapter_seq = args.end_adapter_seq.upper()
             if not str_is_dna_sequence(args.end_adapter_seq):
                 sys.exit('Error: --end_adapter_seq must be a DNA sequence or a number')
+
+
+def check_beta_identities(args):
+    if args.mean_identity > 100.0:
+        sys.exit('Error: mean read identity cannot be more than 100')
+    if args.max_identity > 100.0:
+        sys.exit('Error: max read identity cannot be more than 100')
+    if args.mean_identity <= settings.MIN_MEAN_READ_IDENTITY:
+        sys.exit(f'Error: mean read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
+    if args.max_identity <= settings.MIN_MEAN_READ_IDENTITY:
+        sys.exit(f'Error: max read identity must be at least {settings.MIN_MEAN_READ_IDENTITY}')
+    if args.mean_identity > args.max_identity:
+        sys.exit(f'Error: mean identity ({args.mean_identity}) cannot be larger than max '
+                 f'identity ({args.max_identity})')
+    if args.identity_stdev < 0.0:
+        sys.exit('Error: read identity stdev cannot be negative')
+
+
+def check_qscore_identities(args):
+    if args.mean_identity <= settings.MIN_MEAN_READ_QSCORE:
+        sys.exit(f'Error: mean read identity must be at least {settings.MIN_MEAN_READ_QSCORE}')
+    if args.identity_stdev < 0.0:
+        sys.exit('Error: read qscore stdev cannot be negative')
 
 
 def check_python_version():

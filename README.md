@@ -12,24 +12,24 @@ Badread is published in the [Journal of Open Source Software](http://joss.theoj.
 
 ## Table of contents
 
-  * [Requirements](#requirements)
-  * [Installation](#installation)
-  * [Quick usage](#quick-usage)
-  * [Method](#method)
-  * [Detailed usage](#detailed-usage)
-     * [Command line](#command-line)
-     * [Reference FASTA](#reference-fasta)
-     * [Fragment lengths](#fragment-lengths)
-     * [Read identities](#read-identities)
-     * [Error model](#error-model)
-     * [QScore model](#qscore-model)
-     * [Adapters](#adapters)
-     * [Junk and random reads](#junk-and-random-reads)
-     * [Chimeras](#chimeras)
-     * [Small plasmid bias](#small-plasmid-bias)
-     * [Glitches](#glitches)
-  * [Contributing](#contributing)
-  * [License](#license)
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Quick usage](#quick-usage)
+* [Method](#method)
+* [Detailed usage](#detailed-usage)
+  * [Command line](#command-line)
+  * [Reference FASTA](#reference-fasta)
+  * [Fragment lengths](#fragment-lengths)
+  * [Read identities](#read-identities)
+  * [Error model](#error-model)
+  * [QScore model](#qscore-model)
+  * [Adapters](#adapters)
+  * [Junk and random reads](#junk-and-random-reads)
+  * [Chimeras](#chimeras)
+  * [Small plasmid bias](#small-plasmid-bias)
+  * [Glitches](#glitches)
+* [Contributing](#contributing)
+* [License](#license)
 
 
 
@@ -90,29 +90,29 @@ badread simulate --reference ref.fasta --quantity 50x \
 To simulate older Oxford Nanopore reads (R9.4.1, worse basecalling):
 ```bash
 badread simulate --reference ref.fasta --quantity 50x \
---error_model pacbio2016 --qscore_model nanopore2020 --identity 90,98,5 \
-    | gzip > reads.fastq.gz
-```
-
-Alternatively, you can use Badread's built-in models to imitate older PacBio reads. This command also adjusts the identity and length distributions to be a bit more PacBio-2016-like:
-```bash
-badread simulate --reference ref.fasta --quantity 50x \
-    --error_model pacbio2016 --qscore_model pacbio2016 --identity 85,95,3 --length 7500,7500 \
+    --error_model nanopore2020 --qscore_model nanopore2020 --identity 90,98,5 \
     | gzip > reads.fastq.gz
 ```
 
 Very bad reads:
 ```bash
 badread simulate --reference ref.fasta --quantity 50x --glitches 1000,100,100 \
-    --junk_reads 5 --random_reads 5 --chimeras 10 --identity 75,90,8 \
+    --junk_reads 5 --random_reads 5 --chimeras 10 --identity 80,90,6 --length 4000,2000 \
     | gzip > reads.fastq.gz
 ```
 
-Very nice reads:
+Pretty good reads:
+```bash
+badread simulate --reference ref.fasta --quantity 50x --glitches 10000,10,10 \
+    --junk_reads 0.1 --random_reads 0.1 --chimeras 0.1 --identity 20,3 \
+    | gzip > reads.fastq.gz
+```
+
+Very good reads:
 ```bash
 badread simulate --reference ref.fasta --quantity 50x --error_model random \
-    --qscore_model ideal --glitches 0,0,0 --junk_reads 0 --random_reads 0 \
-    --chimeras 0 --identity 99,100,2 --start_adapter_seq "" --end_adapter_seq "" \
+    --qscore_model ideal --glitches 0,0,0 --junk_reads 0 --random_reads 0 --chimeras 0 \
+    --identity 30,3 --length 40000,20000 --start_adapter_seq "" --end_adapter_seq "" \
     | gzip > reads.fastq.gz
 ```
 
@@ -225,19 +225,11 @@ For a couple of examples, check out [the reference FASTA page on the wiki](https
 
 ### Fragment lengths
 
-Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). While a gamma distribution is usually parameterised with shape and scale (_k_ and _θ_) or shape and rate (_α_ and _β_), I don't find these particularly intuitive. So Badread instead defines the fragment lengths using mean and standard deviation.
+Badread generates fragment lengths from a [gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution). While a gamma distribution is usually parameterised with shape and scale (_k_ and _θ_) or shape and rate (_α_ and _β_), I don't find these particularly intuitive. So Badread instead defines fragment lengths using mean and standard deviation.
 
-There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of _bases_ in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base (red) distribution – half the bases will be in reads shorter than this and half in longer reads.
+There are two ways to think about fragment lengths: the distribution of the fragment lengths and the distribution of _bases_ in the fragments. The latter distribution is higher because larger fragments contribute more bases. The read N50 is the median of the base distribution – half the bases will be in reads shorter than this and half in longer reads.
 
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/default_frag_lengths.png" alt="Default length distribution" width="400">
-            Badread's default is <code>--length 15000,13000</code> (mean=15000, stdev=13000) which corresponds to a decent Nanopore run (N50=22.6 kbp). The fragment length distribution is in blue, while the base distribution is in red.<br><br>
-            To see the equations and interactively explore how different parameters affect the distributions, check out <a href="https://www.desmos.com/calculator/xrkqgzt4o5">this Desmos plot</a>.
-        </td>
-    </tr>
-</table>
+Badread's default is `--length 15000,13000` (mean=15000, stdev=13000) which corresponds to a decent Nanopore run (N50=22.6 kbp). To see the equations and interactively explore how different parameters affect the distributions, check out [this Desmos plot](https://www.desmos.com/calculator/z2a3yqssie).
 
 Note that these parameters control the length of the _fragments_, not the final _reads_. These differ because: adapters are added to fragments, glitches can lengthen/shorten fragments, adding read errors can change the length (especially if the error model is biased towards insertions or deletions) and chimeras are made by concatenating multiple fragments together.
 
@@ -245,17 +237,16 @@ Note that these parameters control the length of the _fragments_, not the final 
 
 ### Read identities
 
-Badread generates read identities from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution). Like with fragment lengths, Badread defines the distribution with mean and standard deviation instead of using the more formal (and less intuitive) shape parameters (_α_ and _β_). In addition, Badread scales the distribution down using a maximum value, for a total of three parameters: `mean,max,stdev`.
+Badread can generate read identities in two alternative ways.
 
-<table>
-    <tr>
-        <td>
-            <img align="right" src="images/default_identities.png" alt="Default identity distribution" width="400">
-            Badread's default is <code>--identity 87.5,97.5,5</code> which corresponds to an okay (but not great) Nanopore sequencing run.<br><br>
-            To see the equations and interactively explore how different parameters affect the distribution, check out <a href="https://www.desmos.com/calculator/q7qw6rq2lb">this Desmos plot</a>.
-        </td>
-    </tr>
-</table>
+The first way uses a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) to sample read identities. Like with fragment lengths, Badread defines the distribution with mean and standard deviation instead of using the more formal (and less intuitive) shape parameters (_α_ and _β_). In addition, Badread scales the distribution down using a maximum value, for a total of three parameters. To use this method, give three comma-delimited values (identity mean, max, stdev), e.g. `--identity 95,99,2.5`.
+
+The second way uses a [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) to sample read [qscores](https://en.wikipedia.org/wiki/Phred_quality_score). To use this method, give two comma-delimited values (qscore mean and stdev), e.g. `--identity 20,4`. This approach is better suited to high accuracy reads like ONT duplex or PacBio HiFi.
+
+Badread's default is `--identity 95,99,2.5` which corresponds to an okay (but not great) R10.4.1 Nanopore sequencing run. To see the equations and interactively explore how different parameters affect the distribution, check out these Desmos plots:
+* [three-parameter identity beta distribution](https://www.desmos.com/calculator/u9fivqmisa)
+* [two-parameter qscore normal distribution (qscore on x-axis)](https://www.desmos.com/calculator/kpganphxj0)
+* [two-parameter qscore normal distribution (identity on x-axis)](https://www.desmos.com/calculator/kg9s0dvbup)
 
 For detail on how Badread defines identity, check out [this page on the wiki](https://github.com/rrwick/Badread/wiki/Definition-of-identity).
 
