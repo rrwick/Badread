@@ -173,7 +173,8 @@ Simulation parameters:
   Length and identity and error distributions
 
   --length LENGTH                 Fragment length distribution (mean and stdev, default: 15000,13000)
-  --identity IDENTITY             Sequencing identity distribution (mean, max and stdev, default:
+  --identity IDENTITY             Sequencing identity distribution (mean,max,stdev for beta
+                                  distribution or mean,stdev for normal qscore distribution, default:
                                   95,99,2.5)
   --error_model ERROR_MODEL       Can be "nanopore2018", "nanopore2020", "nanopore2023", "pacbio2016",
                                   "random" or a model filename (default: nanopore2023)

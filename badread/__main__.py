@@ -98,7 +98,7 @@ def simulate_subparser(subparsers):
                                'default: DEFAULT)')
     sim_args.add_argument('--identity', type=str, default='95,99,2.5',
                           help='Sequencing identity distribution (mean,max,stdev for beta '
-                               'distribution, or mean,stdev for normal qscore distribution, '
+                               'distribution or mean,stdev for normal qscore distribution, '
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='nanopore2023',
                           help='Can be "nanopore2018", "nanopore2020", "nanopore2023", '
