@@ -209,6 +209,11 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
     start_pos = random.randint(0, len(seq)-1)
     end_pos = start_pos + fragment_length
 
+    # The ending position might be past the end of the sequence. If the sequence is linear, we
+    # fix this now.
+    if not ref_circular[contig] and end_pos > len(seq):
+        end_pos = len(seq)
+
     info.append(f'{start_pos}-{end_pos}')
 
     # For circular contigs, we may have to loop the read around the contig.
@@ -220,9 +225,7 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
             assert looped_end_pos > 0
         return seq[start_pos:] + seq[:looped_end_pos], info
 
-    # For linear contigs, we don't care if the ending position is off the end - that will just
-    # result in the read ending at the sequence end (and being shorter than the fragment
-    # length).
+    # For linear contigs, no looping is needed.
     else:
         return seq[start_pos:end_pos], info
 
