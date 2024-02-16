@@ -219,6 +219,11 @@ class TestLoadBuiltInModels(unittest.TestCase):
         self.assertEqual(model.kmer_size, 7)
         self.assertEqual(len(model.alternatives), 16384)
 
+    def test_pacbio2021(self):
+        model = badread.error_model.ErrorModel('pacbio2021', output=self.null)
+        self.assertEqual(model.kmer_size, 7)
+        self.assertEqual(len(model.alternatives), 16384)
+
 
 class Test4MerErrorModel(unittest.TestCase):
     """

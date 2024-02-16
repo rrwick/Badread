@@ -278,6 +278,12 @@ class TestLoadBuiltInModels(unittest.TestCase):
         self.assertEqual(model.kmer_size, 9)
         self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
 
+    def test_pacbio2021(self):
+        model = badread.qscore_model.QScoreModel('pacbio2021', output=self.null)
+        self.assertGreater(len(model.scores), 400)
+        self.assertEqual(model.kmer_size, 9)
+        self.assertEqual(sorted(model.scores.keys()), sorted(model.probabilities.keys()))
+
 
 class TestLoadedQScoreModelDistributions(unittest.TestCase):
     """

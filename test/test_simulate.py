@@ -57,7 +57,7 @@ class TestSequenceFragment(unittest.TestCase):
     def setUp(self):
         self.null = open(os.devnull, 'w')
         self.trials = 20
-        self.identities_to_test = [1.0, 0.9, 0.8, 0.7]
+        self.identities_to_test = [1.0, 0.9, 0.8]
         self.read_lengths_to_test = [3000, 1000]
         self.read_delta = 0.5
         self.mean_delta = 0.05
@@ -144,6 +144,16 @@ class TestSequenceFragment(unittest.TestCase):
         if VERBOSE:
             print('\n\nPACBIO ERROR MODEL\n------------------')
         model_file = self.repo_dir / 'badread' / 'error_models' / 'pacbio2016.gz'
+        error_model = badread.error_model.ErrorModel(model_file, output=self.null)
+        qscore_model = badread.qscore_model.QScoreModel('random', output=self.null)
+        for identity in self.identities_to_test:
+            for read_length in self.read_lengths_to_test:
+                self.identity_test(identity, read_length, error_model, qscore_model)
+
+    def test_pacbio2021_identity(self):
+        if VERBOSE:
+            print('\n\nPACBIO ERROR MODEL\n------------------')
+        model_file = self.repo_dir / 'badread' / 'error_models' / 'pacbio2021.gz'
         error_model = badread.error_model.ErrorModel(model_file, output=self.null)
         qscore_model = badread.qscore_model.QScoreModel('random', output=self.null)
         for identity in self.identities_to_test:

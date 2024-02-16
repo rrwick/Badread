@@ -102,10 +102,10 @@ def simulate_subparser(subparsers):
                                'default: DEFAULT)')
     sim_args.add_argument('--error_model', type=str, default='nanopore2023',
                           help='Can be "nanopore2018", "nanopore2020", "nanopore2023", '
-                               '"pacbio2016", "random" or a model filename')
+                               '"pacbio2016", "pacbio2021", "random" or a model filename')
     sim_args.add_argument('--qscore_model', type=str, default='nanopore2023',
                           help='Can be "nanopore2018", "nanopore2020", "nanopore2023", '
-                               '"pacbio2016", "random", "ideal" or a model filename')
+                               '"pacbio2016", "pacbio2021", "random", "ideal" or a model filename')
     sim_args.add_argument('--seed', type=int,
                           help='Random number generator seed for deterministic output (default: '
                                'different output each time)')
@@ -240,14 +240,15 @@ def check_simulate_args(args):
     if not pathlib.Path(args.reference).is_file():
         sys.exit(f'Error: {args.reference} is not a file')
 
-    error_model_names = ['random', 'nanopore2018', 'nanopore2020', 'nanopore2023', 'pacbio2016']
+    error_model_names = ['random', 'nanopore2018', 'nanopore2020', 'nanopore2023',
+                         'pacbio2016', 'pacbio2021']
     error_model = args.error_model.lower()
     if error_model not in error_model_names and not pathlib.Path(args.error_model).is_file():
         sys.exit(f'Error: {args.error_model} is not a file\n'
                  f'  --error_model must be from {error_model_names} or a filename')
 
     qscore_model_names = ['random', 'ideal', 'nanopore2018', 'nanopore2020', 'nanopore2023',
-                          'pacbio2016']
+                          'pacbio2016', 'pacbio2021']
     qscore_model = args.qscore_model.lower()
     if qscore_model not in qscore_model_names and not pathlib.Path(args.qscore_model).is_file():
         sys.exit(f'Error: {args.qscore_model} is not a file\n'

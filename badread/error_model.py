@@ -102,6 +102,8 @@ class ErrorModel(object):
             self.load_from_file(str(this_script_dir / 'error_models' / 'nanopore2023.gz'), output)
         elif model_type_or_filename == 'pacbio2016':
             self.load_from_file(str(this_script_dir / 'error_models' / 'pacbio2016.gz'), output)
+        elif model_type_or_filename == 'pacbio2021':
+            self.load_from_file(str(this_script_dir / 'error_models' / 'pacbio2021.gz'), output)
         else:
             self.load_from_file(model_type_or_filename, output)
 

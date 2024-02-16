@@ -177,9 +177,10 @@ Simulation parameters:
                                   distribution or mean,stdev for normal qscore distribution, default:
                                   95,99,2.5)
   --error_model ERROR_MODEL       Can be "nanopore2018", "nanopore2020", "nanopore2023", "pacbio2016",
-                                  "random" or a model filename (default: nanopore2023)
+                                  "pacbio2021", "random" or a model filename (default: nanopore2023)
   --qscore_model QSCORE_MODEL     Can be "nanopore2018", "nanopore2020", "nanopore2023", "pacbio2016",
-                                  "random", "ideal" or a model filename (default: nanopore2023)
+                                  "pacbio2021", "random", "ideal" or a model filename (default:
+                                  nanopore2023)
   --seed SEED                     Random number generator seed for deterministic output (default:
                                   different output each time)
 
@@ -256,10 +257,11 @@ For detail on how Badread defines identity, check out [this page on the wiki](ht
 ### Error model
 
 The possible values for the `--error_model` argument are:
-* `nanopore2023`: a model trained on real Nanopore reads from 2023 (the default)
-* `nanopore2020`: a model trained on real Nanopore reads from 2020
-* `nanopore2018`: a model trained on real Nanopore reads from 2018
-* `pacbio2016`: a model trained on real PacBio reads
+* `nanopore2023`: a model trained on ONT R10.4.1 reads from 2023 (the default)
+* `nanopore2020`: a model trained on ONT R9.4.1 reads from 2020
+* `nanopore2018`: a model trained on ONT R9.4/R9.4.1 reads from 2018
+* `pacbio2016`: a model trained on PacBio RS II reads from 2016
+* `pacbio2021`: a model trained on PacBio HiFi reads from 2021
 * `random`: a random error model with 1/3 chance each of insertion, deletion and substitution
 * a file path for a trained model
 
@@ -270,10 +272,11 @@ For more information on how error models work, see [this page on the wiki](https
 ### QScore model
 
 The possible values for the `--qscore_model` argument are:
-* `nanopore2023`: a model trained on real Nanopore reads from 2023 (the default)
-* `nanopore2020`: a model trained on real Nanopore reads from 2020
-* `nanopore2018`: a model trained on real Nanopore reads from 2018
-* `pacbio2016`: a model trained on real PacBio reads
+* `nanopore2023`: a model trained on Nanopore reads from 2023 (the default)
+* `nanopore2020`: a model trained on Nanopore reads from 2020
+* `nanopore2018`: a model trained on Nanopore reads from 2018
+* `pacbio2016`: a model trained on PacBio RS II reads from 2016
+* `pacbio2021`: a model trained on PacBio HiFi reads from 2021
 * `random`: a model where qscores are meaningless and give no indication of read/base quality
 * `ideal`: a model where scores are unrealistically informative about read/base quality
 * a file path for a trained model
