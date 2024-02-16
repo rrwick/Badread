@@ -268,7 +268,7 @@ The possible values for the `--error_model` argument are:
 * `nanopore2020`: a model trained on ONT R9.4.1 reads from 2020
 * `nanopore2018`: a model trained on ONT R9.4/R9.4.1 reads from 2018
 * `pacbio2016`: a model trained on PacBio RS II reads from 2016
-* `pacbio2021`: a model trained on PacBio HiFi reads from 2021
+* `pacbio2021`: a model trained on PacBio Sequel IIe HiFi reads from 2021
 * `random`: a random error model with 1/3 chance each of insertion, deletion and substitution
 * a file path for a trained model
 
@@ -283,7 +283,7 @@ The possible values for the `--qscore_model` argument are:
 * `nanopore2020`: a model trained on ONT R9.4.1 reads from 2020
 * `nanopore2018`: a model trained on ONT R9.4/R9.4.1 reads from 2018
 * `pacbio2016`: a model trained on PacBio RS II reads from 2016
-* `pacbio2021`: a model trained on PacBio HiFi reads from 2021
+* `pacbio2021`: a model trained on PacBio Sequel IIe HiFi reads from 2021
 * `random`: a model where qscores are meaningless and give no indication of read/base quality
 * `ideal`: a model where scores are unrealistically informative about read/base quality
 * a file path for a trained model
