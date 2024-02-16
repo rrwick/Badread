@@ -94,6 +94,13 @@ badread simulate --reference ref.fasta --quantity 50x \
     | gzip > reads.fastq.gz
 ```
 
+To simulate PacBio HiFi reads:
+```bash
+badread simulate --reference ref.fasta --quantity 50x \
+    --error_model pacbio2021 --qscore_model pacbio2021 --identity 30,3 \
+    | gzip > reads.fastq.gz
+```
+
 Very bad reads:
 ```bash
 badread simulate --reference ref.fasta --quantity 50x --glitches 1000,100,100 \
