@@ -272,9 +272,9 @@ For more information on how error models work, see [this page on the wiki](https
 ### QScore model
 
 The possible values for the `--qscore_model` argument are:
-* `nanopore2023`: a model trained on Nanopore reads from 2023 (the default)
-* `nanopore2020`: a model trained on Nanopore reads from 2020
-* `nanopore2018`: a model trained on Nanopore reads from 2018
+* `nanopore2023`: a model trained on ONT R10.4.1 reads from 2023 (the default)
+* `nanopore2020`: a model trained on ONT R9.4.1 reads from 2020
+* `nanopore2018`: a model trained on ONT R9.4/R9.4.1 reads from 2018
 * `pacbio2016`: a model trained on PacBio RS II reads from 2016
 * `pacbio2021`: a model trained on PacBio HiFi reads from 2021
 * `random`: a model where qscores are meaningless and give no indication of read/base quality
