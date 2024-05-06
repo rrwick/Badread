@@ -59,7 +59,8 @@ def make_error_model(args, output=sys.stderr, dot_interval=1000):
             assert len(ref_kmer) == args.k_size
             read_kmer = aligned_read_seq[start:end].replace('-', '')
             if len(read_kmer) > 1 and ref_kmer[0] == read_kmer[0] and ref_kmer[-1] == read_kmer[-1]:
-                kmer_alternatives[ref_kmer][read_kmer] += 1
+                if "N" not in ref_kmer:
+                    kmer_alternatives[ref_kmer][read_kmer] += 1
             start += 1
             while aligned_ref_seq[start] == '-':
                 start += 1
