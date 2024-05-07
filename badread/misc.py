@@ -109,7 +109,7 @@ def load_fastq(filename, output=sys.stderr, dot_interval=1000):
             if not stripped_line.startswith(b'@'):
                 continue
             name = stripped_line[1:].split()[0]
-            sequence = next(fastq).strip()
+            sequence = next(fastq).strip().upper()
             _ = next(fastq)
             qualities = next(fastq).strip()
             reads[name.decode()] = (sequence.decode(), qualities.decode())
@@ -133,7 +133,7 @@ def load_fasta(filename):
                 continue
             if line[0] == '>':  # Header line = start of new contig
                 if name:
-                    fasta_seqs[name.split()[0]] = ''.join(sequence)
+                    fasta_seqs[name.split()[0]] = ''.join(sequence).upper()
                     sequence = []
                 name = line[1:]
                 short_name = name.split()[0]
@@ -148,7 +148,7 @@ def load_fasta(filename):
             else:
                 sequence.append(line)
         if name:
-            fasta_seqs[name.split()[0]] = ''.join(sequence)
+            fasta_seqs[name.split()[0]] = ''.join(sequence).upper()
     return fasta_seqs, depths, circular
 
 
@@ -257,3 +257,12 @@ def check_alignment_matches_read_and_refs(a, reads, refs):
     if a.ref_name not in refs:
         sys.exit(f'\nError: could not find reference {a.ref_name}\nare you sure your '
                  f'reference file and alignment file match?')
+
+
+def only_acgt(seq):
+    # Checks whether the sequence consists only of uppercase A, C, G and T characters.
+    allowed = {'A', 'C', 'G', 'T'}
+    for char in seq:
+        if char not in allowed:
+            return False
+    return True

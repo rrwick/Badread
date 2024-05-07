@@ -254,3 +254,15 @@ class TestOther(unittest.TestCase):
     def test_random_chance_50(self):
         successes = sum(1 if badread.misc.random_chance(0.5) else 0 for _ in range(1000))
         self.assertTrue(200 < successes < 800)
+
+    def test_only_acgt(self):
+        self.assertTrue(badread.misc.only_acgt("AACGATCAGCACTG"))
+        self.assertTrue(badread.misc.only_acgt("CGCGCGCGCGCG"))
+        self.assertTrue(badread.misc.only_acgt("TTTTTTTT"))
+        self.assertTrue(badread.misc.only_acgt("A"))
+        self.assertTrue(badread.misc.only_acgt(""))
+        self.assertFalse(badread.misc.only_acgt("ACGANCTCG"))
+        self.assertFalse(badread.misc.only_acgt("CGCTXACGACT"))
+        self.assertFalse(badread.misc.only_acgt("12345"))
+        self.assertFalse(badread.misc.only_acgt("acgactacgac"))
+        self.assertFalse(badread.misc.only_acgt("ACGAtCGACG"))

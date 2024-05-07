@@ -25,7 +25,7 @@ import re
 import sys
 from .alignment import load_alignments, align_sequences
 from .misc import load_fasta, load_fastq, reverse_complement, random_chance, get_random_base, \
-    get_random_different_base, get_open_func, check_alignment_matches_read_and_refs
+    get_random_different_base, get_open_func, check_alignment_matches_read_and_refs, only_acgt
 
 
 def make_error_model(args, output=sys.stderr, dot_interval=1000):
@@ -58,7 +58,8 @@ def make_error_model(args, output=sys.stderr, dot_interval=1000):
                 continue
             assert len(ref_kmer) == args.k_size
             read_kmer = aligned_read_seq[start:end].replace('-', '')
-            if len(read_kmer) > 1 and ref_kmer[0] == read_kmer[0] and ref_kmer[-1] == read_kmer[-1]:
+            if len(read_kmer) > 1 and ref_kmer[0] == read_kmer[0] and \
+                    ref_kmer[-1] == read_kmer[-1] and only_acgt(ref_kmer) and only_acgt(read_kmer):
                 kmer_alternatives[ref_kmer][read_kmer] += 1
             start += 1
             while aligned_ref_seq[start] == '-':
