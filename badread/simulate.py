@@ -251,7 +251,13 @@ def sequence_fragment(fragment, target_identity, error_model, qscore_model):
     errors = 0.0
     change_count, loop_count = 0, 0
     max_kmer_index = len(new_fragment_bases) - 1 - k_size
+    estimated_errors_needed = frag_len * (1.0 - target_identity)
+
     while True:
+        # If we need less than 1 error (rounded), we can stop immediately.
+        if estimated_errors_needed < 0.5:
+            break
+
         # A precaution to make sure we don't get caught in an infinite loop.
         loop_count += 1
         if loop_count > 100 * frag_len:
