@@ -122,7 +122,7 @@ def load_fastq(filename, output=sys.stderr, dot_interval=1000):
 
 def load_fasta(filename):
     fasta_seqs = collections.OrderedDict()
-    depths, circular = {}, {}
+    depths, circular, hairpin_left, hairpin_right = {}, {}, {}, {}
     p = re.compile(r'depth=([\d.]+)')
     with get_open_func(filename)(filename, 'rt') as fasta_file:
         name = ''
@@ -145,11 +145,13 @@ def load_fasta(filename):
                 else:
                     depths[short_name] = 1.0
                 circular[short_name] = 'circular=true' in name.lower()
+                hairpin_left[short_name] = 'hairpin_left=true' in name.lower()
+                hairpin_right[short_name] = 'hairpin_right=true' in name.lower()
             else:
                 sequence.append(line)
         if name:
             fasta_seqs[name.split()[0]] = ''.join(sequence).upper()
-    return fasta_seqs, depths, circular
+    return fasta_seqs, depths, circular, hairpin_left, hairpin_right
 
 
 RANDOM_SEQ_DICT = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
