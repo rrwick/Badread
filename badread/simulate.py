@@ -62,8 +62,8 @@ def simulate(args, output=sys.stderr):
     print_progress(count, total_size, target_size, output)
     while total_size < target_size:
         fragment, info = build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs,
-                                        ref_contig_weights, ref_circular, args, start_adapt_rate,
-                                        start_adapt_amount, end_adapt_rate, end_adapt_amount)
+                                        ref_contig_weights, ref_circular, left_hairpin, right_hairpin,
+                                        args, start_adapt_rate, start_adapt_amount, end_adapt_rate, end_adapt_amount)
         target_identity = identities.get_identity()
         seq, quals, actual_identity, identity_by_qscores = \
             sequence_fragment(fragment, target_identity, error_model, qscore_model)
@@ -94,7 +94,7 @@ def build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_c
     fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter_seq)]
     info = []
     frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
-                                       ref_contigs, ref_contig_weights, ref_circular, args)
+                                       ref_contigs, ref_contig_weights, ref_circular, left_hairpin, right_hairpin, args)
     fragment.append(frag_seq)
     info.append(','.join(frag_info))
 
@@ -146,7 +146,7 @@ def get_target_size(ref_size, quantity):
 
 
 def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_contig_weights,
-                 ref_circular, left_hairpin, right_hairpin args):
+                 ref_circular, left_hairpin, right_hairpin, args):
     fragment_length = frag_lengths.get_fragment_length()
     fragment_type = get_fragment_type(args)
     if fragment_type == 'junk':
