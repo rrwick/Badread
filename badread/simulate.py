@@ -34,7 +34,7 @@ def simulate(args, output=sys.stderr):
     if args.seed is not None:
         random.seed(args.seed)
         np.random.seed(args.seed)
-    ref_seqs, ref_depths, ref_circular = load_reference(args.reference, output)
+    ref_seqs, ref_depths, ref_circular, left_hairpin, right_hairpin = load_reference(args.reference, output)
     rev_comp_ref_seqs = {name: reverse_complement(seq) for name, seq in ref_seqs.items()}
     frag_lengths = FragmentLengths(args.mean_frag_length, args.frag_length_stdev, output)
     adjust_depths(ref_seqs, ref_depths, ref_circular, frag_lengths, args)
@@ -89,7 +89,7 @@ def simulate(args, output=sys.stderr):
 
 
 def build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_contig_weights,
-                   ref_circular, args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
+                   ref_circular, left_hairpin, right_hairpin, args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                    end_adapt_amount):
     fragment = [get_start_adapter(start_adapt_rate, start_adapt_amount, args.start_adapter_seq)]
     info = []
@@ -105,7 +105,7 @@ def build_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_c
         if random_chance(settings.CHIMERA_START_ADAPTER_CHANCE):
             fragment.append(args.start_adapter_seq)
         frag_seq, frag_info = get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs,
-                                           ref_contigs, ref_contig_weights, ref_circular, args)
+                                           ref_contigs, ref_contig_weights, ref_circular, left_hairpin, right_hairpin, args)
         fragment.append(frag_seq)
         info.append(','.join(frag_info))
     fragment.append(get_end_adapter(end_adapt_rate, end_adapt_amount, args.end_adapter_seq))
@@ -146,7 +146,7 @@ def get_target_size(ref_size, quantity):
 
 
 def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_contig_weights,
-                 ref_circular, args):
+                 ref_circular, left_hairpin, right_hairpin args):
     fragment_length = frag_lengths.get_fragment_length()
     fragment_type = get_fragment_type(args)
     if fragment_type == 'junk':
@@ -158,7 +158,7 @@ def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_con
     # repeatedly until we get a result.
     for _ in range(1000):
         seq, info = get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
-                                      ref_contig_weights, ref_circular)
+                                      ref_contig_weights, ref_circular, left_hairpin, right_hairpin)
         if seq != '':
             return seq, info
     sys.exit('Error: failed to generate any sequence fragments - are your read lengths '
@@ -181,23 +181,31 @@ def get_fragment_type(args):
 
 
 def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
-                      ref_contig_weights, ref_circular):
+                      ref_contig_weights, ref_circular, left_hairpin, right_hairpin):
 
     if len(ref_contigs) == 1:
         contig = ref_contigs[0]
     else:
         contig = random.choices(ref_contigs, weights=ref_contig_weights)[0]
+
     info = [contig]
     if random_chance(0.5):
         seq = ref_seqs[contig]
+        rv_seq = rev_comp_ref_seqs[contig] # save to use for hairpin
         info.append('+strand')
+        strand = '+'
     else:
         seq = rev_comp_ref_seqs[contig]
+        rv_seq = ref_seqs[contig] # save to use for hairpin
         info.append('-strand')
+        strand = '-'
+
+    # is there a hairpin at the relevant end of the contig?
+    hairpin_at_end= (right_hairpin[contig] if strand == '+' else left_hairpin[contig])
 
     # If the reference contig is linear and the fragment length is long enough, then we just
     # return the entire fragment, start to end.
-    if fragment_length >= len(seq) and not ref_circular[contig]:
+    if fragment_length >= len(seq) and not ref_circular[contig] and not hairpin_at_end:
         info.append('0-' + str(len(seq)))
         return seq, info
 
@@ -209,13 +217,6 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
     start_pos = random.randint(0, len(seq)-1)
     end_pos = start_pos + fragment_length
 
-    # The ending position might be past the end of the sequence. If the sequence is linear, we
-    # fix this now.
-    if not ref_circular[contig] and end_pos > len(seq):
-        end_pos = len(seq)
-
-    info.append(f'{start_pos}-{end_pos}')
-
     # For circular contigs, we may have to loop the read around the contig.
     if ref_circular[contig]:
         if end_pos <= len(seq):
@@ -223,11 +224,37 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
         else:
             looped_end_pos = end_pos - len(seq)
             assert looped_end_pos > 0
+
+        info.append(f'{start_pos}-{end_pos}')
         return seq[start_pos:] + seq[:looped_end_pos], info
 
-    # For linear contigs, no looping is needed.
-    else:
-        return seq[start_pos:end_pos], info
+    # The ending position might be past the end of the sequence. If the sequence is linear, we
+    # fix this now.
+
+    if not ref_circular[contig] and end_pos > len(seq):
+        # If the read would extend past the end of a linear contigs with
+        # a hairpin at the end, we allow it to extend through the hairpin
+        # into the other strand (reverse complement)
+        if hairpin_at_end:
+            fwd_seq = seq[start_pos:]
+            left_over_bases = fragment_length - len(fwd_seq)
+
+            # do not allow multiple hairpin loops
+            # as I have observed this in real data so far
+            if left_over_bases > len(rv_seq): 
+                return '', ''  # read would extend past the end of the other strand, so we fail to get the read
+
+            if left_over_bases > 0:
+                hp_seq = rv_seq[:left_over_bases]
+            else:
+                hp_seq = ''
+            info.append(f'{start_pos}-{len(seq)} (hairpin) 0-{left_over_bases}')
+            return fwd_seq + hp_seq, info
+
+        # If there is no hairpin terminate at contig end.
+        end_pos = len(seq)
+        info.append(f'{start_pos}-{end_pos}')
+    return seq[start_pos:end_pos], info
 
 
 def get_junk_fragment(fragment_length):
@@ -478,7 +505,7 @@ def print_progress(count, bp, target, output):
 def load_reference(reference, output):
     print('', file=output)
     print(f'Loading reference from {reference}', file=output)
-    ref_seqs, ref_depths, ref_circular = load_fasta(reference)
+    ref_seqs, ref_depths, ref_circular, left_hairpin, right_hairpin = load_fasta(reference)
     plural = '' if len(ref_seqs) == 1 else 's'
     print(f'  {len(ref_seqs):,} contig{plural}:', file=output)
     for contig in ref_seqs:
@@ -488,7 +515,7 @@ def load_reference(reference, output):
     if len(ref_seqs) > 1:
         total_size = sum(len(s) for s in ref_seqs.values())
         print(f'  total size: {total_size:,} bp', file=output)
-    return ref_seqs, ref_depths, ref_circular
+    return ref_seqs, ref_depths, ref_circular, left_hairpin, right_hairpin
 
 
 def print_intro(output):
