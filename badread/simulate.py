@@ -219,13 +219,13 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
 
     # For circular contigs, we may have to loop the read around the contig.
     if ref_circular[contig]:
+        info.append(f'{start_pos}-{end_pos}')
         if end_pos <= len(seq):
             return seq[start_pos:end_pos], info
         else:
             looped_end_pos = end_pos - len(seq)
             assert looped_end_pos > 0
 
-        info.append(f'{start_pos}-{end_pos}')
         return seq[start_pos:] + seq[:looped_end_pos], info
 
     # The ending position might be past the end of the sequence. If the sequence is linear, we
@@ -253,7 +253,7 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
 
         # If there is no hairpin terminate at contig end.
         end_pos = len(seq)
-        info.append(f'{start_pos}-{end_pos}')
+    info.append(f'{start_pos}-{end_pos}')
     return seq[start_pos:end_pos], info
 
 
