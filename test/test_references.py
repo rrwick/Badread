@@ -25,7 +25,7 @@ class TestLinearFragments(unittest.TestCase):
     def setUp(self):
         null = open(os.devnull, 'w')
         ref_filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
-        self.ref_seqs, self.ref_depths, self.ref_circular = \
+        self.ref_seqs, self.ref_depths, self.ref_circular, _, _ = \
             badread.simulate.load_reference(ref_filename, output=null)
         null.close()
 
