@@ -26,7 +26,7 @@ from .qscore_model import qscore_char_to_val
 
 def plot_window_identity(args, output=sys.stdout):
     reads = load_fastq(args.reads, output=output)
-    refs, _, _ = load_fasta(args.reference)
+    refs, _, _, _, _ = load_fasta(args.reference)
     alignments = load_alignments(args.alignment, output=output)
 
     for a in alignments:

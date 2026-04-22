@@ -146,17 +146,17 @@ class TestLoadSequences(unittest.TestCase):
 
     def test_load_non_gzipped_fasta(self):
         filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta')
-        seqs, depths, circular = badread.misc.load_fasta(filename)
+        seqs, depths, circular, _, _ = badread.misc.load_fasta(filename)
         self.check_fasta(seqs, depths, circular)
 
     def test_load_gzipped_fasta(self):
         filename = os.path.join(os.path.dirname(__file__), 'test_ref_1.fasta.gz')
-        seqs, depths, circular = badread.misc.load_fasta(filename)
+        seqs, depths, circular, _, _ = badread.misc.load_fasta(filename)
         self.check_fasta(seqs, depths, circular)
 
     def test_load_bad_format_fasta(self):
         filename = os.path.join(os.path.dirname(__file__), 'test_ref_1_bad.fasta')
-        seqs, depths, circular = badread.misc.load_fasta(filename)
+        seqs, depths, circular, _, _ = badread.misc.load_fasta(filename)
         self.check_fasta(seqs, depths, circular)
 
     def test_load_fastq(self):

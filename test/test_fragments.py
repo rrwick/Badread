@@ -38,6 +38,8 @@ class TestLinearFragments(unittest.TestCase):
         self.ref_contigs, self.ref_contig_weights = \
             badread.simulate.get_ref_contig_weights(self.ref_seqs, self.ref_depths)
         self.trials = 100
+        self.hairpin_left = {'r': False}
+        self.hairpin_right = {'r': False}
 
     def tearDown(self):
         self.null.close()
@@ -59,8 +61,8 @@ class TestLinearFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             if fragment in forward_ref:
                 forward_count += 1
@@ -104,8 +106,8 @@ class TestLinearFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             self.assertTrue(fragment.startswith(args.start_adapter_seq))
             self.assertTrue(fragment.endswith(args.end_adapter_seq))
@@ -131,8 +133,8 @@ class TestLinearFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             lengths.append(len(fragment))
         self.assertGreater(max(lengths), 1000)  # Chimeras make for some longer fragments
@@ -151,6 +153,8 @@ class TestCircularFragments(unittest.TestCase):
         self.ref_contigs, self.ref_contig_weights = \
             badread.simulate.get_ref_contig_weights(self.ref_seqs, self.ref_depths)
         self.trials = 100
+        self.hairpin_left = {'r': False}
+        self.hairpin_right = {'r': False}
 
     def tearDown(self):
         self.null.close()
@@ -172,8 +176,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             if fragment in forward_ref:
                 forward_count += 1
@@ -201,8 +205,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             self.assertTrue(fragment.startswith(args.start_adapter_seq))
             self.assertTrue(fragment.endswith(args.end_adapter_seq))
@@ -224,8 +228,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             lengths.append(len(fragment))
             self.assertTrue(len(fragment) % 1000 == 0)
@@ -246,8 +250,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             lengths.append(len(fragment))
         self.assertGreater(statistics.mean(lengths), 1000)
@@ -267,8 +271,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             lengths.append(len(fragment))
         self.assertLess(statistics.mean(lengths), 1000)
@@ -289,8 +293,8 @@ class TestCircularFragments(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             if fragment in forward_ref:
                 forward_count += 1
@@ -318,6 +322,8 @@ class TestSmallPlasmidBias(unittest.TestCase):
         self.ref_contigs, self.ref_contig_weights = \
             badread.simulate.get_ref_contig_weights(self.ref_seqs, self.ref_depths)
         self.trials = 100
+        self.hairpin_left = {'r': False}
+        self.hairpin_right = {'r': False}
 
     def tearDown(self):
         self.null.close()
@@ -338,8 +344,8 @@ class TestSmallPlasmidBias(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             self.assertEqual(len(fragment), 1000)
 
@@ -358,6 +364,8 @@ class TestWholeRef(unittest.TestCase):
         self.ref_contigs, self.ref_contig_weights = \
             badread.simulate.get_ref_contig_weights(self.ref_seqs, self.ref_depths)
         self.trials = 100
+        self.hairpin_left = {'r': False}
+        self.hairpin_right = {'r': False}
 
     def tearDown(self):
         self.null.close()
@@ -377,8 +385,8 @@ class TestWholeRef(unittest.TestCase):
             fragment, info = \
                 badread.simulate.build_fragment(self.lengths, self.ref_seqs, self.rev_comp_ref_seqs,
                                                 self.ref_contigs, self.ref_contig_weights,
-                                                self.ref_circular, args, start_adapt_rate,
-                                                start_adapt_amount, end_adapt_rate,
+                                                self.ref_circular, self.hairpin_left, self.hairpin_right,
+                                                args, start_adapt_rate, start_adapt_amount, end_adapt_rate,
                                                 end_adapt_amount)
             self.assertEqual(len(fragment), 1000)
             if fragment == self.ref_seqs['r']:
@@ -411,3 +419,52 @@ class TestRandomJunk(unittest.TestCase):
             random_seq = badread.simulate.get_junk_fragment(self.seq_len)
             compressed_seq = zlib.compress(random_seq.encode())
             self.assertLess(len(compressed_seq), len(random_seq) / 10)
+
+class TestHairpinReadthrough(unittest.TestCase):
+
+    def setUp(self):
+        self.null = open(os.devnull, 'w')
+        self.ref_len = 1000
+        self.ref_seqs = {'r': badread.misc.get_random_sequence(self.ref_len)}
+        self.rev_comp_ref_seqs = {'r': badread.misc.reverse_complement(self.ref_seqs['r'])}
+        self.ref_depths = {'r': 1.0}
+        self.ref_circular = {'r': False}
+        self.left_hairpin = {'r': True}
+        self.right_hairpin = {'r': True}
+        self.ref_contigs, self.ref_contig_weights = badread.simulate.get_ref_contig_weights(
+            self.ref_seqs, self.ref_depths)
+        self.trials = 100
+
+    def tearDown(self):
+        self.null.close()
+
+    def test_readthrough_happens(self):
+        # fragment > contig guarantees overrun on linear contig
+        frag_len = 1001
+
+        for _ in range(self.trials):
+            seq, info = badread.simulate.get_real_fragment(
+                frag_len, self.ref_seqs, self.rev_comp_ref_seqs, self.ref_contigs,
+                self.ref_contig_weights, self.ref_circular, self.left_hairpin,
+                self.right_hairpin
+            )
+            self.assertNotEqual(seq, '')
+            self.assertTrue(any('hairpin' in x for x in info))
+            start_pos = int(info[2].split('-', 1)[0])
+            self.assertEqual(len(seq), min(frag_len, 2 * (self.ref_len - start_pos)))
+
+    def test_no_multi_loop_readthrough(self):
+        # Reads that would extend too far after a hairpin are truncated at the mirrored start
+        # position instead of looping again.
+        frag_len = 2500
+
+        for _ in range(self.trials):
+            seq, info = badread.simulate.get_real_fragment(
+                frag_len, self.ref_seqs, self.rev_comp_ref_seqs, self.ref_contigs,
+                self.ref_contig_weights, self.ref_circular, self.left_hairpin,
+                self.right_hairpin
+            )
+            self.assertNotEqual(seq, '')
+            self.assertTrue(any('hairpin' in x for x in info))
+            start_pos = int(info[2].split('-', 1)[0])
+            self.assertEqual(len(seq), 2 * (self.ref_len - start_pos))
