@@ -231,7 +231,7 @@ Each sequence's depth can be specified in the FASTA header, e.g. using `depth=1.
 
 Circular sequences are indicated by including `circular=true` in the FASTA header. This allows reads to loop past the end and back to the start of the sequence.
 
-Hairpin ends are also supported (thanks, [David](https://github.com/dalofa)). You can add `hairpin_left=true` or `hairpin_right=true` (or both) to make reads that hit the end of the sequence loop back on the opposite strand.
+Hairpin ends are also supported (thanks, [David](https://github.com/dalofa)). Add `hairpin_left=true` and/or `hairpin_right=true` to a FASTA header to mark the left and/or right end of the sequence as a hairpin. Reads that reach that end will loop onto the opposite strand, up to the mirrored starting position.
 
 For a couple of examples, check out [the reference FASTA page on the wiki](https://github.com/rrwick/Badread/wiki/Example-reference-FASTAs).
 
