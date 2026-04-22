@@ -154,8 +154,8 @@ def get_fragment(frag_lengths, ref_seqs, rev_comp_ref_seqs, ref_contigs, ref_con
     elif fragment_type == 'random':
         return get_random_sequence(fragment_length), ['random_seq']
 
-    # The get_real_fragment function can return nothing (due to --small_plasmid_bias or hairpins)
-    # so we try repeatedly until we get a result.
+    # The get_real_fragment function can potentially return nothing, so we try repeatedly until we
+    # get a result.
     for _ in range(1000):
         seq, info = get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
                                       ref_contig_weights, ref_circular, left_hairpin, right_hairpin)
