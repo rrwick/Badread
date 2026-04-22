@@ -7,7 +7,7 @@ Badread does not try to be best at imitating real reads (though it's not too bad
 Badread is published in the [Journal of Open Source Software](http://joss.theoj.org). If you use it in your research, please cite this manuscript:<br>
 > Wick RR. Badread: simulation of error-prone long reads. _Journal of Open Source Software_. 2019;4(36):1316. doi:[10.21105/joss.01316](https://doi.org/10.21105/joss.01316).
 
-[![Build Status](https://travis-ci.com/rrwick/Badread.svg?token=71gNPkycVbFoEsJC4qcj&branch=master)](https://travis-ci.com/rrwick/Badread) [![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master&service=github)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html) [![status](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1/status.svg)](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2622997.svg)](https://doi.org/10.5281/zenodo.2622997)
+[![Coverage Status](https://coveralls.io/repos/github/rrwick/Badread/badge.svg?branch=master&service=github)](https://coveralls.io/github/rrwick/Badread?branch=master) [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html) [![status](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1/status.svg)](http://joss.theoj.org/papers/a9ae38312391668801949ddc59e10cb1) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2622997.svg)](https://doi.org/10.5281/zenodo.2622997)
 
 
 ## Table of contents
