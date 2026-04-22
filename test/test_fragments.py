@@ -440,8 +440,7 @@ class TestHairpinReadthrough(unittest.TestCase):
 
     def test_readthrough_happens(self):
         # fragment > contig guarantees overrun on linear contig
-        frag_len = 1001 # always leads to tread through, but does not lead to multi-loop readthrough
-        lengths = badread.fragment_lengths.FragmentLengths(frag_len, 0, self.null)
+        frag_len = 1001
 
         for _ in range(self.trials):
             seq, info = badread.simulate.get_real_fragment(
@@ -450,12 +449,13 @@ class TestHairpinReadthrough(unittest.TestCase):
                 self.right_hairpin
             )
             self.assertNotEqual(seq, '')
-            self.assertEqual(len(seq), frag_len)
             self.assertTrue(any('hairpin' in x for x in info))
+            start_pos = int(info[2].split('-', 1)[0])
+            self.assertEqual(len(seq), min(frag_len, 2 * (self.ref_len - start_pos)))
 
     def test_no_multi_loop_readthrough(self):
-        # In the current implementation only one hairpin can be read-through
-        # leftover always > opposite strand length, so function must reject
+        # Reads that would extend too far after a hairpin are truncated at the mirrored start
+        # position instead of looping again.
         frag_len = 2500
 
         for _ in range(self.trials):
@@ -464,5 +464,7 @@ class TestHairpinReadthrough(unittest.TestCase):
                 self.ref_contig_weights, self.ref_circular, self.left_hairpin,
                 self.right_hairpin
             )
-            self.assertEqual(seq, '')
-            self.assertEqual(info, '')
+            self.assertNotEqual(seq, '')
+            self.assertTrue(any('hairpin' in x for x in info))
+            start_pos = int(info[2].split('-', 1)[0])
+            self.assertEqual(len(seq), 2 * (self.ref_len - start_pos))

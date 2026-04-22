@@ -189,18 +189,17 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
         contig = random.choices(ref_contigs, weights=ref_contig_weights)[0]
 
     info = [contig]
+    seq = ref_seqs[contig]
+    rev_seq = rev_comp_ref_seqs[contig]
     if random_chance(0.5):
-        seq = ref_seqs[contig]
-        rv_seq = rev_comp_ref_seqs[contig] # save to use for hairpin
         info.append('+strand')
         strand = '+'
     else:
-        seq = rev_comp_ref_seqs[contig]
-        rv_seq = ref_seqs[contig] # save to use for hairpin
+        seq, rev_seq = rev_seq, seq
         info.append('-strand')
         strand = '-'
 
-    hairpin_at_end = (right_hairpin[contig] if strand == '+' else left_hairpin[contig])
+    hairpin_at_end = right_hairpin[contig] if strand == '+' else left_hairpin[contig]
 
     # If the reference contig is linear and the fragment length is long enough, then we just
     # return the entire fragment, start to end.
@@ -224,32 +223,25 @@ def get_real_fragment(fragment_length, ref_seqs, rev_comp_ref_seqs, ref_contigs,
         else:
             looped_end_pos = end_pos - len(seq)
             assert looped_end_pos > 0
-
-        return seq[start_pos:] + seq[:looped_end_pos], info
+            return seq[start_pos:] + seq[:looped_end_pos], info
 
     # The ending position might be past the end of the sequence. If the sequence is linear, we fix
     # this now.
 
-    if not ref_circular[contig] and end_pos > len(seq):
-        # If the read would extend past the end of a linear contigs with a hairpin at the end, we
-        # allow it to extend through the hairpin into the other strand (reverse complement).
+    if end_pos > len(seq):
+        # If the read would extend past the end of a linear contig with a hairpin at the end, we
+        # allow it to extend through the hairpin into the other strand (reverse complement), but
+        # only as far as the mirrored starting position.
         if hairpin_at_end:
             fwd_seq = seq[start_pos:]
-            left_over_bases = fragment_length - len(fwd_seq)
-
-            # Do not allow multiple hairpin loops, as I have observed this in real data.
-            if left_over_bases > len(rv_seq): 
-                return '', ''
-
-            if left_over_bases > 0:
-                hp_seq = rv_seq[:left_over_bases]
-            else:
-                hp_seq = ''
+            left_over_bases = min(fragment_length - len(fwd_seq), len(fwd_seq))
+            hairpin_seq = rev_seq[:left_over_bases]
             info.append(f'{start_pos}-{len(seq)} (hairpin) 0-{left_over_bases}')
-            return fwd_seq + hp_seq, info
+            return fwd_seq + hairpin_seq, info
 
-        # If there is no hairpin terminate at contig end.
+        # If there is no hairpin, terminate at contig end.
         end_pos = len(seq)
+
     info.append(f'{start_pos}-{end_pos}')
     return seq[start_pos:end_pos], info
 
