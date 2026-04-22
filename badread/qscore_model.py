@@ -76,7 +76,7 @@ def get_qscores(seq, frag, qscore_model):
 
 
 def make_qscore_model(args, output=sys.stderr, dot_interval=1000):
-    refs, _, _,_,_ = load_fasta(args.reference)
+    refs, _, _, _, _ = load_fasta(args.reference)
     reads = load_fastq(args.reads, output=output)
     alignments = load_alignments(args.alignment, args.max_alignments, output=output)
     if len(alignments) == 0:

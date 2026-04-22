@@ -12,24 +12,27 @@ Badread is published in the [Journal of Open Source Software](http://joss.theoj.
 
 ## Table of contents
 
-* [Requirements](#requirements)
-* [Installation](#installation)
-* [Quick usage](#quick-usage)
-* [Method](#method)
-* [Detailed usage](#detailed-usage)
-  * [Command line](#command-line)
-  * [Reference FASTA](#reference-fasta)
-  * [Fragment lengths](#fragment-lengths)
-  * [Read identities](#read-identities)
-  * [Error model](#error-model)
-  * [QScore model](#qscore-model)
-  * [Adapters](#adapters)
-  * [Junk and random reads](#junk-and-random-reads)
-  * [Chimeras](#chimeras)
-  * [Small plasmid bias](#small-plasmid-bias)
-  * [Glitches](#glitches)
-* [Contributing](#contributing)
-* [License](#license)
+- [Table of contents](#table-of-contents)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Install from source](#install-from-source)
+  - [Run without installation](#run-without-installation)
+- [Quick usage](#quick-usage)
+- [Method](#method)
+- [Detailed usage](#detailed-usage)
+  - [Command line](#command-line)
+  - [Reference FASTA](#reference-fasta)
+  - [Fragment lengths](#fragment-lengths)
+  - [Read identities](#read-identities)
+  - [Error model](#error-model)
+  - [QScore model](#qscore-model)
+  - [Adapters](#adapters)
+  - [Junk and random reads](#junk-and-random-reads)
+  - [Chimeras](#chimeras)
+  - [Small plasmid bias](#small-plasmid-bias)
+  - [Glitches](#glitches)
+- [Contributing](#contributing)
+- [License](#license)
 
 
 
@@ -135,7 +138,7 @@ Here is an overview of how Badread makes each of its reads:
 1. Use the [fragment length distribution](#fragment-lengths) to choose a length for the read.
 
 2. Choose a type of fragment:
-    * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references. If there are multiple reference sequences with different depths, then the likelihood of the fragment coming from each sequence is proportional to that sequence's depth.
+    * Most will be fragments of sequence from the [reference FASTA](#reference-fasta). These are equally likely to come from either strand, and can loop around circular references or over hairpin ends. If there are multiple reference sequences with different depths, then the likelihood of the fragment coming from each sequence is proportional to that sequence's depth.
     * Depending on the settings, some fragments may also be [junk or random sequence](#junk-and-random-reads).
 
 3. Add adapter sequences to the start and end of the fragment, based on the [adapter settings](#adapters).
@@ -227,6 +230,8 @@ The reference genome must be given as a FASTA file (either gzipped or not) using
 Each sequence's depth can be specified in the FASTA header, e.g. using `depth=1.1` or `depth=15`. Badread will use this to determine the relative abundance of each sequence. This can be useful for both bacterial genomes (where plasmids may be higher depth than the chromosome) and eukaryote genomes (where chloroplast/mitochondrial genomes may be higher depth than the rest of the genome).
 
 Circular sequences are indicated by including `circular=true` in the FASTA header. This allows reads to loop past the end and back to the start of the sequence.
+
+Hairpin ends are also supported (thanks, [David](https://github.com/dalofa)). You can add `hairpin_left=true` or `hairpin_right=true` (or both) to make reads that hit the end of the sequence loop back on the opposite strand.
 
 For a couple of examples, check out [the reference FASTA page on the wiki](https://github.com/rrwick/Badread/wiki/Example-reference-FASTAs).
 
