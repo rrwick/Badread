@@ -8,6 +8,7 @@ before_script:
   - pip3 install scipy
   - pip3 install edlib
   - pip3 install matplotlib
+  - pip3 install numpy
 script:
   - coverage run -m unittest
 after_success:
